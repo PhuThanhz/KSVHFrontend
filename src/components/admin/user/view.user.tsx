@@ -1,4 +1,4 @@
-import { IUser } from "@/types/backend";
+import type { IUser } from "@/types/backend";
 import { Badge, Descriptions, Drawer } from "antd";
 import dayjs from 'dayjs';
 

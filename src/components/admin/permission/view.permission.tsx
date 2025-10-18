@@ -1,4 +1,4 @@
-import { IPermission } from "@/types/backend";
+import type { IPermission } from "@/types/backend";
 import { Descriptions, Drawer } from "antd";
 import dayjs from 'dayjs';
 
