@@ -30,17 +30,17 @@
       "constants/*": [
         "./src/constants/*"
       ],
-      "features/*": [
-        "./src/features/*"
+      "styles/*": [
+        "src/styles/*"
+      ],
+      "config/*": [
+        "src/config/*"
       ],
       "hook/*": [
         "./src/hook/*"
       ],
       "pages/*": [
         "./src/pages/*"
-      ],
-      "styles/*": [
-        "./src/styles/*"
       ],
       "services/*": [
         "./src/services/*"

@@ -1,5 +1,11 @@
 export const PATHS = {
     HOME: "/",
+    ABOUT: "/about",
+    CONTACT: "/contact",
+
+    LOGIN: "/login",
+    REGISTER: "/register",
+
     CREATE_REQUEST: "/create-request",
     REQUESTS: "/requests",
     ASSIGN_CONFIRM: "/assign-confirm",

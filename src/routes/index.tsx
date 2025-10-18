@@ -3,9 +3,10 @@ import App from "../App";
 import HomePage from "pages/client/Home";
 import AboutPage from "pages/client/About";
 import ContactPage from "pages/client/Contact";
-import LoginPage from "@/pages/login";
-import RegisterPage from "@/pages/registerPage";
-import { PATHS } from "@/constants/paths"; // ✅ import hằng số
+import { PATHS } from "@/constants/paths";
+import LoginPage from 'pages/auth/login';
+import RegisterPage from 'pages/auth/register';
+
 
 export const router = createBrowserRouter([
     {
