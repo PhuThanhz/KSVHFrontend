@@ -42,6 +42,9 @@
       "pages/*": [
         "./src/pages/*"
       ],
+      "config/*": [
+        "./src/config/*"
+      ],
       "services/*": [
         "./src/services/*"
       ]

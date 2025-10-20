@@ -1,4 +1,4 @@
-import { IBackendRes } from "@/types/backend";
+import type { IBackendRes } from "@/types/backend";
 import { Mutex } from "async-mutex";
 import axiosClient from "axios";
 import { store } from "@/redux/store";

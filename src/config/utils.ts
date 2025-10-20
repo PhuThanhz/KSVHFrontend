@@ -1,4 +1,4 @@
-import { IPermission } from '@/types/backend';
+import type { IPermission } from '@/types/backend';
 import { grey, green, blue, red, orange } from '@ant-design/colors';
 import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';

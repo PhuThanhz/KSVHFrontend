@@ -1,7 +1,10 @@
+import type {
+  Action, ThunkAction,
+} from '@reduxjs/toolkit';
 import {
-  Action,
+
   configureStore,
-  ThunkAction,
+
 } from '@reduxjs/toolkit';
 import accountReducer from './slice/accountSlide';
 import userReducer from './slice/userSlide';

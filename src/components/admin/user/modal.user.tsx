@@ -3,7 +3,7 @@ import { Col, Form, Row, message, notification } from "antd";
 import { isMobile } from 'react-device-detect';
 import { useState, useEffect } from "react";
 import { callCreateUser, callFetchRole, callUpdateUser } from "@/config/api";
-import { IUser } from "@/types/backend";
+import type { IUser } from "@/types/backend";
 import { DebounceSelect } from "./debouce.select";
 
 interface IProps {
