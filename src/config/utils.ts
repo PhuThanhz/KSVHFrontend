@@ -1,7 +1,30 @@
-import type { IPermission } from "@/types/backend";
-import { grey, green, blue, red, orange } from "@ant-design/colors";
-import groupBy from "lodash-es/groupBy";
-import map from "lodash-es/map";
+import { IPermission } from '@/types/backend';
+import { grey, green, blue, red, orange } from '@ant-design/colors';
+import groupBy from 'lodash/groupBy';
+import map from 'lodash/map';
+
+export const SKILLS_LIST =
+    [
+        { label: "React.JS", value: "REACT.JS" },
+        { label: "React Native", value: "REACT NATIVE" },
+        { label: "Vue.JS", value: "VUE.JS" },
+        { label: "Angular", value: "ANGULAR" },
+        { label: "Nest.JS", value: "NEST.JS" },
+        { label: "TypeScript", value: "TYPESCRIPT" },
+        { label: "Java", value: "JAVA" },
+        { label: "Java Spring", value: "JAVA SPRING" },
+        { label: "Frontend", value: "FRONTEND" },
+        { label: "Backend", value: "BACKEND" },
+        { label: "Fullstack", value: "FULLSTACK" }
+    ];
+
+export const LOCATION_LIST =
+    [
+        { label: "Hà Nội", value: "HANOI" },
+        { label: "Hồ Chí Minh", value: "HOCHIMINH" },
+        { label: "Đà Nẵng", value: "DANANG" },
+        { label: "Others", value: "OTHER" },
+    ];
 
 export const nonAccentVietnamese = (str: string) => {
     str = str.replace(/A|Á|À|Ã|Ạ|Â|Ấ|Ầ|Ẫ|Ậ|Ă|Ắ|Ằ|Ẵ|Ặ/g, "A");
@@ -42,6 +65,12 @@ export const convertSlug = (str: string) => {
         .replace(/-+/g, '-'); // collapse dashes
 
     return str;
+}
+
+export const getLocationName = (value: string) => {
+    const locationFilter = LOCATION_LIST.filter(item => item.value === value);
+    if (locationFilter.length) return locationFilter[0].label;
+    return 'unknown'
 }
 
 export function colorMethod(method: "POST" | "PUT" | "GET" | "DELETE" | string) {

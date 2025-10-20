@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { callRegister } from 'config/api';
 import styles from 'styles/auth.module.scss';
-import type { IUser } from '@/types/backend';
+import { IUser } from '@/types/backend';
 const { Option } = Select;
 
 

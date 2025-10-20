@@ -1,8 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { callFetchPermission } from '@/config/api';
-import type { IPermission } from '@/types/backend';
-
-
+import { IPermission } from '@/types/backend';
 
 interface IState {
     isFetching: boolean;

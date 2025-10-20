@@ -1,6 +1,10 @@
-import type { ParamsType, ProTableProps } from '@ant-design/pro-components';
-import { ProTable } from '@ant-design/pro-components';
+import {
+    ParamsType,
+    ProTable,
+    ProTableProps,
+} from '@ant-design/pro-components';
 import vi_VN from 'antd/locale/vi_VN';
+import enUS from 'antd/lib/locale/en_US';
 import { ConfigProvider } from 'antd';
 
 const DataTable = <

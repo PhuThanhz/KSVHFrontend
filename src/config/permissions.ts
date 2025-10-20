@@ -20,8 +20,12 @@ export const ALL_PERMISSIONS = {
 }
 
 export const ALL_MODULES = {
+    COMPANIES: 'COMPANIES',
     FILES: 'FILES',
+    JOBS: 'JOBS',
     PERMISSIONS: 'PERMISSIONS',
+    RESUMES: 'RESUMES',
     ROLES: 'ROLES',
     USERS: 'USERS',
+    SUBSCRIBERS: 'SUBSCRIBERS'
 }

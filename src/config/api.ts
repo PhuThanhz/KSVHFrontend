@@ -1,4 +1,4 @@
-import type { IBackendRes, IAccount, IUser, IModelPaginate, IGetAccount, IPermission, IRole } from '@/types/backend';
+import { IBackendRes, IAccount, IUser, IModelPaginate, IGetAccount, IPermission, IRole } from '@/types/backend';
 import axios from 'config/axios-customize';
 
 /**
@@ -42,9 +42,6 @@ export const callUploadSingleFile = (file: any, folderType: string) => {
         },
     });
 }
-
-
-
 
 
 /**
@@ -114,5 +111,3 @@ export const callFetchRole = (query: string) => {
 export const callFetchRoleById = (id: string) => {
     return axios.get<IBackendRes<IRole>>(`/api/v1/roles/${id}`);
 }
-
-

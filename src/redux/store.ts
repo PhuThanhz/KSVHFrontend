@@ -1,11 +1,12 @@
-import { configureStore } from "@reduxjs/toolkit";
-import type { ThunkAction, Action } from "@reduxjs/toolkit";
+import {
+  Action,
+  configureStore,
+  ThunkAction,
+} from '@reduxjs/toolkit';
 import accountReducer from './slice/accountSlide';
-
 import userReducer from './slice/userSlide';
 import permissionReducer from './slice/permissionSlide';
 import roleReducer from './slice/roleSlide';
-
 
 export const store = configureStore({
   reducer: {

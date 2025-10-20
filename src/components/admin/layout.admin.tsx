@@ -40,15 +40,10 @@ const LayoutAdmin = () => {
         const ACL_ENABLE = import.meta.env.VITE_ACL_ENABLE;
         if (permissions?.length || ACL_ENABLE === 'false') {
 
-
             const viewUser = permissions?.find(item =>
                 item.apiPath === ALL_PERMISSIONS.USERS.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.USERS.GET_PAGINATE.method
             )
-
-
-
-
 
             const viewRole = permissions?.find(item =>
                 item.apiPath === ALL_PERMISSIONS.ROLES.GET_PAGINATE.apiPath
@@ -66,7 +61,6 @@ const LayoutAdmin = () => {
                     key: '/admin',
                     icon: <AppstoreOutlined />
                 },
-
 
                 ...(viewUser || ACL_ENABLE === 'false' ? [{
                     label: <Link to='/admin/user'>User</Link>,

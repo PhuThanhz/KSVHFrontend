@@ -3,7 +3,7 @@ import { Col, Form, Row, message, notification } from "antd";
 import { isMobile } from 'react-device-detect';
 import { useState, useEffect } from "react";
 import { callCreateUser, callFetchRole, callUpdateUser } from "@/config/api";
-import type { IUser } from "@/types/backend";
+import { IUser } from "@/types/backend";
 import { DebounceSelect } from "./debouce.select";
 
 interface IProps {
@@ -29,6 +29,13 @@ const ModalUser = (props: IProps) => {
 
     useEffect(() => {
         if (dataInit?.id) {
+            if (dataInit.company) {
+                setCompanies([{
+                    label: dataInit.company.name,
+                    value: dataInit.company.id,
+                    key: dataInit.company.id,
+                }])
+            }
             if (dataInit.role) {
                 setRoles([
                     {
@@ -41,6 +48,7 @@ const ModalUser = (props: IProps) => {
             form.setFieldsValue({
                 ...dataInit,
                 role: { label: dataInit.role?.name, value: dataInit.role?.id },
+                company: { label: dataInit.company?.name, value: dataInit.company?.id },
             })
 
         }
@@ -114,7 +122,6 @@ const ModalUser = (props: IProps) => {
     }
 
 
-
     async function fetchRoleList(name: string): Promise<ICompanySelect[]> {
         const res = await callFetchRole(`page=1&size=100&name=/${name}/i`);
         if (res && res.data) {
@@ -151,6 +158,7 @@ const ModalUser = (props: IProps) => {
                 initialValues={dataInit?.id ? {
                     ...dataInit,
                     role: { label: dataInit.role?.name, value: dataInit.role?.id },
+                    company: { label: dataInit.company?.name, value: dataInit.company?.id },
                 } : {}}
 
             >
@@ -228,15 +236,7 @@ const ModalUser = (props: IProps) => {
                         </ProForm.Item>
 
                     </Col>
-                    <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProForm.Item
-                            name="company"
-                            label="Thuộc Công Ty"
-                            rules={[{ required: true, message: 'Vui lòng chọn company!' }]}
-                        >
 
-                        </ProForm.Item>
-                    </Col>
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormText
                             label="Địa chỉ"
