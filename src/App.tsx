@@ -6,7 +6,6 @@ import {
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import NotFound from 'components/share/not.found';
 import LoginPage from 'pages/auth/login';
-import RegisterPage from 'pages/auth/register';
 import LayoutAdmin from '@/components/admin/layout/layout.admin';
 import ProtectedRoute from 'components/share/protected-route.ts';
 import HomePage from 'pages/home';
@@ -88,7 +87,6 @@ export default function App() {
       ],
     },
     { path: PATHS.LOGIN, element: <LoginPage /> },
-    { path: PATHS.REGISTER, element: <RegisterPage /> },
   ]);
 
   return <RouterProvider router={router} />;

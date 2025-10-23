@@ -2,7 +2,7 @@ import { ModalForm, ProFormSelect, ProFormText } from "@ant-design/pro-component
 import { Col, Form, Row, message, notification } from "antd";
 import { isMobile } from 'react-device-detect';
 import { callCreatePermission, callUpdatePermission } from "@/config/api";
-import { IPermission } from "@/types/backend";
+import type { IPermission } from "@/types/backend";
 import { ALL_MODULES } from "@/config/permissions";
 import { useEffect } from "react";
 
@@ -13,8 +13,6 @@ interface IProps {
     setDataInit: (v: any) => void;
     reloadTable: () => void;
 }
-
-
 
 const ModalPermission = (props: IProps) => {
     const { openModal, setOpenModal, reloadTable, dataInit, setDataInit } = props;

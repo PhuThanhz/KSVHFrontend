@@ -1,14 +1,18 @@
-import type { IBackendRes, IAccount, IUser, IModelPaginate, IGetAccount, IPermission, IRole } from '@/types/backend';
+import type {
+    IBackendRes,
+    IAccount,
+    IUser,
+    IModelPaginate,
+    IGetAccount,
+    IPermission,
+    IRole,
+    IForgotPasswordRequest,
+    IConfirmResetPasswordRequest,
+    ISendAccountInfoRequest,
+} from '@/types/backend';
 import axios from 'config/axios-customize';
 
-/**
- * 
-Module Auth
- */
-export const callRegister = (name: string, email: string, password: string, age: number, gender: string, address: string) => {
-    return axios.post<IBackendRes<IUser>>('/api/v1/auth/register', { name, email, password, age, gender, address })
-}
-
+/** Module Auth **/
 export const callLogin = (username: string, password: string) => {
     return axios.post<IBackendRes<IAccount>>('/api/v1/auth/login', { username, password })
 }
@@ -44,30 +48,61 @@ export const callUploadSingleFile = (file: any, folderType: string) => {
 }
 
 
-/**
- * 
-Module User
- */
+
+//================================ Module User ================================//
+
 export const callCreateUser = (user: IUser) => {
-    return axios.post<IBackendRes<IUser>>('/api/v1/users', { ...user })
-}
+    const payload = {
+        name: user.name,
+        email: user.email,
+        password: (user as any).password,
+        address: user.address,
+        role: { id: user.role?.id },
+    };
+
+    return axios.post<IBackendRes<IUser>>('/api/v1/users', payload, {
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+
 
 export const callUpdateUser = (user: IUser) => {
-    return axios.put<IBackendRes<IUser>>(`/api/v1/users`, { ...user })
-}
+    const payload = {
+        id: user.id,
+        name: user.name,
+        address: user.address,
+        role: { id: user.role?.id },
+        active: user.active,
+    };
 
-export const callDeleteUser = (id: string) => {
-    return axios.delete<IBackendRes<IUser>>(`/api/v1/users/${id}`);
-}
+    return axios.put<IBackendRes<IUser>>('/api/v1/users', payload, {
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
 
 export const callFetchUser = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IUser>>>(`/api/v1/users?${query}`);
-}
+};
 
-/**
- * 
-Module Permission
- */
+export const callFetchUserById = (id: string | number) => {
+    return axios.get<IBackendRes<IUser>>(`/api/v1/users/${id}`);
+};
+
+export const callForgotPassword = (data: IForgotPasswordRequest) => {
+    return axios.post<IBackendRes<string>>('/api/v1/users/forgot-password', data);
+};
+
+export const callConfirmResetPassword = (data: IConfirmResetPasswordRequest) => {
+    return axios.post<IBackendRes<string>>('/api/v1/users/confirm-reset-password', data);
+};
+
+export const callSendAccountInfo = (data: ISendAccountInfoRequest) => {
+    return axios.post<IBackendRes<string>>('/api/v1/users/send-account-info', data);
+};
+//================================End Module User ================================//
+
+
+/** Module Permission **/
 export const callCreatePermission = (permission: IPermission) => {
     return axios.post<IBackendRes<IPermission>>('/api/v1/permissions', { ...permission })
 }
@@ -88,10 +123,7 @@ export const callFetchPermissionById = (id: string) => {
     return axios.get<IBackendRes<IPermission>>(`/api/v1/permissions/${id}`);
 }
 
-/**
- * 
-Module Role
- */
+/**  Module Role **/
 export const callCreateRole = (role: IRole) => {
     return axios.post<IBackendRes<IRole>>('/api/v1/roles', { ...role })
 }

@@ -1,3 +1,4 @@
+// Backend Response Types
 export interface IBackendRes<T> {
     error?: string | string[];
     message: string;
@@ -5,6 +6,7 @@ export interface IBackendRes<T> {
     data?: T;
 }
 
+// Pagination Interface
 export interface IModelPaginate<T> {
     meta: {
         page: number;
@@ -37,44 +39,41 @@ export interface IAccount {
 
 export interface IGetAccount extends Omit<IAccount, "access_token"> { }
 
-export interface ICompany {
-    id?: string;
-    name?: string;
-    address?: string;
-    logo: string;
-    description?: string;
-    createdBy?: string;
-    isDeleted?: boolean;
-    deletedAt?: boolean | null;
-    createdAt?: string;
-    updatedAt?: string;
+export interface IForgotPasswordRequest {
+    email: string;
 }
 
+export interface IConfirmResetPasswordRequest {
+    email: string;
+    code: string;
+    newPassword: string;
+}
 
+export interface ISendAccountInfoRequest {
+    email: string;
+}
 
 export interface IUser {
-    id?: string;
+    id?: string | number;
+    email?: string;
     name: string;
-    email: string;
     password?: string;
-    age: number;
-    gender: string;
-    address: string;
+    address?: string | null;
     role?: {
-        id: string;
-        name: string;
-    }
+        id: string | number;
+        name?: string;
+    };
+    accountTypeDisplay?: string;
+    avatar?: string | null;
+    active?: boolean;
 
-    company?: {
-        id: string;
-        name: string;
-    }
-    createdBy?: string;
-    isDeleted?: boolean;
-    deletedAt?: boolean | null;
     createdAt?: string;
     updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
 }
+
+
 
 export interface IPermission {
     id?: string;

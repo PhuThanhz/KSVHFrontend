@@ -1,8 +1,8 @@
-import DataTable from "@/components/client/data-table";
+import DataTable from "@/components/admin/data-table";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { IPermission, IRole } from "@/types/backend";
+import type { IPermission, IRole } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { ActionType, ProColumns } from '@ant-design/pro-components';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { Button, Popconfirm, Space, Tag, message, notification } from "antd";
 import { useState, useRef, useEffect } from 'react';
 import dayjs from 'dayjs';
@@ -18,7 +18,8 @@ import { groupByPermission } from "@/config/utils";
 const RolePage = () => {
     const [openModal, setOpenModal] = useState<boolean>(false);
 
-    const tableRef = useRef<ActionType>();
+    const tableRef = useRef<ActionType>(null!);
+
 
     const isFetching = useAppSelector(state => state.role.isFetching);
     const meta = useAppSelector(state => state.role.meta);
