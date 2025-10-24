@@ -1,29 +1,25 @@
 import DataTable from "@/components/admin/data-table";
-import type { IUser } from "@/types/backend";
-import { EditOutlined, PlusOutlined, EyeOutlined } from "@ant-design/icons";
+import type { ICompany } from "@/types/backend";
+import { EditOutlined, PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Tag, Select } from "antd";
+import { Button, Space, Tag, Popconfirm } from "antd";
 import { useEffect, useState } from "react";
 import queryString from "query-string";
-import ModalUser from "@/components/admin/user/modal.user";
-import ViewDetailUser from "@/components/admin/user/view.user";
+import ModalCompany from "@/components/admin/company/modal.company";
+import ViewDetailCompany from "@/components/admin/company/view.company";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { sfLike } from "spring-filter-query-builder";
-import { useUsersQuery } from "@/hooks/useUsers";
+import { useCompaniesQuery, useDeleteCompanyMutation } from "@/hooks/useCompanies";
 import DateRangeFilter from "@/components/common/DateRangeFilter";
-import { callFetchRole } from "@/config/api";
 
-const UserPage = () => {
+const CompanyPage = () => {
     const [openModal, setOpenModal] = useState(false);
-    const [dataInit, setDataInit] = useState<IUser | null>(null);
+    const [dataInit, setDataInit] = useState<ICompany | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+    const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
 
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
-    const [activeFilter, setActiveFilter] = useState<boolean | null>(null);
-    const [roleFilter, setRoleFilter] = useState<string | null>(null);
-    const [roleOptions, setRoleOptions] = useState<{ label: string; value: string }[]>([]);
 
     const [query, setQuery] = useState<string>(() => {
         return queryString.stringify({
@@ -33,24 +29,9 @@ const UserPage = () => {
         });
     });
 
-    const { data, isFetching } = useUsersQuery(query);
+    const { data, isFetching } = useCompaniesQuery(query);
+    const { mutate: deleteCompany } = useDeleteCompanyMutation();
 
-    //  Lấy danh sách role (giống modal user)
-    useEffect(() => {
-        const fetchRoles = async () => {
-            const res = await callFetchRole("page=1&size=100");
-            if (res?.data?.result) {
-                const list = res.data.result.map((r: any) => ({
-                    label: r.name,
-                    value: r.name,
-                }));
-                setRoleOptions(list);
-            }
-        };
-        fetchRoles();
-    }, []);
-
-    //  Build query string có thêm role + active
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
@@ -59,26 +40,11 @@ const UserPage = () => {
         };
 
         if (params.name) q.filter = sfLike("name", params.name);
-        if (params.email)
+        if (params.companyCode)
             q.filter = q.filter
-                ? `${q.filter} and ${sfLike("email", params.email)}`
-                : sfLike("email", params.email);
+                ? `${q.filter} and ${sfLike("companyCode", params.companyCode)}`
+                : sfLike("companyCode", params.companyCode);
 
-        // Lọc vai trò
-        if (roleFilter) {
-            q.filter = q.filter
-                ? `${q.filter} and role.name='${roleFilter}'`
-                : `role.name='${roleFilter}'`;
-        }
-
-        // Lọc trạng thái
-        if (activeFilter !== null) {
-            q.filter = q.filter
-                ? `${q.filter} and active=${activeFilter}`
-                : `active=${activeFilter}`;
-        }
-
-        // Lọc theo ngày
         if (createdAtFilter) {
             q.filter = q.filter ? `${q.filter} and ${createdAtFilter}` : createdAtFilter;
         }
@@ -91,14 +57,12 @@ const UserPage = () => {
         let sortBy = "";
         if (sort?.name)
             sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
-        else if (sort?.email)
-            sortBy = sort.email === "ascend" ? "sort=email,asc" : "sort=email,desc";
         else sortBy = "sort=createdAt,desc";
 
         return `${temp}&${sortBy}`;
     };
 
-    const columns: ProColumns<IUser>[] = [
+    const columns: ProColumns<ICompany>[] = [
         {
             title: "STT",
             key: "index",
@@ -110,57 +74,49 @@ const UserPage = () => {
             hideInSearch: true,
         },
         {
-            title: "Tên hiển thị",
+            title: "Mã công ty",
+            dataIndex: "companyCode",
+            sorter: true,
+        },
+        {
+            title: "Tên công ty",
             dataIndex: "name",
             sorter: true,
         },
         {
+            title: "Địa chỉ",
+            dataIndex: "address",
+            hideInSearch: true,
+            ellipsis: true,
+        },
+        {
+            title: "Số điện thoại",
+            dataIndex: "phone",
+            hideInSearch: true,
+        },
+        {
             title: "Email",
             dataIndex: "email",
-            sorter: true,
-        },
-        {
-            title: "Vai trò",
-            dataIndex: ["role", "name"],
-            sorter: true,
             hideInSearch: true,
-            render: (_, record) =>
-                record.role?.name ? (
-                    <Tag color="blue">{record.role.name}</Tag>
-                ) : (
-                    <Tag color="default">Chưa có vai trò</Tag>
-                ),
-        },
-        {
-            title: "Trạng thái",
-            dataIndex: "active",
-            sorter: true,
-            hideInSearch: true,
-            render: (_, record) =>
-                record.active ? (
-                    <Tag color="green">Đang hoạt động</Tag>
-                ) : (
-                    <Tag color="red">Ngừng hoạt động</Tag>
-                ),
         },
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 120,
+            width: 140,
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.USERS.GET_BY_ID} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.COMPANY.GET_BY_ID} hideChildren>
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
                             onClick={() => {
-                                setSelectedUserId(Number(entity.id));
+                                setSelectedCompanyId(Number(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.USERS.UPDATE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.COMPANY.UPDATE} hideChildren>
                         <EditOutlined
                             style={{
                                 fontSize: 18,
@@ -173,6 +129,23 @@ const UserPage = () => {
                             }}
                         />
                     </Access>
+
+                    <Access permission={ALL_PERMISSIONS.COMPANY.DELETE} hideChildren>
+                        <Popconfirm
+                            title="Xác nhận xóa công ty này?"
+                            onConfirm={() => {
+                                if (entity.id) deleteCompany(Number(entity.id));
+                            }}
+                        >
+                            <DeleteOutlined
+                                style={{
+                                    fontSize: 18,
+                                    color: "#ff4d4f",
+                                    cursor: "pointer",
+                                }}
+                            />
+                        </Popconfirm>
+                    </Access>
                 </Space>
             ),
         },
@@ -180,9 +153,9 @@ const UserPage = () => {
 
     return (
         <div>
-            <Access permission={ALL_PERMISSIONS.USERS.GET_PAGINATE}>
-                <DataTable<IUser>
-                    headerTitle="Danh sách người dùng"
+            <Access permission={ALL_PERMISSIONS.COMPANY.GET_PAGINATE}>
+                <DataTable<ICompany>
+                    headerTitle="Danh sách công ty"
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
@@ -207,7 +180,7 @@ const UserPage = () => {
                                 <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
-                                người dùng
+                                công ty
                             </div>
                         ),
                         style: {
@@ -223,28 +196,6 @@ const UserPage = () => {
                     rowSelection={false}
                     toolBarRender={() => [
                         <Space key="toolbar" size={12} align="center" wrap>
-                            {/* Bộ lọc vai trò */}
-                            <Select
-                                placeholder="Chọn vai trò"
-                                allowClear
-                                style={{ width: 180 }}
-                                options={roleOptions}
-                                onChange={(value) => setRoleFilter(value || null)}
-                            />
-                            {/* Bộ lọc trạng thái */}
-                            <Select
-                                placeholder="Trạng thái"
-                                allowClear
-                                style={{ width: 150 }}
-                                options={[
-                                    { label: "Đang hoạt động", value: true },
-                                    { label: "Ngừng hoạt động", value: false },
-                                ]}
-                                onChange={(value) =>
-                                    setActiveFilter(value === undefined ? null : value)
-                                }
-                            />
-                            {/* Bộ lọc ngày tạo */}
                             <DateRangeFilter
                                 label="Ngày tạo"
                                 fieldName="createdAt"
@@ -252,7 +203,7 @@ const UserPage = () => {
                                 width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
-                            <Access permission={ALL_PERMISSIONS.USERS.CREATE}>
+                            <Access permission={ALL_PERMISSIONS.COMPANY.CREATE}>
                                 <Button
                                     icon={<PlusOutlined />}
                                     type="primary"
@@ -269,22 +220,20 @@ const UserPage = () => {
                 />
             </Access>
 
-            {/* Modal Tạo / Sửa */}
-            <ModalUser
+            <ModalCompany
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 dataInit={dataInit}
                 setDataInit={setDataInit}
             />
 
-            {/* Drawer Xem chi tiết */}
-            <ViewDetailUser
+            <ViewDetailCompany
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
-                userId={selectedUserId}
+                companyId={selectedCompanyId}
             />
         </div>
     );
 };
 
-export default UserPage;
+export default CompanyPage;

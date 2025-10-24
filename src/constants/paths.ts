@@ -9,6 +9,11 @@ export const PATHS = {
         USER: "/admin/user",
         ROLE: "/admin/role",
         PERMISSION: "/admin/permission",
+        COMPANY: "/admin/company",
+        ASSET_TYPE: "/admin/asset-type",
+        DEPARTMENT: "/admin/department",
+        POSITION: "/admin/position",
+        EMPLOYEE: "/admin/employee",
     },
 
     CLIENT: {

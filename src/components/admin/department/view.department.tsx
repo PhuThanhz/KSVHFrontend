@@ -1,23 +1,23 @@
 import { Badge, Descriptions, Drawer, Typography, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
-import { useUserByIdQuery } from "@/hooks/useUsers";
+import { useDepartmentByIdQuery } from "@/hooks/useDepartments";
 
 const { Text, Title } = Typography;
 
 interface IProps {
     onClose: (v: boolean) => void;
     open: boolean;
-    userId?: string | number | null;
+    departmentId?: string | number | null;
 }
 
-const ViewDetailUser = ({ onClose, open, userId }: IProps) => {
-    const { data: user, isLoading, isError } = useUserByIdQuery(userId || undefined);
+const ViewDetailDepartment = ({ onClose, open, departmentId }: IProps) => {
+    const { data: dept, isLoading, isError } = useDepartmentByIdQuery(departmentId || undefined);
 
     return (
         <Drawer
             title={
                 <Title level={4} style={{ margin: 0 }}>
-                    Thông tin người dùng
+                    Thông tin phòng ban
                 </Title>
             }
             placement="right"
@@ -31,8 +31,8 @@ const ViewDetailUser = ({ onClose, open, userId }: IProps) => {
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
                     <Spin size="large" />
                 </div>
-            ) : isError || !user ? (
-                <Empty description="Không tìm thấy thông tin người dùng" />
+            ) : isError || !dept ? (
+                <Empty description="Không tìm thấy thông tin phòng ban" />
             ) : (
                 <>
                     <Descriptions
@@ -50,50 +50,34 @@ const ViewDetailUser = ({ onClose, open, userId }: IProps) => {
                             color: "#262626",
                         }}
                     >
-                        <Descriptions.Item label="Tên hiển thị">
-                            <Text strong>{user?.name ?? "-"}</Text>
+                        <Descriptions.Item label="Mã phòng ban">
+                            <Text strong>{dept.departmentCode ?? "-"}</Text>
                         </Descriptions.Item>
 
-                        <Descriptions.Item label="Email">
-                            <Text>{user?.email ?? "-"}</Text>
+                        <Descriptions.Item label="Tên phòng ban">
+                            <Text>{dept.name ?? "-"}</Text>
                         </Descriptions.Item>
 
-                        <Descriptions.Item label="Vai trò">
-                            {user?.role?.name ? (
-                                <Badge status="processing" text={user.role.name} />
+                        <Descriptions.Item label="Công ty">
+                            {dept.company?.name ? (
+                                <Badge status="processing" text={dept.company.name} />
                             ) : (
-                                <Badge status="default" text="Chưa có vai trò" />
-                            )}
-                        </Descriptions.Item>
-
-                        <Descriptions.Item label="Loại tài khoản">
-                            <Text>{user?.accountTypeDisplay ?? "-"}</Text>
-                        </Descriptions.Item>
-
-                        <Descriptions.Item label="Địa chỉ">
-                            <Text>{user?.address ?? "-"}</Text>
-                        </Descriptions.Item>
-
-                        <Descriptions.Item label="Trạng thái">
-                            {user?.active ? (
-                                <Badge status="success" text="Đang hoạt động" />
-                            ) : (
-                                <Badge status="error" text="Ngừng hoạt động" />
+                                <Badge status="default" text="Chưa có công ty" />
                             )}
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Ngày tạo">
                             <Text type="secondary">
-                                {user?.createdAt
-                                    ? dayjs(user.createdAt).format("DD-MM-YYYY HH:mm")
+                                {dept.createdAt
+                                    ? dayjs(dept.createdAt).format("DD-MM-YYYY HH:mm")
                                     : "-"}
                             </Text>
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Ngày cập nhật">
                             <Text type="secondary">
-                                {user?.updatedAt
-                                    ? dayjs(user.updatedAt).format("DD-MM-YYYY HH:mm")
+                                {dept.updatedAt
+                                    ? dayjs(dept.updatedAt).format("DD-MM-YYYY HH:mm")
                                     : "-"}
                             </Text>
                         </Descriptions.Item>
@@ -103,8 +87,8 @@ const ViewDetailUser = ({ onClose, open, userId }: IProps) => {
 
                     <div style={{ textAlign: "right", marginTop: 10 }}>
                         <Text type="secondary">
-                            Người tạo: <b>{user?.createdBy ?? "Không rõ"}</b> <br />
-                            Người cập nhật: <b>{user?.updatedBy ?? "Không rõ"}</b>
+                            Người tạo: <b>{dept?.createdBy ?? "Không rõ"}</b> <br />
+                            Người cập nhật: <b>{dept?.updatedBy ?? "Không rõ"}</b>
                         </Text>
                     </div>
                 </>
@@ -113,4 +97,4 @@ const ViewDetailUser = ({ onClose, open, userId }: IProps) => {
     );
 };
 
-export default ViewDetailUser;
+export default ViewDetailDepartment;

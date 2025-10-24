@@ -1,134 +1,118 @@
 import DataTable from "@/components/admin/data-table";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import type { IPermission } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { Button, Popconfirm, Space, message, notification } from "antd";
-import { useState, useRef } from 'react';
-import dayjs from 'dayjs';
-import { callDeletePermission } from "@/config/api";
-import queryString from 'query-string';
-import { fetchPermission } from "@/redux/slice/permissionSlide";
-import ViewDetailPermission from "@/components/admin/permission/view.permission";
-import ModalPermission from "@/components/admin/permission/modal.permission";
+import type { ActionType, ProColumns } from "@ant-design/pro-components";
+import { Button, Popconfirm, Space } from "antd";
+import { useState, useRef } from "react";
+import dayjs from "dayjs";
+import queryString from "query-string";
 import { colorMethod } from "@/config/utils";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import ModalPermission from "@/components/admin/permission/modal.permission";
+import ViewDetailPermission from "@/components/admin/permission/view.permission";
+import {
+    usePermissionsQuery,
+    useDeletePermissionMutation,
+} from "@/hooks/usePermissions";
 
 const PermissionPage = () => {
-    const [openModal, setOpenModal] = useState<boolean>(false);
+    const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IPermission | null>(null);
-    const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
+    const [openViewDetail, setOpenViewDetail] = useState(false);
+    const [query, setQuery] = useState<string>("page=1&pageSize=10&sort=createdAt,desc");
+
     const tableRef = useRef<ActionType>(null!);
 
+    //  React Query hooks
+    const { data, isFetching } = usePermissionsQuery(query);
+    const deleteMutation = useDeletePermissionMutation();
 
-    const isFetching = useAppSelector(state => state.permission.isFetching);
-    const meta = useAppSelector(state => state.permission.meta);
-    const permissions = useAppSelector(state => state.permission.result);
-    const dispatch = useAppDispatch();
-
-    const handleDeletePermission = async (id: string | undefined) => {
-        if (id) {
-            const res = await callDeletePermission(id);
-            if (res && res.statusCode === 200) {
-                message.success('Xóa Permission thành công');
-                reloadTable();
-            } else {
-                notification.error({
-                    message: 'Có lỗi xảy ra',
-                    description: res.error
-                });
-            }
-        }
-    }
+    const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
+    const permissions = data?.result ?? [];
 
     const reloadTable = () => {
-        tableRef?.current?.reload();
-    }
+        setQuery("page=1&pageSize=10&sort=createdAt,desc");
+    };
+
+    const handleDeletePermission = async (id?: string) => {
+        if (!id) return;
+        await deleteMutation.mutateAsync(id, {
+            onSuccess: () => reloadTable(),
+        });
+    };
 
     const columns: ProColumns<IPermission>[] = [
         {
-            title: 'Id',
-            dataIndex: 'id',
+            title: "Id",
+            dataIndex: "id",
             width: 50,
-            render: (text, record, index, action) => {
-                return (
-                    <a href="#" onClick={() => {
+            render: (_, record) => (
+                <a
+                    onClick={() => {
                         setOpenViewDetail(true);
                         setDataInit(record);
-                    }}>
-                        {record.id}
-                    </a>
-                )
-            },
+                    }}
+                >
+                    {record.id}
+                </a>
+            ),
             hideInSearch: true,
         },
+        { title: "Name", dataIndex: "name", sorter: true },
+        { title: "API", dataIndex: "apiPath", sorter: true },
         {
-            title: 'Name',
-            dataIndex: 'name',
+            title: "Method",
+            dataIndex: "method",
             sorter: true,
+            render: (_, record) => (
+                <p
+                    style={{
+                        paddingLeft: 10,
+                        fontWeight: "bold",
+                        marginBottom: 0,
+                        color: colorMethod(record.method as string),
+                    }}
+                >
+                    {record.method}
+                </p>
+            ),
         },
+        { title: "Module", dataIndex: "module", sorter: true },
         {
-            title: 'API',
-            dataIndex: 'apiPath',
-            sorter: true,
-        },
-        {
-            title: 'Method',
-            dataIndex: 'method',
-            sorter: true,
-            render(dom, entity, index, action, schema) {
-                return (
-                    <p style={{ paddingLeft: 10, fontWeight: 'bold', marginBottom: 0, color: colorMethod(entity?.method as string) }}>{entity?.method || ''}</p>
-                )
-            },
-        },
-        {
-            title: 'Module',
-            dataIndex: 'module',
-            sorter: true,
-        },
-        {
-            title: 'CreatedAt',
-            dataIndex: 'createdAt',
+            title: "CreatedAt",
+            dataIndex: "createdAt",
             width: 200,
             sorter: true,
-            render: (text, record, index, action) => {
-                return (
-                    <>{record.createdAt ? dayjs(record.createdAt).format('DD-MM-YYYY HH:mm:ss') : ""}</>
-                )
-            },
+            render: (_, record) =>
+                record.createdAt
+                    ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm:ss")
+                    : "",
             hideInSearch: true,
         },
         {
-            title: 'UpdatedAt',
-            dataIndex: 'updatedAt',
+            title: "UpdatedAt",
+            dataIndex: "updatedAt",
             width: 200,
             sorter: true,
-            render: (text, record, index, action) => {
-                return (
-                    <>{record.updatedAt ? dayjs(record.updatedAt).format('DD-MM-YYYY HH:mm:ss') : ""}</>
-                )
-            },
+            render: (_, record) =>
+                record.updatedAt
+                    ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm:ss")
+                    : "",
             hideInSearch: true,
         },
         {
-
-            title: 'Actions',
+            title: "Actions",
             hideInSearch: true,
             width: 50,
-            render: (_value, entity, _index, _action) => (
+            render: (_, entity) => (
                 <Space>
                     <Access
                         permission={ALL_PERMISSIONS.PERMISSIONS.UPDATE}
                         hideChildren
                     >
                         <EditOutlined
-                            style={{
-                                fontSize: 20,
-                                color: '#ffa500',
-                            }}
-                            type=""
+                            style={{ fontSize: 20, color: "#ffa500" }}
                             onClick={() => {
                                 setOpenModal(true);
                                 setDataInit(entity);
@@ -141,43 +125,38 @@ const PermissionPage = () => {
                     >
                         <Popconfirm
                             placement="leftTop"
-                            title={"Xác nhận xóa permission"}
-                            description={"Bạn có chắc chắn muốn xóa permission này ?"}
+                            title="Xác nhận xóa permission"
+                            description="Bạn có chắc chắn muốn xóa permission này?"
                             onConfirm={() => handleDeletePermission(entity.id)}
                             okText="Xác nhận"
                             cancelText="Hủy"
                         >
                             <span style={{ cursor: "pointer", margin: "0 10px" }}>
                                 <DeleteOutlined
-                                    style={{
-                                        fontSize: 20,
-                                        color: '#ff4d4f',
-                                    }}
+                                    style={{ fontSize: 20, color: "#ff4d4f" }}
                                 />
                             </span>
                         </Popconfirm>
                     </Access>
                 </Space>
             ),
-
         },
     ];
 
     const buildQuery = (params: any, sort: any, filter: any) => {
         const clone = { ...params };
+        const parts: string[] = [];
 
-        let parts = [];
         if (clone.name) parts.push(`name ~ '${clone.name}'`);
         if (clone.apiPath) parts.push(`apiPath ~ '${clone.apiPath}'`);
         if (clone.method) parts.push(`method ~ '${clone.method}'`);
         if (clone.module) parts.push(`module ~ '${clone.module}'`);
 
-        clone.filter = parts.join(' and ');
+        clone.filter = parts.join(" and ");
         if (!clone.filter) delete clone.filter;
 
         clone.page = clone.current;
         clone.size = clone.pageSize;
-
         delete clone.current;
         delete clone.pageSize;
         delete clone.name;
@@ -187,33 +166,35 @@ const PermissionPage = () => {
 
         let temp = queryString.stringify(clone);
 
-        let sortBy = "";
-        const fields = ["name", "apiPath", "method", "module", "createdAt", "updatedAt"];
+        const fields = [
+            "name",
+            "apiPath",
+            "method",
+            "module",
+            "createdAt",
+            "updatedAt",
+        ];
 
+        let sortBy = "";
         if (sort) {
             for (const field of fields) {
                 if (sort[field]) {
-                    sortBy = `sort=${field},${sort[field] === 'ascend' ? 'asc' : 'desc'}`;
-                    break;  // Remove this if you want to handle multiple sort parameters
+                    sortBy = `sort=${field},${sort[field] === "ascend" ? "asc" : "desc"
+                        }`;
+                    break;
                 }
             }
         }
 
-        //mặc định sort theo updatedAt
-        if (Object.keys(sortBy).length === 0) {
-            temp = `${temp}&sort=updatedAt,desc`;
-        } else {
-            temp = `${temp}&${sortBy}`;
-        }
+        if (!sortBy) temp = `${temp}&sort=updatedAt,desc`;
+        else temp = `${temp}&${sortBy}`;
 
         return temp;
-    }
+    };
 
     return (
         <div>
-            <Access
-                permission={ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE}
-            >
+            <Access permission={ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE}>
                 <DataTable<IPermission>
                     actionRef={tableRef}
                     headerTitle="Danh sách Permissions (Quyền Hạn)"
@@ -221,34 +202,60 @@ const PermissionPage = () => {
                     loading={isFetching}
                     columns={columns}
                     dataSource={permissions}
-                    request={async (params, sort, filter): Promise<any> => {
-                        const query = buildQuery(params, sort, filter);
-                        dispatch(fetchPermission({ query }))
+                    request={async (params, sort, filter) => {
+                        const q = buildQuery(params, sort, filter);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: permissions || [],
+                            success: true,
+                            total: meta.total || 0,
+                        });
                     }}
                     scroll={{ x: true }}
-                    pagination={
-                        {
-                            current: meta.page,
-                            pageSize: meta.pageSize,
-                            showSizeChanger: true,
-                            total: meta.total,
-                            showTotal: (total, range) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
-                        }
-                    }
-                    rowSelection={false}
-                    toolBarRender={(_action, _rows): any => {
-                        return (
-                            <Button
-                                icon={<PlusOutlined />}
-                                type="primary"
-                                onClick={() => setOpenModal(true)}
-                            >
-                                Thêm mới
-                            </Button>
-                        );
+                    pagination={{
+                        current: data?.meta?.page,
+                        pageSize: data?.meta?.pageSize,
+                        showSizeChanger: true,
+                        total: data?.meta?.total,
+                        showQuickJumper: true,
+                        size: "default",
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13, color: "#595959" }}>
+                                <span style={{ fontWeight: 500, color: "#000" }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                quyền
+                            </div>
+                        ),
+                        style: {
+                            marginTop: 16,
+                            padding: "12px 24px",
+                            background: "#fff",
+                            borderRadius: 8,
+                            borderTop: "1px solid #f0f0f0",
+                            display: "flex",
+                            justifyContent: "flex-end",
+                        },
                     }}
+                    rowSelection={false}
+                    toolBarRender={() => [
+                        <Button
+                            key="create"
+                            icon={<PlusOutlined />}
+                            type="primary"
+                            onClick={() => setOpenModal(true)}
+                        >
+                            Thêm mới
+                        </Button>,
+                    ]}
+
                 />
             </Access>
+
             <ModalPermission
                 openModal={openModal}
                 setOpenModal={setOpenModal}
@@ -264,7 +271,7 @@ const PermissionPage = () => {
                 setDataInit={setDataInit}
             />
         </div>
-    )
-}
+    );
+};
 
 export default PermissionPage;

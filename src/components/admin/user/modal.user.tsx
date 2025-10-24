@@ -1,17 +1,17 @@
 import { ModalForm, ProForm, ProFormText } from "@ant-design/pro-components";
-import { Col, Form, Row, message, notification, Switch } from "antd";
+import { Col, Form, Row, Switch } from "antd";
 import { isMobile } from "react-device-detect";
 import { useEffect, useState } from "react";
-import { callCreateUser, callFetchRole, callUpdateUser } from "@/config/api";
 import type { IUser } from "@/types/backend";
-import { DebounceSelect } from "./debouce.select";
+import { DebounceSelect } from "../debouce.select";
+import { useCreateUserMutation, useUpdateUserMutation } from "@/hooks/useUsers";
+import { callFetchRole } from "@/config/api";
 
 interface IProps {
     openModal: boolean;
     setOpenModal: (v: boolean) => void;
     dataInit?: IUser | null;
     setDataInit: (v: any) => void;
-    reloadTable: () => void;
 }
 
 export interface IRoleSelect {
@@ -20,10 +20,13 @@ export interface IRoleSelect {
     key?: string | number;
 }
 
-const ModalUser = (props: IProps) => {
-    const { openModal, setOpenModal, reloadTable, dataInit, setDataInit } = props;
+const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) => {
     const [selectedRole, setSelectedRole] = useState<IRoleSelect | null>(null);
     const [form] = Form.useForm();
+    const isEdit = Boolean(dataInit?.id);
+
+    const { mutate: createUser, isPending: isCreating } = useCreateUserMutation();
+    const { mutate: updateUser, isPending: isUpdating } = useUpdateUserMutation();
 
     useEffect(() => {
         if (dataInit?.id && dataInit.role) {
@@ -33,7 +36,6 @@ const ModalUser = (props: IProps) => {
                 key: dataInit.role.id,
             };
             setSelectedRole(roleItem);
-
             form.setFieldsValue({
                 email: dataInit.email,
                 name: dataInit.name,
@@ -56,7 +58,6 @@ const ModalUser = (props: IProps) => {
 
     const submitUser = async (valuesForm: any) => {
         const { name, email, password, address, role, active } = valuesForm;
-
         const payload: IUser = dataInit?.id
             ? {
                 id: dataInit.id,
@@ -73,18 +74,13 @@ const ModalUser = (props: IProps) => {
                 role: { id: Number(role?.value) },
             };
 
-        const res = dataInit?.id
-            ? await callUpdateUser(payload)
-            : await callCreateUser(payload);
-
-        if (res?.data) {
-            message.success(`${dataInit?.id ? "Cập nhật" : "Tạo mới"} user thành công`);
-            handleReset();
-            reloadTable();
+        if (isEdit) {
+            updateUser(payload, {
+                onSuccess: () => handleReset(),
+            });
         } else {
-            notification.error({
-                message: "Có lỗi xảy ra",
-                description: res?.message || "Không thể thực hiện thao tác",
+            createUser(payload, {
+                onSuccess: () => handleReset(),
             });
         }
     };
@@ -100,8 +96,6 @@ const ModalUser = (props: IProps) => {
         return [];
     }
 
-    const isEdit = Boolean(dataInit?.id);
-
     return (
         <ModalForm
             title={isEdit ? "Cập nhật User" : "Tạo mới User"}
@@ -115,6 +109,7 @@ const ModalUser = (props: IProps) => {
                 maskClosable: false,
                 okText: isEdit ? "Cập nhật" : "Tạo mới",
                 cancelText: "Hủy",
+                confirmLoading: isCreating || isUpdating,
             }}
             scrollToFirstError
             preserve={false}
@@ -151,9 +146,7 @@ const ModalUser = (props: IProps) => {
                         label="Mật khẩu"
                         name="password"
                         disabled={isEdit}
-                        rules={[
-                            { required: !isEdit, message: "Vui lòng nhập mật khẩu" },
-                        ]}
+                        rules={[{ required: !isEdit, message: "Vui lòng nhập mật khẩu" }]}
                         placeholder="Nhập mật khẩu"
                     />
                 </Col>

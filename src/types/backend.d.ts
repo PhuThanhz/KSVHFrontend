@@ -103,3 +103,88 @@ export interface IRole {
     createdAt?: string;
     updatedAt?: string;
 }
+/** ==============================
+ *   COMPANY MODULE
+ *  ============================== */
+export interface ICompany {
+    id?: number | string;
+    companyCode: string;
+    name: string;
+    address?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+/** ==============================
+ *   ASSET TYPE MODULE
+ *  ============================== */
+export interface IAssetType {
+    id?: number | string;
+    assetTypeCode: string;
+    assetTypeName: string;
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+/** ==============================
+ *   DEPARTMENT MODULE
+ *  ============================== */
+export interface IDepartment {
+    id?: number | string;
+    departmentCode: string;
+    name: string;
+    company: {
+        id: number | string;
+        name?: string;
+    };
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+
+/** ==============================
+ *   EMPLOYEE MODULE
+ *  ============================== */
+export interface IEmployee {
+    id?: number | string;
+    employeeCode: string;
+    fullName: string;
+    phone?: string | null;
+    email?: string | null;
+
+    company: {
+        id: number | string;
+        name?: string;
+    };
+    department: {
+        id: number | string;
+        name?: string;
+    };
+    position: {
+        id: number | string;
+        name?: string;
+    };
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string;
+    updatedBy?: string;
+}
+
+/** ==============================
+ *   EMPLOYEE POSITION 
+ *  ============================== */
+
+export interface IPosition {
+    id?: number | string;
+    name: string;
+
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string;
+    updatedBy?: string;
+}

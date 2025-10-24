@@ -6,13 +6,19 @@ import type {
     IGetAccount,
     IPermission,
     IRole,
+    IEmployee,
     IForgotPasswordRequest,
     IConfirmResetPasswordRequest,
     ISendAccountInfoRequest,
+    ICompany,
+    IAssetType,
+    IDepartment,
+    IPosition
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 
-/** Module Auth **/
+//================================ Module Auth ================================//
+
 export const callLogin = (username: string, password: string) => {
     return axios.post<IBackendRes<IAccount>>('/api/v1/auth/login', { username, password })
 }
@@ -46,9 +52,6 @@ export const callUploadSingleFile = (file: any, folderType: string) => {
         },
     });
 }
-
-
-
 //================================ Module User ================================//
 
 export const callCreateUser = (user: IUser) => {
@@ -99,10 +102,9 @@ export const callConfirmResetPassword = (data: IConfirmResetPasswordRequest) => 
 export const callSendAccountInfo = (data: ISendAccountInfoRequest) => {
     return axios.post<IBackendRes<string>>('/api/v1/users/send-account-info', data);
 };
-//================================End Module User ================================//
 
+//================================Module Permission ================================//
 
-/** Module Permission **/
 export const callCreatePermission = (permission: IPermission) => {
     return axios.post<IBackendRes<IPermission>>('/api/v1/permissions', { ...permission })
 }
@@ -123,7 +125,7 @@ export const callFetchPermissionById = (id: string) => {
     return axios.get<IBackendRes<IPermission>>(`/api/v1/permissions/${id}`);
 }
 
-/**  Module Role **/
+//================================Module Role ================================//
 export const callCreateRole = (role: IRole) => {
     return axios.post<IBackendRes<IRole>>('/api/v1/roles', { ...role })
 }
@@ -143,3 +145,175 @@ export const callFetchRole = (query: string) => {
 export const callFetchRoleById = (id: string) => {
     return axios.get<IBackendRes<IRole>>(`/api/v1/roles/${id}`);
 }
+
+//================================Module Company ================================//
+
+export const callCreateCompany = (company: ICompany) => {
+    const payload = {
+        companyCode: company.companyCode, name: company.name, address: company.address, phone: company.phone, email: company.email,
+    };
+    return axios.post<IBackendRes<ICompany>>('/api/v1/companies', payload, {
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+
+export const callUpdateCompany = (company: ICompany) => {
+    const payload = {
+        id: company.id, companyCode: company.companyCode, name: company.name, address: company.address, phone: company.phone, email: company.email,
+    };
+    return axios.put<IBackendRes<ICompany>>('/api/v1/companies', payload, {
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+
+export const callDeleteCompany = (id: number | string) => {
+    return axios.delete<IBackendRes<ICompany>>(`/api/v1/companies/${id}`);
+};
+
+
+export const callFetchCompany = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ICompany>>>(`/api/v1/companies?${query}`);
+};
+
+
+export const callFetchCompanyById = (id: number | string) => {
+    return axios.get<IBackendRes<ICompany>>(`/api/v1/companies/${id}`);
+};
+//================================Module AssetType  ================================//
+export const callCreateAssetType = (assetType: IAssetType) => {
+    const payload = {
+        assetTypeCode: assetType.assetTypeCode,
+        assetTypeName: assetType.assetTypeName,
+    };
+
+    return axios.post<IBackendRes<IAssetType>>("/api/v1/asset-types", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdateAssetType = (assetType: IAssetType) => {
+    const payload = {
+        id: assetType.id,
+        assetTypeCode: assetType.assetTypeCode,
+        assetTypeName: assetType.assetTypeName,
+    };
+
+    return axios.put<IBackendRes<IAssetType>>("/api/v1/asset-types", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeleteAssetType = (id: number | string) => {
+    return axios.delete<IBackendRes<null>>(`/api/v1/asset-types/${id}`);
+};
+
+export const callFetchAssetType = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IAssetType>>>(`/api/v1/asset-types?${query}`);
+};
+
+export const callFetchAssetTypeById = (id: number | string) => {
+    return axios.get<IBackendRes<IAssetType>>(`/api/v1/asset-types/${id}`);
+};
+
+
+//================================Module Department  ================================//
+export const callCreateDepartment = (dept: IDepartment) => {
+    const payload = {
+        departmentCode: dept.departmentCode,
+        name: dept.name,
+        company: { id: dept.company.id },
+    };
+
+    return axios.post<IBackendRes<IDepartment>>("/api/v1/departments", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdateDepartment = (dept: IDepartment) => {
+    const payload = {
+        id: dept.id,
+        departmentCode: dept.departmentCode,
+        name: dept.name,
+        company: { id: dept.company.id },
+    };
+    return axios.put<IBackendRes<IDepartment>>("/api/v1/departments", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callDeleteDepartment = (id: number | string) => {
+    return axios.delete<IBackendRes<null>>(`/api/v1/departments/${id}`);
+};
+export const callFetchDepartment = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IDepartment>>>(`/api/v1/departments?${query}`);
+};
+
+export const callFetchDepartmentById = (id: number | string) => {
+    return axios.get<IBackendRes<IDepartment>>(`/api/v1/departments/${id}`);
+};
+/** ======================== Module Position ======================== **/
+
+export const callFetchPosition = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IPosition>>>(`/api/v1/positions?${query}`);
+};
+
+export const callFetchPositionById = (id: string | number) => {
+    return axios.get<IBackendRes<IPosition>>(`/api/v1/positions/${id}`);
+};
+
+export const callCreatePosition = (data: { name: string }) => {
+    return axios.post<IBackendRes<IPosition>>(`/api/v1/positions`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdatePosition = (data: IPosition) => {
+    return axios.put<IBackendRes<IPosition>>(`/api/v1/positions`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeletePosition = (id: string | number) => {
+    return axios.delete<IBackendRes<IPosition>>(`/api/v1/positions/${id}`);
+};
+
+/** ======================== Module Employee ======================== **/
+
+export const callFetchEmployee = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IEmployee>>>(`/api/v1/employees?${query}`);
+};
+
+export const callFetchEmployeeById = (id: string | number) => {
+    return axios.get<IBackendRes<IEmployee>>(`/api/v1/employees/${id}`);
+};
+
+export const callCreateEmployee = (data: {
+    employeeCode: string;
+    fullName: string;
+    phone?: string;
+    email?: string;
+    departmentId: number;
+    positionId: number;
+    companyId: number;
+}) => {
+    return axios.post<IBackendRes<IEmployee>>(`/api/v1/employees`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callUpdateEmployee = (
+    id: string | number,
+    data: {
+        employeeCode: string;
+        fullName: string;
+        phone?: string;
+        email?: string;
+        departmentId: number;
+        positionId: number;
+        companyId: number;
+    }
+) => {
+    return axios.put<IBackendRes<IEmployee>>(`/api/v1/employees/${id}`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeleteEmployee = (id: string | number) => {
+    return axios.delete<IBackendRes<IEmployee>>(`/api/v1/employees/${id}`);
+};
