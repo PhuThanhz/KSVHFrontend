@@ -1,14 +1,32 @@
 import DataTable from "@/components/admin/data-table";
 import type { IEmployee } from "@/types/backend";
-import { EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+    EditOutlined,
+    EyeOutlined,
+    PlusOutlined,
+    DeleteOutlined,
+} from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Tag, Select } from "antd";
+import {
+    Button,
+    Space,
+    Tag,
+    Select,
+    Popconfirm,
+} from "antd";
 import { useEffect, useState } from "react";
 import queryString from "query-string";
-import { useEmployeesQuery } from "@/hooks/useEmployees";
+import {
+    useEmployeesQuery,
+    useDeleteEmployeeMutation,
+} from "@/hooks/useEmployees";
 import ModalEmployee from "@/components/admin/employee/modal.employee";
 import ViewDetailEmployee from "@/components/admin/employee/view.employee";
-import { callFetchCompany, callFetchDepartment, callFetchPosition } from "@/config/api";
+import {
+    callFetchCompany,
+    callFetchDepartment,
+    callFetchPosition,
+} from "@/config/api";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import Access from "@/components/share/access";
 import DateRangeFilter from "@/components/common/DateRangeFilter";
@@ -35,6 +53,7 @@ const EmployeePage = () => {
     );
 
     const { data, isFetching } = useEmployeesQuery(query);
+    const { mutate: deleteEmployee, isPending: isDeleting } = useDeleteEmployeeMutation();
 
     // Fetch danh sách Company, Department, Position để filter
     useEffect(() => {
@@ -137,10 +156,11 @@ const EmployeePage = () => {
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 120,
+            width: 160,
             align: "center",
             render: (_, entity) => (
-                <Space>
+                <Space size="middle">
+                    {/* Xem chi tiết */}
                     <Access permission={ALL_PERMISSIONS.EMPLOYEE.GET_BY_ID} hideChildren>
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
@@ -151,14 +171,40 @@ const EmployeePage = () => {
                         />
                     </Access>
 
+                    {/* Cập nhật */}
                     <Access permission={ALL_PERMISSIONS.EMPLOYEE.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#ffa500", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#faad14",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
                             }}
                         />
+                    </Access>
+
+                    {/* Xóa */}
+                    <Access permission={ALL_PERMISSIONS.EMPLOYEE.DELETE} hideChildren>
+                        <Popconfirm
+                            title="Xác nhận xóa nhân viên?"
+                            okText="Xóa"
+                            cancelText="Hủy"
+                            okButtonProps={{ danger: true, loading: isDeleting }}
+                            onConfirm={() => {
+                                if (entity.id) deleteEmployee(entity.id);
+                            }}
+                        >
+                            <DeleteOutlined
+                                style={{
+                                    fontSize: 18,
+                                    color: "#ff4d4f",
+                                    cursor: "pointer",
+                                }}
+                            />
+                        </Popconfirm>
                     </Access>
                 </Space>
             ),
