@@ -22,6 +22,7 @@ import LayoutClient from "./components/client/layout/layout.client";
 import { PATHS } from "@/constants/paths";
 import PositionPage from './pages/admin/position';
 import EmployeePage from './pages/admin/employee';
+import CustomerPage from './pages/admin/customer';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -124,6 +125,14 @@ export default function App() {
           element: (
             <ProtectedRoute>
               <EmployeePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.CUSTOMER,
+          element: (
+            <ProtectedRoute>
+              <CustomerPage />
             </ProtectedRoute>
           ),
         },

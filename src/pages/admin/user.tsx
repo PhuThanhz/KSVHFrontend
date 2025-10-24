@@ -12,7 +12,7 @@ import { ALL_PERMISSIONS } from "@/config/permissions";
 import { sfLike } from "spring-filter-query-builder";
 import { useUsersQuery } from "@/hooks/useUsers";
 import DateRangeFilter from "@/components/common/DateRangeFilter";
-import { callFetchRole } from "@/config/api";
+import { useRolesQuery } from "@/hooks/useRoles";
 
 const UserPage = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -35,20 +35,18 @@ const UserPage = () => {
 
     const { data, isFetching } = useUsersQuery(query);
 
-    //  Lấy danh sách role (giống modal user)
+    const { data: rolesData, isLoading: isRolesLoading } = useRolesQuery("page=1&size=100");
+
     useEffect(() => {
-        const fetchRoles = async () => {
-            const res = await callFetchRole("page=1&size=100");
-            if (res?.data?.result) {
-                const list = res.data.result.map((r: any) => ({
-                    label: r.name,
-                    value: r.name,
-                }));
-                setRoleOptions(list);
-            }
-        };
-        fetchRoles();
-    }, []);
+        if (rolesData?.result) {
+            const list = rolesData.result.map((r: any) => ({
+                label: r.name,
+                value: r.name,
+            }));
+            setRoleOptions(list);
+        }
+    }, [rolesData]);
+
 
     //  Build query string có thêm role + active
     const buildQuery = (params: any, sort: any) => {
@@ -229,6 +227,7 @@ const UserPage = () => {
                                 allowClear
                                 style={{ width: 180 }}
                                 options={roleOptions}
+                                loading={isRolesLoading}
                                 onChange={(value) => setRoleFilter(value || null)}
                             />
                             {/* Bộ lọc trạng thái */}

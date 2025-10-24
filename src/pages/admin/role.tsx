@@ -11,7 +11,7 @@ import { ALL_PERMISSIONS } from "@/config/permissions";
 import Access from "@/components/share/access";
 import { sfLike } from "spring-filter-query-builder";
 import { groupByPermission } from "@/config/utils";
-import { callFetchPermission } from "@/config/api";
+import { usePermissionsQuery } from "@/hooks/usePermissions";
 import { useRolesQuery, useDeleteRoleMutation } from "@/hooks/useRoles";
 
 const RolePage = () => {
@@ -28,16 +28,13 @@ const RolePage = () => {
     const { data, isLoading, refetch } = useRolesQuery(query);
     const deleteRoleMutation = useDeleteRoleMutation();
 
-    //  Lấy danh sách quyền
+    const { data: permissionsData, isLoading: isPermissionsLoading } = usePermissionsQuery("page=1&size=100");
+
     useEffect(() => {
-        const init = async () => {
-            const res = await callFetchPermission(`page=1&size=100`);
-            if (res.data?.result) {
-                setListPermissions(groupByPermission(res.data.result));
-            }
-        };
-        init();
-    }, []);
+        if (permissionsData?.result) {
+            setListPermissions(groupByPermission(permissionsData.result));
+        }
+    }, [permissionsData]);
 
     //  Xóa role
     const handleDeleteRole = async (id?: string) => {
@@ -207,15 +204,17 @@ const RolePage = () => {
                     ]}
                 />
             </Access>
+            {listPermissions && (
+                <ModalRole
+                    openModal={openModal}
+                    setOpenModal={setOpenModal}
+                    reloadTable={refetch}
+                    listPermissions={listPermissions}
+                    singleRole={singleRole}
+                    setSingleRole={setSingleRole}
+                />
+            )}
 
-            <ModalRole
-                openModal={openModal}
-                setOpenModal={setOpenModal}
-                reloadTable={refetch}
-                listPermissions={listPermissions!}
-                singleRole={singleRole}
-                setSingleRole={setSingleRole}
-            />
         </div>
     );
 };

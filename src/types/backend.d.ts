@@ -176,9 +176,8 @@ export interface IEmployee {
 }
 
 /** ==============================
- *   EMPLOYEE POSITION 
+ *   MODULE POSITION 
  *  ============================== */
-
 export interface IPosition {
     id?: number | string;
     name: string;
@@ -188,3 +187,21 @@ export interface IPosition {
     createdBy?: string;
     updatedBy?: string;
 }
+
+
+/** ==============================
+ *   MODULE CUSTOMER 
+ *  ============================== */
+export interface ICustomer {
+    id?: number | string;
+    customerCode?: string;
+    name: string;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+    createdAt?: string | null;
+    updatedAt?: string | null;
+}
+

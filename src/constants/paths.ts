@@ -14,6 +14,8 @@ export const PATHS = {
         DEPARTMENT: "/admin/department",
         POSITION: "/admin/position",
         EMPLOYEE: "/admin/employee",
+        CUSTOMER: "/admin/customer",
+
     },
 
     CLIENT: {

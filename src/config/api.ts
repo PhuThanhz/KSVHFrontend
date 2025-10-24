@@ -13,7 +13,8 @@ import type {
     ICompany,
     IAssetType,
     IDepartment,
-    IPosition
+    IPosition,
+    ICustomer
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 
@@ -316,4 +317,41 @@ export const callUpdateEmployee = (
 
 export const callDeleteEmployee = (id: string | number) => {
     return axios.delete<IBackendRes<IEmployee>>(`/api/v1/employees/${id}`);
+};
+
+
+/** ======================== Module Customer ======================== **/
+
+export const callFetchCustomer = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ICustomer>>>(`/api/v1/customers?${query}`);
+};
+
+export const callFetchCustomerById = (id: string | number) => {
+    return axios.get<IBackendRes<ICustomer>>(`/api/v1/customers/${id}`);
+};
+
+export const callCreateCustomer = (data: {
+    name: string;
+    email: string;
+    phone?: string;
+    address?: string;
+}) => {
+    return axios.post<IBackendRes<ICustomer>>(`/api/v1/customers`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdateCustomer = (data: {
+    id: string | number;
+    name: string;
+    email: string;
+    phone?: string;
+    address?: string;
+}) => {
+    return axios.put<IBackendRes<ICustomer>>(`/api/v1/customers`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeleteCustomer = (id: string | number) => {
+    return axios.delete<IBackendRes<ICustomer>>(`/api/v1/customers/${id}`);
 };

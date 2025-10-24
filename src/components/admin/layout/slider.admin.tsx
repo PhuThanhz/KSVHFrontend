@@ -135,6 +135,15 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
+                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {})
+                    ? [
+                        {
+                            label: <Link to="/admin/customer">Quản lý khách hàng</Link>,
+                            key: "/admin/customer",
+                            icon: <TeamOutlined />,
+                        },
+                    ]
+                    : []),
             ];
 
             setMenuItems(full);

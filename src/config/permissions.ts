@@ -62,6 +62,14 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
     },
+
+    CUSTOMER: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/customers", module: "CUSTOMER" },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/customers/{id}", module: "CUSTOMER" },
+        CREATE: { method: "POST", apiPath: "/api/v1/customers", module: "CUSTOMER" },
+        UPDATE: { method: "PUT", apiPath: "/api/v1/customers", module: "CUSTOMER" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/customers/{id}", module: "CUSTOMER" },
+    },
 };
 
 export const ALL_MODULES = {
@@ -74,4 +82,5 @@ export const ALL_MODULES = {
     DEPARTMENT: "DEPARTMENT",
     POSITION: "POSITION",
     EMPLOYEE: "EMPLOYEE",
+    CUSTOMER: "CUSTOMER",
 };

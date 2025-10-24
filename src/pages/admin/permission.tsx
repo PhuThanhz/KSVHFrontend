@@ -20,7 +20,7 @@ const PermissionPage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IPermission | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [query, setQuery] = useState<string>("page=1&pageSize=10&sort=createdAt,desc");
+    const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
 
     const tableRef = useRef<ActionType>(null!);
 
@@ -32,7 +32,7 @@ const PermissionPage = () => {
     const permissions = data?.result ?? [];
 
     const reloadTable = () => {
-        setQuery("page=1&pageSize=10&sort=createdAt,desc");
+        setQuery("page=1&size=10&sort=createdAt,desc");
     };
 
     const handleDeletePermission = async (id?: string) => {

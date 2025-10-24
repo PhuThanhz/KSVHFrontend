@@ -22,11 +22,9 @@ import {
 } from "@/hooks/useEmployees";
 import ModalEmployee from "@/components/admin/employee/modal.employee";
 import ViewDetailEmployee from "@/components/admin/employee/view.employee";
-import {
-    callFetchCompany,
-    callFetchDepartment,
-    callFetchPosition,
-} from "@/config/api";
+import { useCompaniesQuery } from "@/hooks/useCompanies";
+import { useDepartmentsQuery } from "@/hooks/useDepartments";
+import { usePositionsQuery } from "@/hooks/usePositions";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import Access from "@/components/share/access";
 import DateRangeFilter from "@/components/common/DateRangeFilter";
@@ -55,25 +53,28 @@ const EmployeePage = () => {
     const { data, isFetching } = useEmployeesQuery(query);
     const { mutate: deleteEmployee, isPending: isDeleting } = useDeleteEmployeeMutation();
 
-    // Fetch danh sách Company, Department, Position để filter
+    const { data: companiesData, isLoading: isCompaniesLoading } = useCompaniesQuery("page=1&size=100");
+    const { data: departmentsData, isLoading: isDepartmentsLoading } = useDepartmentsQuery("page=1&size=100");
+    const { data: positionsData, isLoading: isPositionsLoading } = usePositionsQuery("page=1&size=100");
+
     useEffect(() => {
-        (async () => {
-            const [com, dep, pos] = await Promise.all([
-                callFetchCompany("page=1&size=100"),
-                callFetchDepartment("page=1&size=100"),
-                callFetchPosition("page=1&size=100"),
-            ]);
-            setCompanyOptions(
-                com?.data?.result?.map((c: any) => ({ label: c.name, value: c.name })) || []
-            );
-            setDepartmentOptions(
-                dep?.data?.result?.map((d: any) => ({ label: d.name, value: d.name })) || []
-            );
-            setPositionOptions(
-                pos?.data?.result?.map((p: any) => ({ label: p.name, value: p.name })) || []
-            );
-        })();
-    }, []);
+        if (companiesData?.result) {
+            setCompanyOptions(companiesData.result.map((c) => ({ label: c.name, value: c.name })));
+        }
+    }, [companiesData]);
+
+    useEffect(() => {
+        if (departmentsData?.result) {
+            setDepartmentOptions(departmentsData.result.map((d) => ({ label: d.name, value: d.name })));
+        }
+    }, [departmentsData]);
+
+    useEffect(() => {
+        if (positionsData?.result) {
+            setPositionOptions(positionsData.result.map((p) => ({ label: p.name, value: p.name })));
+        }
+    }, [positionsData]);
+
 
     // build query string
     const buildQuery = (params: any, sort: any) => {
@@ -238,22 +239,28 @@ const EmployeePage = () => {
                                 allowClear
                                 style={{ width: 180 }}
                                 options={companyOptions}
+                                loading={isCompaniesLoading}
                                 onChange={(value) => setCompanyFilter(value || null)}
                             />
+
                             <Select
                                 placeholder="Phòng ban"
                                 allowClear
                                 style={{ width: 180 }}
                                 options={departmentOptions}
+                                loading={isDepartmentsLoading}
                                 onChange={(value) => setDepartmentFilter(value || null)}
                             />
+
                             <Select
                                 placeholder="Chức vụ"
                                 allowClear
                                 style={{ width: 180 }}
                                 options={positionOptions}
+                                loading={isPositionsLoading}
                                 onChange={(value) => setPositionFilter(value || null)}
                             />
+
                             <DateRangeFilter
                                 label="Ngày tạo"
                                 fieldName="createdAt"

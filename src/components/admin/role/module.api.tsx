@@ -22,11 +22,13 @@ interface IProps {
 const ModuleApi = (props: IProps) => {
   const { form, listPermissions, singleRole, openModal } = props;
 
-  // ✅ Dùng React Query để fetch chi tiết role theo id
+  //  Dùng React Query để fetch chi tiết role theo id
   const { data: roleDetail, isLoading } = useRoleByIdQuery(singleRole?.id ? String(singleRole.id) : undefined);
 
   useEffect(() => {
-    if (listPermissions?.length && roleDetail?.id && openModal) {
+    if (!openModal || !listPermissions?.length || !roleDetail?.id) return;
+
+    const timer = setTimeout(() => {
       const userPermissions = groupByPermission(roleDetail.permissions);
       const p: any = {};
 
@@ -56,8 +58,11 @@ const ModuleApi = (props: IProps) => {
         description: roleDetail.description,
         permissions: p,
       });
-    }
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, [openModal, listPermissions, roleDetail, form]);
+
 
   const handleSwitchAll = (value: boolean, name: string) => {
     const child = listPermissions?.find((item) => item.module === name);
