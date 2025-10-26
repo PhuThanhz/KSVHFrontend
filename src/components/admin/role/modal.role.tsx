@@ -33,7 +33,7 @@ const ModalRole = (props: IProps) => {
     const { openModal, setOpenModal, reloadTable, listPermissions, singleRole, setSingleRole } = props;
     const [form] = Form.useForm();
 
-    // ✅ React Query mutations
+    //  React Query mutations
     const { mutate: createRole, isPending: creating } = useCreateRoleMutation();
     const { mutate: updateRole, isPending: updating } = useUpdateRoleMutation();
 

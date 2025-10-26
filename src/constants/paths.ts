@@ -15,6 +15,17 @@ export const PATHS = {
         POSITION: "/admin/position",
         EMPLOYEE: "/admin/employee",
         CUSTOMER: "/admin/customer",
+        DEVICE_TYPE: "/admin/device-type",
+        SKILL: "/admin/skill",
+        SOLUTION: "/admin/solution",
+        WAREHOUSE: "/admin/warehouse",
+        UNIT: "/admin/unit",
+        REJECT_REASON: "/admin/reject-reason",
+        TECHNICIAN_SUPPLIER: "/admin/technician-supplier",
+        ISSUE: "/admin/issue",
+        MATERIAL_SUPPLIER: "/admin/material-supplier",
+        TECHNICIAN: "/admin/technician",
+
 
     },
 

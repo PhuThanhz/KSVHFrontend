@@ -14,7 +14,17 @@ import type {
     IAssetType,
     IDepartment,
     IPosition,
-    ICustomer
+    ICustomer,
+    IDeviceType,
+    ISkill,
+    ISolution,
+    IWarehouse,
+    IUnit,
+    IRejectReason,
+    ITechnicianSupplier,
+    IIssue,
+    IMaterialSupplier,
+    ITechnician
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 
@@ -354,4 +364,336 @@ export const callUpdateCustomer = (data: {
 
 export const callDeleteCustomer = (id: string | number) => {
     return axios.delete<IBackendRes<ICustomer>>(`/api/v1/customers/${id}`);
+};
+
+
+/** ======================== Module Customer ======================== **/
+
+export const callFetchDeviceType = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IDeviceType>>>(`/api/v1/device-types?${query}`);
+};
+
+export const callFetchDeviceTypeById = (id: number | string) => {
+    return axios.get<IBackendRes<IDeviceType>>(`/api/v1/device-types/${id}`);
+};
+export const callCreateDeviceType = (payload: IDeviceType) => {
+    const body = {
+        deviceTypeCode: payload.deviceTypeCode,
+        typeName: payload.typeName,
+        assetType: { id: payload.assetType?.id },
+    };
+    return axios.post<IBackendRes<IDeviceType>>("/api/v1/device-types", body);
+};
+export const callUpdateDeviceType = (payload: IDeviceType) => {
+    const body = {
+        id: payload.id,
+        deviceTypeCode: payload.deviceTypeCode,
+        typeName: payload.typeName,
+        assetType: { id: payload.assetType?.id },
+    };
+    return axios.put<IBackendRes<IDeviceType>>("/api/v1/device-types", body);
+};
+
+export const callDeleteDeviceType = (id: number | string) => {
+    return axios.delete<IBackendRes<IDeviceType>>(`/api/v1/device-types/${id}`);
+};
+
+
+/** ======================== Module Skill ======================== **/
+
+export const callFetchSkill = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ISkill>>>(`/api/v1/skills?${query}`);
+};
+
+export const callFetchSkillById = (id: number | string) => {
+    return axios.get<IBackendRes<ISkill>>(`/api/v1/skills/${id}`);
+};
+
+export const callCreateSkill = (skill: ISkill) => {
+    const payload = {
+        techniqueName: skill.techniqueName,
+    };
+    return axios.post<IBackendRes<ISkill>>("/api/v1/skills", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callUpdateSkill = (skill: ISkill) => {
+    const payload = {
+        id: skill.id,
+        techniqueName: skill.techniqueName,
+    };
+    return axios.put<IBackendRes<ISkill>>("/api/v1/skills", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeleteSkill = (id: number | string) => {
+    return axios.delete<IBackendRes<ISkill>>(`/api/v1/skills/${id}`);
+};
+
+
+
+/** ======================== Module Solution  ======================== **/
+export const callFetchSolution = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ISolution>>>(`/api/v1/solutions?${query}`);
+};
+export const callFetchSolutionById = (id: number | string) => {
+    return axios.get<IBackendRes<ISolution>>(`/api/v1/solutions/${id}`);
+};
+export const callCreateSolution = (solution: ISolution) => {
+    const payload = {
+        solutionName: solution.solutionName,
+    };
+    return axios.post<IBackendRes<ISolution>>("/api/v1/solutions", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdateSolution = (solution: ISolution) => {
+    const payload = {
+        id: solution.id,
+        solutionName: solution.solutionName,
+    };
+    return axios.put<IBackendRes<ISolution>>("/api/v1/solutions", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callDeleteSolution = (id: number | string) => {
+    return axios.delete<IBackendRes<ISolution>>(`/api/v1/solutions/${id}`);
+};
+
+
+/** ======================== Module Warehouse  ======================== **/
+
+export const callFetchWarehouse = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IWarehouse>>>(`/api/v1/warehouses?${query}`);
+};
+
+export const callFetchWarehouseById = (id: number | string) => {
+    return axios.get<IBackendRes<IWarehouse>>(`/api/v1/warehouses/${id}`);
+};
+export const callCreateWarehouse = (warehouse: IWarehouse) => {
+    const payload = {
+        warehouseName: warehouse.warehouseName,
+        address: warehouse.address,
+    };
+    return axios.post<IBackendRes<IWarehouse>>("/api/v1/warehouses", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdateWarehouse = (warehouse: IWarehouse) => {
+    const payload = {
+        id: warehouse.id,
+        warehouseName: warehouse.warehouseName,
+        address: warehouse.address,
+    };
+    return axios.put<IBackendRes<IWarehouse>>("/api/v1/warehouses", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callDeleteWarehouse = (id: number | string) => {
+    return axios.delete<IBackendRes<IWarehouse>>(`/api/v1/warehouses/${id}`);
+};
+
+
+
+
+/** ======================== Module Unit  ======================== **/
+export const callFetchUnit = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IUnit>>>(`/api/v1/units?${query}`);
+};
+
+export const callFetchUnitById = (id: number | string) => {
+    return axios.get<IBackendRes<IUnit>>(`/api/v1/units/${id}`);
+};
+
+export const callCreateUnit = (unit: IUnit) => {
+    const payload = {
+        name: unit.name,
+    };
+    return axios.post<IBackendRes<IUnit>>("/api/v1/units", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callUpdateUnit = (unit: IUnit) => {
+    const payload = {
+        id: unit.id,
+        name: unit.name,
+    };
+    return axios.put<IBackendRes<IUnit>>("/api/v1/units", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeleteUnit = (id: number | string) => {
+    return axios.delete<IBackendRes<IUnit>>(`/api/v1/units/${id}`);
+};
+
+
+/** ======================== Module RejectReason  ======================== **/
+
+export const callFetchRejectReason = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IRejectReason>>>(`/api/v1/reject-reasons?${query}`);
+};
+export const callFetchRejectReasonById = (id: string | number) => {
+    return axios.get<IBackendRes<IRejectReason>>(`/api/v1/reject-reasons/${id}`);
+};
+export const callCreateRejectReason = (reason: IRejectReason) => {
+    return axios.post<IBackendRes<IRejectReason>>(`/api/v1/reject-reasons`, reason, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdateRejectReason = (reason: IRejectReason) => {
+    return axios.put<IBackendRes<IRejectReason>>(`/api/v1/reject-reasons`, reason, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callDeleteRejectReason = (id: string | number) => {
+    return axios.delete<IBackendRes<IRejectReason>>(`/api/v1/reject-reasons/${id}`);
+};
+export const callFetchTechnicianSupplier = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ITechnicianSupplier>>>(
+        `/api/v1/technician-suppliers?${query}`
+    );
+};
+
+
+/** ======================== Module TechnicianSupplier  ======================== **/
+export const callFetchTechnicianSupplierById = (id: number | string) => {
+    return axios.get<IBackendRes<ITechnicianSupplier>>(
+        `/api/v1/technician-suppliers/${id}`
+    );
+};
+export const callCreateTechnicianSupplier = (data: ITechnicianSupplier) => {
+    return axios.post<IBackendRes<ITechnicianSupplier>>(
+        `/api/v1/technician-suppliers`,
+        data
+    );
+};
+export const callUpdateTechnicianSupplier = (data: ITechnicianSupplier) => {
+    return axios.put<IBackendRes<ITechnicianSupplier>>(
+        `/api/v1/technician-suppliers`,
+        data
+    );
+};
+export const callDeleteTechnicianSupplier = (id: number | string) => {
+    return axios.delete<IBackendRes<ITechnicianSupplier>>(
+        `/api/v1/technician-suppliers/${id}`
+    );
+};
+
+
+/** ========================= MODULE ISSUE ========================= **/
+
+export const callFetchIssue = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IIssue>>>(`/api/v1/issues?${query}`);
+};
+export const callFetchIssueById = (id: string | number) => {
+    return axios.get<IBackendRes<IIssue>>(`/api/v1/issues/${id}`);
+};
+export const callCreateIssue = (issue: IIssue) => {
+    return axios.post<IBackendRes<IIssue>>(`/api/v1/issues`, issue, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdateIssue = (issue: IIssue) => {
+    return axios.put<IBackendRes<IIssue>>(`/api/v1/issues`, issue, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callDeleteIssue = (id: string | number) => {
+    return axios.delete<IBackendRes<string>>(`/api/v1/issues/${id}`);
+};
+
+
+/** ========================= MODULE MATERIAL SUPPLIER ========================= **/
+export const callFetchMaterialSupplier = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IMaterialSupplier>>>(`/api/v1/material-suppliers?${query}`);
+};
+
+export const callFetchMaterialSupplierById = (id: string | number) => {
+    return axios.get<IBackendRes<IMaterialSupplier>>(`/api/v1/material-suppliers/${id}`);
+};
+
+export const callCreateMaterialSupplier = (data: IMaterialSupplier) => {
+    return axios.post<IBackendRes<IMaterialSupplier>>(`/api/v1/material-suppliers`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callUpdateMaterialSupplier = (data: IMaterialSupplier) => {
+    return axios.put<IBackendRes<IMaterialSupplier>>(`/api/v1/material-suppliers`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeleteMaterialSupplier = (id: string | number) => {
+    return axios.delete<IBackendRes<string>>(`/api/v1/material-suppliers/${id}`);
+};
+
+
+/** ========================= MODULE TECHNICIAN ========================= **/
+/** ========================= MODULE TECHNICIAN ========================= **/
+
+
+export const callFetchTechnician = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ITechnician>>>(`/api/v1/technicians?${query}`);
+};
+
+export const callFetchTechnicianById = (id: string | number) => {
+    return axios.get<IBackendRes<ITechnician>>(`/api/v1/technicians/${id}`);
+};
+
+export const callCreateTechnician = (technician: ITechnician) => {
+    const payload = {
+        technicianCode: technician.technicianCode,
+        fullName: technician.fullName,
+        activeStatus: technician.activeStatus ?? true,
+        technicianType: technician.technicianType,
+        technicianSupplierId:
+            technician.technicianType === "OUTSOURCE"
+                ? technician.technicianSupplierId
+                : null,
+        costPerHire:
+            technician.technicianType === "OUTSOURCE"
+                ? technician.costPerHire
+                : 0,
+        phone: technician.phone,
+        email: technician.email,
+        skillIds: technician.skillIds ?? [],
+    };
+
+    return axios.post<IBackendRes<ITechnician>>(`/api/v1/technicians`, payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callUpdateTechnician = (technician: ITechnician) => {
+    const payload = {
+        id: technician.id,
+        technicianCode: technician.technicianCode,
+        fullName: technician.fullName,
+        activeStatus: technician.activeStatus ?? true,
+        technicianType: technician.technicianType,
+        technicianSupplierId:
+            technician.technicianType === "OUTSOURCE"
+                ? technician.technicianSupplierId
+                : null,
+        costPerHire:
+            technician.technicianType === "OUTSOURCE"
+                ? technician.costPerHire
+                : 0,
+        phone: technician.phone,
+        email: technician.email,
+        skillIds: technician.skillIds ?? [],
+    };
+
+    return axios.put<IBackendRes<ITechnician>>(`/api/v1/technicians`, payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeleteTechnician = (id: number | string) => {
+    return axios.delete<IBackendRes<string>>(`/api/v1/technicians/${id}`);
 };

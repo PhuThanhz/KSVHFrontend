@@ -1,97 +1,126 @@
 import DataTable from "@/components/admin/data-table";
-import type { ICustomer } from "@/types/backend";
-import { EditOutlined, EyeOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import type { ITechnicianSupplier } from "@/types/backend";
+import { EditOutlined, PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Tag, Popconfirm } from "antd";
+import { Button, Space, Popconfirm, Tag } from "antd";
 import { useState } from "react";
 import queryString from "query-string";
-import { useCustomersQuery, useDeleteCustomerMutation } from "@/hooks/useCustomers";
-import ModalCustomer from "@/components/admin/customer/modal.customer";
-import ViewDetailCustomer from "@/components/admin/customer/view.customer";
-import { ALL_PERMISSIONS } from "@/config/permissions";
+import ModalTechnicianSupplier from "@/components/admin/technician-supplier/modal.technician.supplier";
+import ViewDetailTechnicianSupplier from "@/components/admin/technician-supplier/view.technician.supplier";
 import Access from "@/components/share/access";
-import { sfLike } from "spring-filter-query-builder";
+import { ALL_PERMISSIONS } from "@/config/permissions";
+import { useTechnicianSuppliersQuery, useDeleteTechnicianSupplierMutation } from "@/hooks/useTechnicianSuppliers";
 import dayjs from "dayjs";
 
-const CustomerPage = () => {
+const TechnicianSupplierPage = () => {
     const [openModal, setOpenModal] = useState(false);
-    const [dataInit, setDataInit] = useState<ICustomer | null>(null);
+    const [dataInit, setDataInit] = useState<ITechnicianSupplier | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
 
     const [query, setQuery] = useState<string>(() =>
         queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" })
     );
 
-    const { data, isFetching } = useCustomersQuery(query);
-    const { mutate: deleteCustomer, isPending: isDeleting } = useDeleteCustomerMutation();
+    const { data, isFetching } = useTechnicianSuppliersQuery(query);
+    const deleteMutation = useDeleteTechnicianSupplierMutation();
 
-    /** Build query */
-    const buildQuery = (params: any, sort: any) => {
-        const q: any = { page: params.current, size: params.pageSize, filter: "" };
-
-        if (params.name) q.filter = sfLike("name", params.name);
-        if (params.email)
-            q.filter = q.filter
-                ? `${q.filter} and ${sfLike("email", params.email)}`
-                : sfLike("email", params.email);
-
-        let sortBy = "sort=createdAt,desc";
-        if (sort?.name)
-            sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
-        else if (sort?.email)
-            sortBy = sort.email === "ascend" ? "sort=email,asc" : "sort=email,desc";
-
-        return `${queryString.stringify(q)}&${sortBy}`;
+    const handleDelete = async (id: number | string) => {
+        await deleteMutation.mutateAsync(id);
     };
 
-    /** Columns */
-    const columns: ProColumns<ICustomer>[] = [
+    const buildQuery = (params: any, sort: any) => {
+        const q: any = {
+            page: params.current,
+            size: params.pageSize,
+        };
+
+        if (params.name) q.filter = `name ~ '${params.name}'`;
+        if (params.supplierCode)
+            q.filter = q.filter
+                ? `${q.filter} and supplierCode ~ '${params.supplierCode}'`
+                : `supplierCode ~ '${params.supplierCode}'`;
+
+        let temp = queryString.stringify(q);
+
+        // Sort
+        let sortBy = "";
+        if (sort?.name)
+            sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
+        else if (sort?.supplierCode)
+            sortBy = sort.supplierCode === "ascend"
+                ? "sort=supplierCode,asc"
+                : "sort=supplierCode,desc";
+        else sortBy = "sort=createdAt,desc";
+
+        return `${temp}&${sortBy}`;
+    };
+
+    const columns: ProColumns<ITechnicianSupplier>[] = [
         {
             title: "STT",
             key: "index",
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) + ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+                (index + 1) +
+                ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
             hideInSearch: true,
         },
-        { title: "Mã KH", dataIndex: "customerCode", sorter: true },
-        { title: "Tên khách hàng", dataIndex: "name", sorter: true },
-        { title: "Email", dataIndex: "email" },
-        { title: "Số điện thoại", dataIndex: "phone", hideInSearch: true },
         {
-            title: "Địa chỉ",
-            dataIndex: "address",
-            render: (text) => <Tag color="blue">{text || "-"}</Tag>,
+            title: "Mã nhà cung cấp",
+            dataIndex: "supplierCode",
+            sorter: true,
+        },
+        {
+            title: "Tên nhà cung cấp",
+            dataIndex: "name",
+            sorter: true,
+        },
+        {
+            title: "Số điện thoại",
+            dataIndex: "phone",
+            hideInSearch: true,
+        },
+        {
+            title: "Email",
+            dataIndex: "email",
             hideInSearch: true,
         },
         {
             title: "Ngày tạo",
             dataIndex: "createdAt",
+            sorter: true,
             hideInSearch: true,
-            render: (text: any) => (text ? dayjs(text).format("DD/MM/YYYY HH:mm") : "-"),
+            render: (_, record) =>
+                record.createdAt
+                    ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm")
+                    : "-",
         },
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 140,
+            width: 120,
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.CUSTOMER.GET_BY_ID} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_BY_ID} hideChildren>
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
                             onClick={() => {
-                                setSelectedId(Number(entity.id));
+                                setSelectedSupplierId(Number(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.CUSTOMER.UPDATE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#ffa500",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
@@ -99,16 +128,21 @@ const CustomerPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.CUSTOMER.DELETE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.DELETE} hideChildren>
                         <Popconfirm
-                            title="Xóa khách hàng?"
-                            description="Bạn có chắc muốn xóa khách hàng này không?"
-                            onConfirm={() => entity.id && deleteCustomer(entity.id)}
-                            okText="Xóa"
+                            placement="leftTop"
+                            title="Xác nhận xóa nhà cung cấp"
+                            description="Bạn có chắc chắn muốn xóa nhà cung cấp này?"
+                            onConfirm={() => handleDelete(entity.id!)}
+                            okText="Xác nhận"
                             cancelText="Hủy"
                         >
                             <DeleteOutlined
-                                style={{ fontSize: 18, color: "red", cursor: "pointer" }}
+                                style={{
+                                    fontSize: 18,
+                                    color: "#ff4d4f",
+                                    cursor: "pointer",
+                                }}
                             />
                         </Popconfirm>
                     </Access>
@@ -119,11 +153,11 @@ const CustomerPage = () => {
 
     return (
         <div>
-            <Access permission={ALL_PERMISSIONS.CUSTOMER.GET_PAGINATE}>
-                <DataTable<ICustomer>
-                    headerTitle="Danh sách khách hàng"
+            <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_PAGINATE}>
+                <DataTable<ITechnicianSupplier>
+                    headerTitle="Danh sách nhà cung cấp kỹ thuật viên"
                     rowKey="id"
-                    loading={isFetching || isDeleting}
+                    loading={isFetching}
                     columns={columns}
                     dataSource={data?.result || []}
                     request={async (params, sort): Promise<any> => {
@@ -146,7 +180,7 @@ const CustomerPage = () => {
                                 <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
-                                khách hàng
+                                nhà cung cấp
                             </div>
                         ),
                         style: {
@@ -160,7 +194,7 @@ const CustomerPage = () => {
                         },
                     }}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.CUSTOMER.CREATE}>
+                        <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.CREATE} key="create">
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"
@@ -176,20 +210,22 @@ const CustomerPage = () => {
                 />
             </Access>
 
-            <ModalCustomer
+            {/* Modal Thêm / Sửa */}
+            <ModalTechnicianSupplier
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 dataInit={dataInit}
                 setDataInit={setDataInit}
             />
 
-            <ViewDetailCustomer
+            {/* Drawer Xem chi tiết */}
+            <ViewDetailTechnicianSupplier
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
-                customerId={selectedId}
+                supplierId={selectedSupplierId}
             />
         </div>
     );
 };
 
-export default CustomerPage;
+export default TechnicianSupplierPage;

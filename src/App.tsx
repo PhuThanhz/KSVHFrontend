@@ -23,10 +23,19 @@ import { PATHS } from "@/constants/paths";
 import PositionPage from './pages/admin/position';
 import EmployeePage from './pages/admin/employee';
 import CustomerPage from './pages/admin/customer';
+import DeviceTypePage from './pages/admin/device-type';
+import SkillPage from "pages/admin/skill";
+import SolutionPage from "./pages/admin/solution";
+import WarehousePage from "@/pages/admin/warehouse";
+import UnitPage from "@/pages/admin/unit";
+import RejectReasonPage from "@/pages/admin/reject-reason";
+import TechnicianSupplierPage from './pages/admin/technician-supplier';
+import IssuePage from "./pages/admin/issue";
+import MaterialSupplierPage from "@/pages/admin/material-supplier";
+import TechnicianPage from "./pages/admin/technician";
 
 export default function App() {
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(state => state.account.isLoading);
 
   useEffect(() => {
     if (
@@ -136,6 +145,90 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: PATHS.ADMIN.DEVICE_TYPE,
+          element: (
+            <ProtectedRoute>
+              <DeviceTypePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.SKILL,
+          element: (
+            <ProtectedRoute>
+              <SkillPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.SOLUTION,
+          element: (
+            <ProtectedRoute>
+              <SolutionPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.WAREHOUSE,
+          element: (
+            <ProtectedRoute>
+              <WarehousePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.UNIT,
+          element: (
+            <ProtectedRoute>
+              <UnitPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.REJECT_REASON,
+          element: (
+            <ProtectedRoute>
+              <RejectReasonPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.TECHNICIAN_SUPPLIER,
+          element: (
+            <ProtectedRoute>
+              <TechnicianSupplierPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.ISSUE,
+          element: (
+            <ProtectedRoute>
+              <IssuePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MATERIAL_SUPPLIER,
+          element: (
+            <ProtectedRoute>
+              <MaterialSupplierPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.TECHNICIAN,
+          element: (
+            <ProtectedRoute>
+              <TechnicianPage />
+            </ProtectedRoute>
+          ),
+        },
+
+
+
+
 
       ],
     },

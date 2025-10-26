@@ -204,4 +204,165 @@ export interface ICustomer {
     createdAt?: string | null;
     updatedAt?: string | null;
 }
+/** ==============================
+ *   DEVICE TYPE MODULE
+ *  ============================== */
+export interface IDeviceType {
+    id?: number | string;
+    deviceTypeCode: string;
+    typeName: string;
 
+    assetType: {
+        id: number | string;
+        assetTypeCode?: string;
+        assetTypeName?: string;
+    };
+
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+/** ==============================
+ *   MODULE SKILL
+ *  ============================== */
+export interface ISkill {
+    id?: number | string;
+    techniqueName: string;
+
+    createdAt?: string | null;
+    updatedAt?: string | null;
+}
+
+/** ==============================
+ *   MODULE SOLUTION
+ *  ============================== */
+export interface ISolution {
+    id?: number | string;
+    solutionName: string;
+
+    createdAt?: string | null;
+    updatedAt?: string | null;
+}
+
+/* ===========================
+   MODULE WAREHOUSE
+   =========================== */
+export interface IWarehouse {
+    id?: number | string;
+    warehouseName: string;
+    address: string;
+    createdAt?: string | null;
+    updatedAt?: string | null;
+}
+
+/** ==============================
+ *   MODULE UNIT
+ *  ============================== */
+export interface IUnit {
+    id?: number | string;
+    name: string;
+
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+
+
+export type ReasonTypeEnum = "ASSIGNMENT" | "PLAN" | "ACCEPTANCE";
+
+/** ==============================
+ *   MODULE REJECT_REASON
+ *  ============================== */
+
+export interface IRejectReason {
+    id?: number | string;
+    reasonType: ReasonTypeEnum;
+    reasonName: string;
+    description?: string;
+
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+
+/** ==============================
+ *   TECHNICIAN SUPPLIER MODULE
+ *  ============================== */
+export interface ITechnicianSupplier {
+    id?: number | string;
+    supplierCode: string;
+    name: string;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+/** ==============================
+ *   ISSUE MODULE
+ *  ============================== */
+export interface IIssue {
+    id?: number | string;
+    issueName: string;
+
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+
+/** ==============================
+ *   MATERIAL SUPPLIER MODULE
+ *  ============================== */
+export interface IMaterialSupplier {
+    id?: number | string;
+    supplierCode: string;
+    supplierName: string;
+    representative?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
+
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+
+/** ==============================
+ *   TECHNICIAN MODULE
+ *  ============================== */
+export type TechnicianTypeEnum = "INTERNAL" | "OUTSOURCE";
+
+export interface ITechnician {
+    id?: number | string;
+    technicianCode: string;
+    fullName: string;
+    activeStatus?: boolean;
+    technicianType: TechnicianTypeEnum;
+    supplier?: {
+        id: number | string;
+        supplierCode: string;
+        name: string;
+    } | null;
+    technicianSupplierId?: number | string | null;
+    costPerHire?: number | null;
+    phone?: string | null;
+    email?: string | null;
+    skillIds?: (number | string)[];
+    skills?: {
+        id: number | string;
+        techniqueName: string;
+    }[];
+
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}

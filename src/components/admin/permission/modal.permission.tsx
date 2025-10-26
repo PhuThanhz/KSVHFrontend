@@ -21,7 +21,6 @@ const ModalPermission = (props: IProps) => {
     const { openModal, setOpenModal, reloadTable, dataInit, setDataInit } = props;
     const [form] = Form.useForm();
 
-    // 🟢 React Query mutation hooks
     const createPermission = useCreatePermissionMutation();
     const updatePermission = useUpdatePermissionMutation();
 

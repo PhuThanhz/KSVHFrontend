@@ -1,87 +1,101 @@
 import DataTable from "@/components/admin/data-table";
-import type { ICustomer } from "@/types/backend";
-import { EditOutlined, EyeOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Tag, Popconfirm } from "antd";
-import { useState } from "react";
+import type { IUnit } from "@/types/backend";
+import { EditOutlined, DeleteOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
+import { Button, Popconfirm, Space } from "antd";
+import { useRef, useState } from "react";
 import queryString from "query-string";
-import { useCustomersQuery, useDeleteCustomerMutation } from "@/hooks/useCustomers";
-import ModalCustomer from "@/components/admin/customer/modal.customer";
-import ViewDetailCustomer from "@/components/admin/customer/view.customer";
-import { ALL_PERMISSIONS } from "@/config/permissions";
 import Access from "@/components/share/access";
-import { sfLike } from "spring-filter-query-builder";
+import { ALL_PERMISSIONS } from "@/config/permissions";
+import {
+    useUnitsQuery,
+    useDeleteUnitMutation,
+} from "@/hooks/useUnits";
+import ModalUnit from "@/components/admin/unit/modal.unit";
+import ViewDetailUnit from "@/components/admin/unit/view.unit";
 import dayjs from "dayjs";
 
-const CustomerPage = () => {
+const UnitPage = () => {
     const [openModal, setOpenModal] = useState(false);
-    const [dataInit, setDataInit] = useState<ICustomer | null>(null);
+    const [dataInit, setDataInit] = useState<IUnit | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
 
-    const [query, setQuery] = useState<string>(() =>
-        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" })
-    );
+    const tableRef = useRef<ActionType>(null);
 
-    const { data, isFetching } = useCustomersQuery(query);
-    const { mutate: deleteCustomer, isPending: isDeleting } = useDeleteCustomerMutation();
+    const { data, isFetching } = useUnitsQuery(query);
+    const deleteMutation = useDeleteUnitMutation();
 
-    /** Build query */
-    const buildQuery = (params: any, sort: any) => {
-        const q: any = { page: params.current, size: params.pageSize, filter: "" };
+    const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
+    const units = data?.result ?? [];
 
-        if (params.name) q.filter = sfLike("name", params.name);
-        if (params.email)
-            q.filter = q.filter
-                ? `${q.filter} and ${sfLike("email", params.email)}`
-                : sfLike("email", params.email);
-
-        let sortBy = "sort=createdAt,desc";
-        if (sort?.name)
-            sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
-        else if (sort?.email)
-            sortBy = sort.email === "ascend" ? "sort=email,asc" : "sort=email,desc";
-
-        return `${queryString.stringify(q)}&${sortBy}`;
+    const handleDelete = async (id?: number | string) => {
+        if (!id) return;
+        await deleteMutation.mutateAsync(id);
     };
 
-    /** Columns */
-    const columns: ProColumns<ICustomer>[] = [
+    const buildQuery = (params: any, sort: any) => {
+        const q: any = {
+            page: params.current,
+            size: params.pageSize,
+        };
+
+        if (params.name) {
+            q.filter = `name ~ '${params.name}'`;
+        }
+
+        let temp = queryString.stringify(q);
+
+        if (sort?.name) {
+            const dir = sort.name === "ascend" ? "asc" : "desc";
+            temp += `&sort=name,${dir}`;
+        } else {
+            temp += "&sort=createdAt,desc";
+        }
+
+        return temp;
+    };
+
+    const columns: ProColumns<IUnit>[] = [
         {
             title: "STT",
             key: "index",
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) + ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+                (index + 1) + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
-        { title: "Mã KH", dataIndex: "customerCode", sorter: true },
-        { title: "Tên khách hàng", dataIndex: "name", sorter: true },
-        { title: "Email", dataIndex: "email" },
-        { title: "Số điện thoại", dataIndex: "phone", hideInSearch: true },
         {
-            title: "Địa chỉ",
-            dataIndex: "address",
-            render: (text) => <Tag color="blue">{text || "-"}</Tag>,
-            hideInSearch: true,
+            title: "Tên đơn vị",
+            dataIndex: "name",
+            sorter: true,
         },
         {
             title: "Ngày tạo",
             dataIndex: "createdAt",
             hideInSearch: true,
-            render: (text: any) => (text ? dayjs(text).format("DD/MM/YYYY HH:mm") : "-"),
+            render: (_, record) =>
+                record.createdAt ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm") : "-",
+        },
+        {
+            title: "Ngày cập nhật",
+            dataIndex: "updatedAt",
+            hideInSearch: true,
+            render: (_, record) =>
+                record.updatedAt ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm") : "-",
         },
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 140,
+            width: 120,
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.CUSTOMER.GET_BY_ID} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.UNIT.GET_BY_ID} hideChildren>
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
                             onClick={() => {
                                 setSelectedId(Number(entity.id));
                                 setOpenViewDetail(true);
@@ -89,9 +103,9 @@ const CustomerPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.CUSTOMER.UPDATE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.UNIT.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
@@ -99,16 +113,16 @@ const CustomerPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.CUSTOMER.DELETE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.UNIT.DELETE} hideChildren>
                         <Popconfirm
-                            title="Xóa khách hàng?"
-                            description="Bạn có chắc muốn xóa khách hàng này không?"
-                            onConfirm={() => entity.id && deleteCustomer(entity.id)}
+                            title="Xác nhận xóa đơn vị"
+                            description="Bạn có chắc chắn muốn xóa đơn vị này không?"
                             okText="Xóa"
                             cancelText="Hủy"
+                            onConfirm={() => handleDelete(entity.id!)}
                         >
                             <DeleteOutlined
-                                style={{ fontSize: 18, color: "red", cursor: "pointer" }}
+                                style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
                             />
                         </Popconfirm>
                     </Access>
@@ -119,24 +133,29 @@ const CustomerPage = () => {
 
     return (
         <div>
-            <Access permission={ALL_PERMISSIONS.CUSTOMER.GET_PAGINATE}>
-                <DataTable<ICustomer>
-                    headerTitle="Danh sách khách hàng"
+            <Access permission={ALL_PERMISSIONS.UNIT.GET_PAGINATE}>
+                <DataTable<IUnit>
+                    headerTitle="Danh sách đơn vị"
+                    actionRef={tableRef}
                     rowKey="id"
-                    loading={isFetching || isDeleting}
+                    loading={isFetching}
                     columns={columns}
-                    dataSource={data?.result || []}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                    dataSource={units}
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: units || [],
+                            success: true,
+                            total: meta.total || 0,
+                        });
                     }}
                     pagination={{
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
-                        showSizeChanger: true,
                         total: data?.meta?.total,
                         showQuickJumper: true,
-                        size: "default",
+                        showSizeChanger: true,
                         showTotal: (total, range) => (
                             <div style={{ fontSize: 13, color: "#595959" }}>
                                 <span style={{ fontWeight: 500, color: "#000" }}>
@@ -146,7 +165,7 @@ const CustomerPage = () => {
                                 <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
-                                khách hàng
+                                đơn vị
                             </div>
                         ),
                         style: {
@@ -159,8 +178,9 @@ const CustomerPage = () => {
                             justifyContent: "flex-end",
                         },
                     }}
+                    rowSelection={false}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.CUSTOMER.CREATE}>
+                        <Access key="create" permission={ALL_PERMISSIONS.UNIT.CREATE}>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"
@@ -176,20 +196,22 @@ const CustomerPage = () => {
                 />
             </Access>
 
-            <ModalCustomer
+            {/* Modal thêm/sửa */}
+            <ModalUnit
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 dataInit={dataInit}
                 setDataInit={setDataInit}
             />
 
-            <ViewDetailCustomer
+            {/* Drawer xem chi tiết */}
+            <ViewDetailUnit
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
-                customerId={selectedId}
+                unitId={selectedId}
             />
         </div>
     );
 };
 
-export default CustomerPage;
+export default UnitPage;

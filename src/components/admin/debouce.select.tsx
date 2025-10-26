@@ -10,57 +10,56 @@ export interface DebounceSelectProps<ValueType = any>
 }
 
 export function DebounceSelect<
-    ValueType extends { key?: string; label: React.ReactNode; value: string | number } = any,
->({ fetchOptions, debounceTimeout = 800, value, ...props }: DebounceSelectProps<ValueType>) {
+    ValueType extends { key?: string; label: React.ReactNode; value: string | number } = any
+>({
+    fetchOptions,
+    debounceTimeout = 800,
+    value,
+    ...props
+}: DebounceSelectProps<ValueType>) {
     const [fetching, setFetching] = useState(false);
     const [options, setOptions] = useState<ValueType[]>([]);
     const fetchRef = useRef(0);
+
+    /** ================== Debounce Fetch ================== */
     const debounceFetcher = useMemo(() => {
-        const loadOptions = (value: string) => {
+        const loadOptions = (searchText: string) => {
             fetchRef.current += 1;
             const fetchId = fetchRef.current;
-            setOptions([]);
             setFetching(true);
 
-            fetchOptions(value).then((newOptions) => {
-                if (fetchId !== fetchRef.current) {
-                    // for fetch callback order
-                    return;
-                }
-
+            fetchOptions(searchText).then((newOptions) => {
+                if (fetchId !== fetchRef.current) return; // ignore old fetches
                 setOptions(newOptions);
                 setFetching(false);
             });
         };
-
         return debounce(loadOptions, debounceTimeout);
     }, [fetchOptions, debounceTimeout]);
 
+    /** ================== Fetch khi focus ================== */
     const handleOnFocus = () => {
-        //fetching init data when focus to input
-        if (options && options.length > 0) {
-            return;
+        if (options.length === 0) {
+            fetchOptions('').then((newOptions) => setOptions(newOptions));
         }
-        fetchOptions("").then((newOptions) => {
-            setOptions([...options, ...newOptions]);
-        });
-    }
+    };
 
     const handleOnBlur = () => {
-        setOptions([]);
-    }
+        // giữ nguyên options
+    };
 
     return (
         <Select
             labelInValue
+            showSearch
             filterOption={false}
             onSearch={debounceFetcher}
             notFoundContent={fetching ? <Spin size="small" /> : null}
             {...props}
             options={options}
+            value={value}
             onFocus={handleOnFocus}
             onBlur={handleOnBlur}
         />
     );
 }
-

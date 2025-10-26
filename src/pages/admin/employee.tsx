@@ -228,9 +228,31 @@ const EmployeePage = () => {
                     pagination={{
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
-                        total: data?.meta?.total,
                         showSizeChanger: true,
+                        total: data?.meta?.total,
                         showQuickJumper: true,
+                        size: "default",
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13, color: "#595959" }}>
+                                <span style={{ fontWeight: 500, color: "#000" }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                nhân viên
+                            </div>
+                        ),
+                        style: {
+                            marginTop: 16,
+                            padding: "12px 24px",
+                            background: "#fff",
+                            borderRadius: 8,
+                            borderTop: "1px solid #f0f0f0",
+                            display: "flex",
+                            justifyContent: "flex-end",
+                        },
                     }}
                     toolBarRender={() => [
                         <Space key="toolbar" size={12} align="center" wrap>

@@ -22,27 +22,32 @@ const ModalCustomer = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
     const { mutate: createCustomer, isPending: isCreating } = useCreateCustomerMutation();
     const { mutate: updateCustomer, isPending: isUpdating } = useUpdateCustomerMutation();
 
-    // Khi mở modal, nếu có dataInit => fill vào form
+    /** ==================== Khi mở modal: fill dữ liệu nếu có ==================== */
     useEffect(() => {
         if (dataInit?.id) {
-            form.setFieldsValue({
-                customerCode: dataInit.customerCode,
-                name: dataInit.name,
-                phone: dataInit.phone,
-                email: dataInit.email,
-                address: dataInit.address,
-            });
+            // dùng timeout để đợi form mount xong mới fill (fix lỗi form rỗng)
+            setTimeout(() => {
+                form.setFieldsValue({
+                    customerCode: dataInit.customerCode || "",
+                    name: dataInit.name || "",
+                    phone: dataInit.phone || "",
+                    email: dataInit.email || "",
+                    address: dataInit.address || "",
+                });
+            }, 0);
         } else {
             form.resetFields();
         }
     }, [dataInit, form]);
 
+    /** ==================== Đóng & reset modal ==================== */
     const handleReset = () => {
         form.resetFields();
         setDataInit(null);
         setOpenModal(false);
     };
 
+    /** ==================== Submit ==================== */
     const submitCustomer = async (values: any) => {
         const payload = {
             name: values.name,
@@ -52,15 +57,13 @@ const ModalCustomer = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
         };
 
         if (isEdit && dataInit?.id) {
-            updateCustomer(
-                { ...dataInit, ...payload },
-                { onSuccess: () => handleReset() }
-            );
+            updateCustomer({ ...dataInit, ...payload }, { onSuccess: () => handleReset() });
         } else {
             createCustomer(payload, { onSuccess: () => handleReset() });
         }
     };
 
+    /** ==================== Render ==================== */
     return (
         <ModalForm
             title={isEdit ? "Cập nhật khách hàng" : "Thêm mới khách hàng"}

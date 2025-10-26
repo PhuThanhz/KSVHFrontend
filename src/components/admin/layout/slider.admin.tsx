@@ -10,6 +10,10 @@ import {
     ApartmentOutlined,
     DeploymentUnitOutlined,
     BugOutlined,
+    AppstoreAddOutlined,
+    ToolOutlined,
+    StopOutlined,
+    ShopOutlined
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
@@ -49,19 +53,55 @@ const SliderAdmin: React.FC<IProps> = ({
                     key: "/admin",
                     icon: <AppstoreOutlined />,
                 },
-
-                // --- User ---
                 ...(checkPermission(ALL_PERMISSIONS.USERS.GET_PAGINATE)
                     ? [
                         {
-                            label: <Link to="/admin/user">Quản Lý Người Dùng</Link>,
+                            label: "Quản lý người dùng",
                             key: "/admin/user",
                             icon: <UserOutlined />,
+                            children: [
+                                ...(checkPermission(ALL_PERMISSIONS.USERS.GET_PAGINATE)
+                                    ? [
+                                        {
+                                            label: <Link to="/admin/user">Tất cả người dùng</Link>,
+                                            key: "/admin/user",
+                                            icon: <UserOutlined />,
+                                        },
+                                    ]
+                                    : []),
+                                ...(checkPermission(ALL_PERMISSIONS.EMPLOYEE.GET_PAGINATE)
+                                    ? [
+                                        {
+                                            label: <Link to="/admin/employee">Nhân viên</Link>,
+                                            key: "/admin/employee",
+                                            icon: <TeamOutlined />,
+                                        },
+                                    ]
+                                    : []),
+                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {})
+                                    ? [
+                                        {
+                                            label: <Link to="/admin/customer">Khách hàng</Link>,
+                                            key: "/admin/customer",
+                                            icon: <TeamOutlined />,
+                                        },
+                                    ]
+                                    : []),
+                                ...(checkPermission(ALL_PERMISSIONS.TECHNICIAN.GET_PAGINATE)
+                                    ? [
+                                        {
+                                            label: <Link to="/admin/technician">Kỹ thuật viên</Link>,
+                                            key: "/admin/technician",
+                                            icon: <ToolOutlined />,
+                                        },
+                                    ]
+                                    : []),
+                            ],
                         },
                     ]
                     : []),
 
-                // --- Role ---
+
                 ...(checkPermission(ALL_PERMISSIONS.ROLES.GET_PAGINATE)
                     ? [
                         {
@@ -72,7 +112,6 @@ const SliderAdmin: React.FC<IProps> = ({
                     ]
                     : []),
 
-                // --- Permission ---
                 ...(checkPermission(ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE)
                     ? [
                         {
@@ -83,7 +122,17 @@ const SliderAdmin: React.FC<IProps> = ({
                     ]
                     : []),
 
-                // --- Company ---
+                ...(checkPermission(ALL_PERMISSIONS.SKILL.GET_PAGINATE)
+                    ? [
+                        {
+                            label: <Link to="/admin/skill">Quản lý kỹ năng</Link>,
+                            key: "/admin/skill",
+                            icon: <ToolOutlined />,
+                        },
+                    ]
+                    : []),
+
+
                 ...(checkPermission(ALL_PERMISSIONS.COMPANY?.GET_PAGINATE ?? {})
                     ? [
                         {
@@ -94,7 +143,7 @@ const SliderAdmin: React.FC<IProps> = ({
                     ]
                     : []),
 
-                // --- Department ---
+
                 ...(checkPermission(ALL_PERMISSIONS.DEPARTMENT?.GET_PAGINATE ?? {})
                     ? [
                         {
@@ -105,18 +154,17 @@ const SliderAdmin: React.FC<IProps> = ({
                     ]
                     : []),
 
-                // --- Asset Type ---
                 ...(checkPermission(ALL_PERMISSIONS.ASSET_TYPE?.GET_PAGINATE ?? {})
                     ? [
                         {
-                            label: <Link to="/admin/asset-type">Quản lý loại thiết bị</Link>,
+                            label: <Link to="/admin/asset-type">Quản lý loại tài sản</Link>,
                             key: "/admin/asset-type",
                             icon: <DeploymentUnitOutlined />,
                         },
                     ]
                     : []),
 
-                // --- Position (chức vụ) ---
+
                 ...(checkPermission(ALL_PERMISSIONS.POSITION?.GET_PAGINATE ?? {})
                     ? [
                         {
@@ -126,24 +174,86 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
-                ...(checkPermission(ALL_PERMISSIONS.EMPLOYEE.GET_PAGINATE)
+
+                ...(checkPermission(ALL_PERMISSIONS.DEVICE_TYPES.GET_PAGINATE)
                     ? [
                         {
-                            label: <Link to="/admin/employee">Quản lý nhân viên</Link>,
-                            key: "/admin/employee",
-                            icon: <TeamOutlined />,
+                            label: <Link to="/admin/device-type">Quản lý loại thiết bị</Link>,
+                            key: "/admin/device-type",
+                            icon: <AppstoreAddOutlined />,
                         },
                     ]
                     : []),
-                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {})
+
+                ...(checkPermission(ALL_PERMISSIONS.SOLUTION?.GET_PAGINATE ?? {})
+
                     ? [
                         {
-                            label: <Link to="/admin/customer">Quản lý khách hàng</Link>,
-                            key: "/admin/customer",
-                            icon: <TeamOutlined />,
+                            label: <Link to="/admin/solution">Quản lý phương án xử lý</Link>,
+                            key: "/admin/solution",
+                            icon: <AppstoreAddOutlined />,
                         },
                     ]
                     : []),
+                ...(checkPermission(ALL_PERMISSIONS.WAREHOUSE?.GET_PAGINATE ?? {})
+                    ? [
+                        {
+                            label: <Link to="/admin/warehouse">Quản lý kho</Link>,
+                            key: "/admin/warehouse",
+                            icon: <BankOutlined />,
+                        },
+                    ]
+                    : []),
+                ...(checkPermission(ALL_PERMISSIONS.UNIT.GET_PAGINATE)
+                    ? [
+                        {
+                            label: <Link to="/admin/unit">Quản lý đơn vị</Link>,
+                            key: "/admin/unit",
+                            icon: <DeploymentUnitOutlined />,
+                        },
+                    ]
+                    : []),
+                // --- Reject Reason ---
+                ...(checkPermission(ALL_PERMISSIONS.REJECT_REASON.GET_PAGINATE)
+                    ? [
+                        {
+                            label: <Link to="/admin/reject-reason">Quản lý lý do từ chối</Link>,
+                            key: "/admin/reject-reason",
+                            icon: <StopOutlined />,
+                        },
+                    ]
+                    : []),
+                ...(checkPermission(ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_PAGINATE)
+                    ? [
+                        {
+                            label: <Link to="/admin/technician-supplier">Quản lý nhà cung cấp kỹ thuật viên</Link>,
+                            key: "/admin/technician-supplier",
+                            icon: <ToolOutlined />,
+                        },
+                    ]
+                    : []),
+                ...(checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE)
+                    ? [
+                        {
+                            label: <Link to="/admin/issue">Quản lý vấn đề</Link>,
+                            key: "/admin/issue",
+                            icon: <ToolOutlined />,
+                        },
+                    ]
+                    : []),
+                // --- Material Supplier ---
+                ...(checkPermission(ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_PAGINATE ?? {})
+                    ? [
+                        {
+                            label: <Link to="/admin/material-supplier">Quản lý nhà cung cấp vật tư</Link>,
+                            key: "/admin/material-supplier",
+                            icon: <ShopOutlined />,
+                        },
+                    ]
+                    : []),
+
+
+
             ];
 
             setMenuItems(full);
@@ -151,7 +261,14 @@ const SliderAdmin: React.FC<IProps> = ({
     }, [permissions]);
 
     return (
-        <Sider theme="light" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+        <Sider
+            theme="light"
+            collapsible
+            collapsed={collapsed}
+            onCollapse={setCollapsed}
+            width={250}
+            collapsedWidth={80}
+        >
             <div
                 style={{
                     height: 32,

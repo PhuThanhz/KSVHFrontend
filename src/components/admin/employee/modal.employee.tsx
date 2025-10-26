@@ -1,7 +1,7 @@
 import { ModalForm, ProForm, ProFormText } from "@ant-design/pro-components";
-import { Col, Form, Row, Select } from "antd";
+import { Col, Form, Row } from "antd";
 import { isMobile } from "react-device-detect";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { IEmployee } from "@/types/backend";
 import {
     useCreateEmployeeMutation,
@@ -16,59 +16,77 @@ interface IProps {
     dataInit?: IEmployee | null;
     setDataInit: (v: any) => void;
 }
-
 export interface ISelectItem {
-    label: string;
+    label?: string;
     value: number | string;
 }
+
 
 const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) => {
     const [form] = Form.useForm();
     const isEdit = Boolean(dataInit?.id);
 
+    const [selectedCompany, setSelectedCompany] = useState<ISelectItem | null>(null);
+    const [selectedDepartment, setSelectedDepartment] = useState<ISelectItem | null>(null);
+    const [selectedPosition, setSelectedPosition] = useState<ISelectItem | null>(null);
+
     const { mutate: createEmployee, isPending: isCreating } = useCreateEmployeeMutation();
     const { mutate: updateEmployee, isPending: isUpdating } = useUpdateEmployeeMutation();
 
+    /** ==================== Set dữ liệu khi mở modal ==================== */
     useEffect(() => {
         if (dataInit?.id) {
+            const companyItem = dataInit.company
+                ? { label: dataInit.company.name, value: dataInit.company.id }
+                : null;
+            const departmentItem = dataInit.department
+                ? { label: dataInit.department.name, value: dataInit.department.id }
+                : null;
+            const positionItem = dataInit.position
+                ? { label: dataInit.position.name, value: dataInit.position.id }
+                : null;
+
+            setSelectedCompany(companyItem);
+            setSelectedDepartment(departmentItem);
+            setSelectedPosition(positionItem);
+
             form.setFieldsValue({
                 employeeCode: dataInit.employeeCode,
                 fullName: dataInit.fullName,
                 phone: dataInit.phone,
                 email: dataInit.email,
-                company: {
-                    label: dataInit.company?.name,
-                    value: dataInit.company?.id,
-                },
-                department: {
-                    label: dataInit.department?.name,
-                    value: dataInit.department?.id,
-                },
-                position: {
-                    label: dataInit.position?.name,
-                    value: dataInit.position?.id,
-                },
+                company: companyItem,
+                department: departmentItem,
+                position: positionItem,
             });
         } else {
             form.resetFields();
+            setSelectedCompany(null);
+            setSelectedDepartment(null);
+            setSelectedPosition(null);
         }
     }, [dataInit, form]);
 
+    /** ==================== Reset modal ==================== */
     const handleReset = () => {
         form.resetFields();
+        setSelectedCompany(null);
+        setSelectedDepartment(null);
+        setSelectedPosition(null);
         setDataInit(null);
         setOpenModal(false);
     };
 
+    /** ==================== Submit form ==================== */
     const submitEmployee = async (values: any) => {
         const payload = {
             employeeCode: values.employeeCode,
             fullName: values.fullName,
             phone: values.phone,
             email: values.email,
-            departmentId: Number(values.department.value),
-            positionId: Number(values.position.value),
-            companyId: Number(values.company.value),
+            companyId: Number(values.company?.value),
+            departmentId: Number(values.department?.value),
+            positionId: Number(values.position?.value),
         };
 
         if (isEdit && dataInit?.id) {
@@ -81,30 +99,38 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
         }
     };
 
+    /** ==================== Fetch danh sách chọn ==================== */
     async function fetchCompanyList(name: string): Promise<ISelectItem[]> {
         const res = await callFetchCompany(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((item: any) => ({
-            label: item.name,
-            value: item.id,
-        })) || [];
+        return (
+            res?.data?.result?.map((item: any) => ({
+                label: item.name,
+                value: item.id,
+            })) || []
+        );
     }
 
     async function fetchDepartmentList(name: string): Promise<ISelectItem[]> {
         const res = await callFetchDepartment(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((item: any) => ({
-            label: item.name,
-            value: item.id,
-        })) || [];
+        return (
+            res?.data?.result?.map((item: any) => ({
+                label: item.name,
+                value: item.id,
+            })) || []
+        );
     }
 
     async function fetchPositionList(name: string): Promise<ISelectItem[]> {
         const res = await callFetchPosition(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((item: any) => ({
-            label: item.name,
-            value: item.id,
-        })) || [];
+        return (
+            res?.data?.result?.map((item: any) => ({
+                label: item.name,
+                value: item.id,
+            })) || []
+        );
     }
 
+    /** ==================== Render ==================== */
     return (
         <ModalForm
             title={isEdit ? "Cập nhật nhân viên" : "Tạo mới nhân viên"}
@@ -123,6 +149,16 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
             preserve={false}
             form={form}
             onFinish={submitEmployee}
+            initialValues={
+                dataInit?.id
+                    ? {
+                        ...dataInit,
+                        company: selectedCompany,
+                        department: selectedDepartment,
+                        position: selectedPosition,
+                    }
+                    : {}
+            }
         >
             <Row gutter={16}>
                 <Col lg={12} md={12} sm={24} xs={24}>
@@ -171,6 +207,10 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                             showSearch
                             placeholder="Chọn công ty"
                             fetchOptions={fetchCompanyList}
+                            value={selectedCompany as any}
+                            onChange={(newValue: any) =>
+                                setSelectedCompany(newValue as ISelectItem)
+                            }
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>
@@ -187,6 +227,10 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                             showSearch
                             placeholder="Chọn phòng ban"
                             fetchOptions={fetchDepartmentList}
+                            value={selectedDepartment as any}
+                            onChange={(newValue: any) =>
+                                setSelectedDepartment(newValue as ISelectItem)
+                            }
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>
@@ -203,6 +247,10 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                             showSearch
                             placeholder="Chọn chức vụ"
                             fetchOptions={fetchPositionList}
+                            value={selectedPosition as any}
+                            onChange={(newValue: any) =>
+                                setSelectedPosition(newValue as ISelectItem)
+                            }
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>
