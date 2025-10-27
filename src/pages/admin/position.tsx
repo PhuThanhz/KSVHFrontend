@@ -157,7 +157,7 @@ const PositionPage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.ROLES.CREATE} key="add">
+                        <Access permission={ALL_PERMISSIONS.ROLES.CREATE} hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"

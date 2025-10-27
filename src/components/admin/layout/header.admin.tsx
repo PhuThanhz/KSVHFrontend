@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button, Dropdown, Space, Avatar, message } from 'antd';
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Space, Avatar, message, Badge } from 'antd';
+import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { callLogout } from '@/config/api';
@@ -31,26 +31,35 @@ const HeaderAdmin: React.FC<IProps> = ({ collapsed, setCollapsed }) => {
             key: 'home',
         },
         {
-            label: <label
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleLogout()}
-            >Đăng xuất</label>,
+            label: (
+                <label
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleLogout()}
+                >
+                    Đăng xuất
+                </label>
+            ),
             key: 'logout',
         },
     ];
+
+    // Ví dụ giả lập số thông báo chưa đọc
+    const unreadCount = 3;
 
     return (
         <div
             className='admin-header'
             style={{
-                display: "flex",
-                justifyContent: "space-between",
+                display: 'flex',
+                justifyContent: 'space-between',
                 marginRight: 20,
-                alignItems: "center",
+                alignItems: 'center',
+                height: 64,
             }}
         >
+            {/* Nút thu/phóng sidebar */}
             <Button
-                type="text"
+                type='text'
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                 onClick={() => setCollapsed(!collapsed)}
                 style={{
@@ -60,12 +69,25 @@ const HeaderAdmin: React.FC<IProps> = ({ collapsed, setCollapsed }) => {
                 }}
             />
 
-            <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
-                <Space style={{ cursor: "pointer" }}>
-                    Welcome {user?.name}
-                    <Avatar>{user?.name?.substring(0, 2)?.toUpperCase()}</Avatar>
-                </Space>
-            </Dropdown>
+            <Space size={20} align='center'>
+                <Badge count={unreadCount} size='small' offset={[-3, 5]}>
+                    <BellOutlined
+                        style={{
+                            fontSize: 20,
+                            cursor: 'pointer',
+                            color: '#595959',
+                        }}
+                        onClick={() => message.info('Mở danh sách thông báo')}
+                    />
+                </Badge>
+
+                <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
+                    <Space style={{ cursor: 'pointer' }}>
+                        Welcome {user?.name}
+                        <Avatar>{user?.name?.substring(0, 2)?.toUpperCase()}</Avatar>
+                    </Space>
+                </Dropdown>
+            </Space>
         </div>
     );
 };

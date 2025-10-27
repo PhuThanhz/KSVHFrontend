@@ -192,7 +192,7 @@ const WarehousePage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.WAREHOUSE.CREATE}>
+                        <Access key="create" permission={ALL_PERMISSIONS.WAREHOUSE.CREATE} hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"

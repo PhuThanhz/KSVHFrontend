@@ -191,7 +191,7 @@ const AssetTypePage = () => {
                                 width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
-                            <Access permission={ALL_PERMISSIONS.ASSET_TYPE.CREATE}>
+                            <Access permission={ALL_PERMISSIONS.ASSET_TYPE.CREATE} hideChildren>
                                 <Button
                                     icon={<PlusOutlined />}
                                     type="primary"

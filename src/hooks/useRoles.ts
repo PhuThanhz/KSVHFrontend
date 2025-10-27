@@ -66,9 +66,10 @@ export const useUpdateRoleMutation = () => {
                 throw new Error(res?.message || "Không thể cập nhật vai trò");
             return res;
         },
-        onSuccess: (res) => {
+        onSuccess: (res, variables) => {
             notify.updated(res?.message || "Cập nhật vai trò thành công");
             queryClient.invalidateQueries({ queryKey: ["roles"] });
+            queryClient.invalidateQueries({ queryKey: ["role", variables.id] });
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi cập nhật vai trò");

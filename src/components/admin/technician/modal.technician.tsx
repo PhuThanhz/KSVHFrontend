@@ -267,7 +267,6 @@ const ModalTechnician = ({
                     </ProForm.Item>
                 </Col>
 
-                {/* CHỈ HIỂN THỊ NẾU THUÊ NGOÀI */}
                 {technicianType === "OUTSOURCE" && (
                     <>
                         <Col lg={12} md={12}>
@@ -285,13 +284,14 @@ const ModalTechnician = ({
                                     },
                                 ]}
                                 fieldProps={{
-                                    formatter: (v) =>
-                                        `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                                    formatter: (value) =>
+                                        value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "",
+                                    parser: (value?: string) =>
+                                        value ? Number(value.replace(/₫|,/g, "")) : 0,
                                 }}
                                 placeholder="Nhập chi phí thuê"
                             />
                         </Col>
-
                         <Col lg={12} md={12}>
                             <ProForm.Item
                                 name="technicianSupplier"

@@ -160,7 +160,7 @@ const CustomerPage = () => {
                         },
                     }}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.CUSTOMER.CREATE}>
+                        <Access key="create" permission={ALL_PERMISSIONS.CUSTOMER.CREATE} hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"

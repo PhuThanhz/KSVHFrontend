@@ -194,7 +194,7 @@ const TechnicianSupplierPage = () => {
                         },
                     }}
                     toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.CREATE} key="create">
+                        <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.CREATE} key="create" hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"
@@ -210,7 +210,6 @@ const TechnicianSupplierPage = () => {
                 />
             </Access>
 
-            {/* Modal Thêm / Sửa */}
             <ModalTechnicianSupplier
                 openModal={openModal}
                 setOpenModal={setOpenModal}
@@ -218,7 +217,6 @@ const TechnicianSupplierPage = () => {
                 setDataInit={setDataInit}
             />
 
-            {/* Drawer Xem chi tiết */}
             <ViewDetailTechnicianSupplier
                 onClose={setOpenViewDetail}
                 open={openViewDetail}

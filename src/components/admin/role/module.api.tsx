@@ -22,7 +22,6 @@ interface IProps {
 const ModuleApi = (props: IProps) => {
   const { form, listPermissions, singleRole, openModal } = props;
 
-  //  Dùng React Query để fetch chi tiết role theo id
   const { data: roleDetail, isLoading } = useRoleByIdQuery(singleRole?.id ? String(singleRole.id) : undefined);
 
   useEffect(() => {

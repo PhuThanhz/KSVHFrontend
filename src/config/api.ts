@@ -24,7 +24,13 @@ import type {
     ITechnicianSupplier,
     IIssue,
     IMaterialSupplier,
-    ITechnician
+    ITechnician,
+    IInventoryItem,
+    IDevicePart,
+    IDevice,
+    ICreateDeviceRequest,
+    IUpdateDeviceRequest,
+    IResUploadFileDTO,
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 
@@ -46,23 +52,32 @@ export const callLogout = () => {
     return axios.post<IBackendRes<string>>('/api/v1/auth/logout')
 }
 
-/**
- * Upload single file
- */
-export const callUploadSingleFile = (file: any, folderType: string) => {
-    const bodyFormData = new FormData();
-    bodyFormData.append('file', file);
-    bodyFormData.append('folder', folderType);
+// ============================= Upload Single File ============================= //
+export const callUploadSingleFile = (file: File, folderType: string) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", folderType);
 
-    return axios<IBackendRes<{ fileName: string }>>({
-        method: 'post',
-        url: '/api/v1/files',
-        data: bodyFormData,
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
+    return axios.post<{ fileName: string; uploadedAt: string }[]>("/api/v1/files", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
     });
-}
+};
+
+
+// ============================= Upload Multiple Files ============================= //
+export const callUploadMultipleFiles = (files: File[], folderType: string) => {
+    const formData = new FormData();
+
+    files.forEach((file) => {
+        formData.append("file", file);
+    });
+    formData.append("folder", folderType);
+
+    return axios.post<IBackendRes<IResUploadFileDTO[]>>("/api/v1/files", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+};
+
 //================================ Module User ================================//
 
 export const callCreateUser = (user: IUser) => {
@@ -696,4 +711,110 @@ export const callUpdateTechnician = (technician: ITechnician) => {
 
 export const callDeleteTechnician = (id: number | string) => {
     return axios.delete<IBackendRes<string>>(`/api/v1/technicians/${id}`);
+};
+
+
+
+
+/** ======================== Module InventoryItem ======================== **/
+export const callFetchInventoryItem = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IInventoryItem>>>(`/api/v1/inventory-items?${query}`);
+};
+export const callFetchInventoryItemById = (id: string | number) => {
+    return axios.get<IBackendRes<IInventoryItem>>(`/api/v1/inventory-items/${id}`);
+};
+export const callCreateInventoryItem = (data: IInventoryItem) => {
+    const payload = {
+        itemCode: data.itemCode,
+        itemName: data.itemName,
+        quantity: data.quantity,
+        unitPrice: data.unitPrice,
+        unitId: Number(data.unit.id),
+        deviceTypeId: Number(data.deviceType.id),
+        warehouseId: Number(data.warehouse.id),
+        materialSupplierId: Number(data.materialSupplier.id),
+    };
+
+    return axios.post<IBackendRes<IInventoryItem>>(`/api/v1/inventory-items`, payload, {
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+export const callUpdateInventoryItem = (data: IInventoryItem) => {
+    const payload = {
+        id: data.id,
+        itemCode: data.itemCode,
+        itemName: data.itemName,
+        quantity: data.quantity,
+        unitPrice: data.unitPrice,
+        unitId: Number(data.unit.id),
+        deviceTypeId: Number(data.deviceType.id),
+        warehouseId: Number(data.warehouse.id),
+        materialSupplierId: Number(data.materialSupplier.id),
+    };
+
+    return axios.put<IBackendRes<IInventoryItem>>(`/api/v1/inventory-items`, payload, {
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+export const callDeleteInventoryItem = (id: string | number) => {
+    return axios.delete<IBackendRes<null>>(`/api/v1/inventory-items/${id}`);
+};
+
+/** ======================== Module DevicePart ======================== **/
+export const callFetchDevicePart = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IDevicePart>>>(`/api/v1/parts?${query}`);
+};
+
+export const callFetchDevicePartById = (id: string | number) => {
+    return axios.get<IBackendRes<IDevicePart>>(`/api/v1/parts/${id}`);
+};
+
+export const callCreateDevicePart = (data: IDevicePart) => {
+    const payload = {
+        partCode: data.partCode,
+        partName: data.partName,
+        quantity: data.quantity,
+        deviceId: Number(data.device?.id),
+    };
+    return axios.post<IBackendRes<IDevicePart>>("/api/v1/parts", payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callUpdateDevicePart = (id: string | number, data: IDevicePart) => {
+    const payload = {
+        partCode: data.partCode,
+        partName: data.partName,
+        quantity: data.quantity,
+        deviceId: Number(data.device?.id),
+    };
+    return axios.put<IBackendRes<IDevicePart>>(`/api/v1/parts/${id}`, payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callDeleteDevicePart = (id: string | number) => {
+    return axios.delete<IBackendRes<string>>(`/api/v1/parts/${id}`);
+};
+
+
+/** ======================== Module Devices ======================== **/
+export const callFetchDevice = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IDevice>>>(`/api/v1/devices?${query}`);
+};
+export const callFetchDeviceById = (id: string | number) => {
+    return axios.get<IBackendRes<IDevice>>(`/api/v1/devices/${id}`);
+};
+export const callCreateDevice = (data: ICreateDeviceRequest) => {
+    return axios.post<IBackendRes<IDevice>>(`/api/v1/devices`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callUpdateDevice = (id: string | number, data: IUpdateDeviceRequest) => {
+    return axios.put<IBackendRes<IDevice>>(`/api/v1/devices/${id}`, data, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+export const callDeleteDevice = (id: string | number) => {
+    return axios.delete<IBackendRes<string>>(`/api/v1/devices/${id}`);
 };

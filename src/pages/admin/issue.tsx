@@ -169,7 +169,7 @@ const IssuePage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.ISSUE.CREATE} key="create">
+                        <Access permission={ALL_PERMISSIONS.ISSUE.CREATE} key="create" hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"

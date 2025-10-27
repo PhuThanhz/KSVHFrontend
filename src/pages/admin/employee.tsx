@@ -290,7 +290,7 @@ const EmployeePage = () => {
                                 width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
-                            <Access permission={ALL_PERMISSIONS.EMPLOYEE.CREATE}>
+                            <Access permission={ALL_PERMISSIONS.EMPLOYEE.CREATE} hideChildren>
                                 <Button
                                     icon={<PlusOutlined />}
                                     type="primary"

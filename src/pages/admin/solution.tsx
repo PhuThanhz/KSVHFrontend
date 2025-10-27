@@ -190,7 +190,7 @@ const SolutionPage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.SOLUTION.CREATE}>
+                        <Access key="create" permission={ALL_PERMISSIONS.SOLUTION.CREATE} hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"

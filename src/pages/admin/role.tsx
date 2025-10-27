@@ -193,14 +193,16 @@ const RolePage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Button
-                            key="create"
-                            icon={<PlusOutlined />}
-                            type="primary"
-                            onClick={() => setOpenModal(true)}
-                        >
-                            Thêm mới
-                        </Button>
+                        <Access permission={ALL_PERMISSIONS.ROLES.CREATE} key="create" hideChildren>
+                            <Button
+                                icon={<PlusOutlined />}
+                                type="primary"
+                                onClick={() => setOpenModal(true)}
+                            >
+                                Thêm mới
+                            </Button>
+                        </Access>
+
                     ]}
                 />
             </Access>

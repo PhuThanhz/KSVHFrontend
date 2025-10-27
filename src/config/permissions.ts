@@ -134,14 +134,35 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/material-suppliers", module: "MATERIAL_SUPPLIER" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/material-suppliers/{id}", module: "MATERIAL_SUPPLIER" },
     },
-
-
     TECHNICIAN: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/technicians", module: "TECHNICIAN" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/technicians/{id}", module: "TECHNICIAN" },
         CREATE: { method: "POST", apiPath: "/api/v1/technicians", module: "TECHNICIAN" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/technicians", module: "TECHNICIAN" },
     },
+    INVENTORY_ITEM: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/inventory-items", module: "INVENTORY_ITEM" },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/inventory-items/{id}", module: "INVENTORY_ITEM" },
+        CREATE: { method: "POST", apiPath: "/api/v1/inventory-items", module: "INVENTORY_ITEM" },
+        UPDATE: { method: "PUT", apiPath: "/api/v1/inventory-items", module: "INVENTORY_ITEM" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/inventory-items/{id}", module: "INVENTORY_ITEM" },
+    },
+
+    DEVICE_PART: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/parts", module: "DEVICE_PART" },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/parts/{id}", module: "DEVICE_PART" },
+        CREATE: { method: "POST", apiPath: "/api/v1/parts", module: "DEVICE_PART" },
+        UPDATE: { method: "PUT", apiPath: "/api/v1/parts/{id}", module: "DEVICE_PART" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/parts/{id}", module: "DEVICE_PART" },
+    },
+    DEVICE: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/devices", module: "DEVICE" },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/devices/{id}", module: "DEVICE" },
+        CREATE: { method: "POST", apiPath: "/api/v1/devices", module: "DEVICE" },
+        UPDATE: { method: "PUT", apiPath: "/api/v1/devices/{id}", module: "DEVICE" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/devices/{id}", module: "DEVICE" },
+    },
+
 };
 
 export const ALL_MODULES = {
@@ -165,6 +186,10 @@ export const ALL_MODULES = {
     ISSUE: "ISSUE",
     MATERIAL_SUPPLIER: "MATERIAL_SUPPLIER",
     TECHNICIAN: "TECHNICIAN",
+    DEVICE_PART: "DEVICE_PART",
+    DEVICE: "DEVICE",
+
+
 
 
 };

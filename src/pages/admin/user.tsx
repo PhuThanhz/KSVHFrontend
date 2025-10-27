@@ -191,7 +191,8 @@ const UserPage = () => {
                     }}
                     pagination={{
                         current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
+                        pageSize: data?.meta?.pageSize || 10,
+                        defaultPageSize: 10,
                         showSizeChanger: true,
                         total: data?.meta?.total,
                         showQuickJumper: true,
@@ -221,7 +222,6 @@ const UserPage = () => {
                     rowSelection={false}
                     toolBarRender={() => [
                         <Space key="toolbar" size={12} align="center" wrap>
-                            {/* Bộ lọc vai trò */}
                             <Select
                                 placeholder="Chọn vai trò"
                                 allowClear
@@ -251,7 +251,7 @@ const UserPage = () => {
                                 width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
-                            <Access permission={ALL_PERMISSIONS.USERS.CREATE}>
+                            <Access permission={ALL_PERMISSIONS.USERS.CREATE} hideChildren>
                                 <Button
                                     icon={<PlusOutlined />}
                                     type="primary"

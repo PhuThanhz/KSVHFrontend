@@ -180,7 +180,7 @@ const UnitPage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.UNIT.CREATE}>
+                        <Access key="create" permission={ALL_PERMISSIONS.UNIT.CREATE} hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"

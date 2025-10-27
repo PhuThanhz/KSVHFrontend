@@ -203,7 +203,7 @@ const CompanyPage = () => {
                                 width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
-                            <Access permission={ALL_PERMISSIONS.COMPANY.CREATE}>
+                            <Access permission={ALL_PERMISSIONS.COMPANY.CREATE} hideChildren>
                                 <Button
                                     icon={<PlusOutlined />}
                                     type="primary"

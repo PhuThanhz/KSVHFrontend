@@ -204,7 +204,7 @@ const DepartmentPage = () => {
                                 width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
-                            <Access permission={ALL_PERMISSIONS.DEPARTMENT.CREATE}>
+                            <Access permission={ALL_PERMISSIONS.DEPARTMENT.CREATE} hideChildren>
                                 <Button
                                     icon={<PlusOutlined />}
                                     type="primary"

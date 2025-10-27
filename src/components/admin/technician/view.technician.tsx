@@ -1,6 +1,7 @@
 import { Drawer, Descriptions, Divider, Spin, Empty, Badge, Typography } from "antd";
 import { useTechnicianByIdQuery } from "@/hooks/useTechnicians";
 import dayjs from "dayjs";
+import { formatCurrency } from "@/config/format";
 
 const { Text, Title } = Typography;
 
@@ -85,9 +86,7 @@ const ViewTechnician = ({ onClose, open, technicianId }: IProps) => {
 
                                 <Descriptions.Item label="Chi phí thuê (VNĐ)">
                                     <Text>
-                                        {technician.costPerHire
-                                            ? `${Number(technician.costPerHire).toLocaleString("vi-VN")} đ`
-                                            : "-"}
+                                        {technician.costPerHire ? formatCurrency(technician.costPerHire) : "-"}
                                     </Text>
                                 </Descriptions.Item>
                             </>

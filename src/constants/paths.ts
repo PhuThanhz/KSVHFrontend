@@ -25,7 +25,9 @@ export const PATHS = {
         ISSUE: "/admin/issue",
         MATERIAL_SUPPLIER: "/admin/material-supplier",
         TECHNICIAN: "/admin/technician",
-
+        INVENTORY_ITEM: "/admin/inventory-items",
+        DEVICE_PART: "/admin/device-part",
+        DEVICE: "/admin/device",
 
     },
 

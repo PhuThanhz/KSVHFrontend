@@ -170,7 +170,7 @@ const MaterialSupplierPage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.CREATE}>
+                        <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.CREATE} hideChildren>
                             <Button
                                 key="create"
                                 icon={<PlusOutlined />}

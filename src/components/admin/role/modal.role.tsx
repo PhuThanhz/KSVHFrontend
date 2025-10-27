@@ -64,7 +64,6 @@ const ModalRole = (props: IProps) => {
         };
 
         if (singleRole?.id) {
-            // ✅ Cập nhật role
             updateRole(
                 { id: String(singleRole.id), role: roleData },
                 {
@@ -82,7 +81,6 @@ const ModalRole = (props: IProps) => {
                 }
             );
         } else {
-            // ✅ Tạo mới role
             createRole(roleData as IRole, {
                 onSuccess: () => {
                     message.success("Thêm mới role thành công");

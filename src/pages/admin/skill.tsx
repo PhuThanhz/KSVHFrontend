@@ -199,7 +199,6 @@ const SkillPage = () => {
                 />
             </Access>
 
-            {/* Modal thêm/sửa */}
             <ModalSkill
                 openModal={openModal}
                 setOpenModal={setOpenModal}

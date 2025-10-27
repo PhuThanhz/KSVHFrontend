@@ -227,7 +227,7 @@ const DeviceTypePage = () => {
                                 width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
-                            <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.CREATE}>
+                            <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.CREATE} hideChildren>
                                 <Button
                                     icon={<PlusOutlined />}
                                     type="primary"

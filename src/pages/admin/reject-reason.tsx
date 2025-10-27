@@ -214,7 +214,7 @@ const RejectReasonPage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.REJECT_REASON.CREATE} key="create">
+                        <Access permission={ALL_PERMISSIONS.REJECT_REASON.CREATE} key="create" hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"

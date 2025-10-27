@@ -33,7 +33,9 @@ import TechnicianSupplierPage from './pages/admin/technician-supplier';
 import IssuePage from "./pages/admin/issue";
 import MaterialSupplierPage from "@/pages/admin/material-supplier";
 import TechnicianPage from "./pages/admin/technician";
-
+import InventoryItemPage from "./pages/admin/inventory-item";
+import DevicePartPage from "./pages/admin/device-part";
+import DevicePage from "pages/admin/device";
 export default function App() {
   const dispatch = useAppDispatch();
 
@@ -226,8 +228,32 @@ export default function App() {
           ),
         },
 
+        {
+          path: PATHS.ADMIN.INVENTORY_ITEM,
+          element: (
+            <ProtectedRoute>
+              <InventoryItemPage />
+            </ProtectedRoute>
+          ),
+        },
 
+        {
+          path: PATHS.ADMIN.DEVICE_PART,
+          element: (
+            <ProtectedRoute>
+              <DevicePartPage />
+            </ProtectedRoute>
+          ),
+        },
 
+        {
+          path: PATHS.ADMIN.DEVICE,
+          element: (
+            <ProtectedRoute>
+              <DevicePage />
+            </ProtectedRoute>
+          ),
+        },
 
 
       ],
