@@ -47,7 +47,7 @@ const PositionPage = () => {
 
         if (!q.filter) delete q.filter;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
         let sortBy = "sort=createdAt,desc";
 
         if (sort?.name) {
@@ -137,6 +137,7 @@ const PositionPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         total: data?.meta?.total,

@@ -22,13 +22,13 @@ const RejectReasonPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedReasonId, setSelectedReasonId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState<string>(() => {
-        return queryString.stringify({
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
             page: 1,
             size: 10,
             sort: "createdAt,desc",
-        });
-    });
+        }, { encode: false })
+    );;
 
     const { data, isFetching } = useRejectReasonsQuery(query);
     const deleteMutation = useDeleteRejectReasonMutation();
@@ -159,7 +159,8 @@ const RejectReasonPage = () => {
                 ? `${q.filter} and reasonType='${params.reasonType}'`
                 : `reasonType='${params.reasonType}'`;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
+        queryString.stringify(q);
 
         // Sort
         let sortBy = "";
@@ -185,6 +186,7 @@ const RejectReasonPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         total: data?.meta?.total,

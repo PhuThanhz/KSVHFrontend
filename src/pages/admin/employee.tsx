@@ -46,10 +46,13 @@ const EmployeePage = () => {
     const [departmentOptions, setDepartmentOptions] = useState<{ label: string; value: string }[]>([]);
     const [positionOptions, setPositionOptions] = useState<{ label: string; value: string }[]>([]);
 
-    const [query, setQuery] = useState<string>(() =>
-        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" })
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
     );
-
     const { data, isFetching } = useEmployeesQuery(query);
     const { mutate: deleteEmployee, isPending: isDeleting } = useDeleteEmployeeMutation();
 
@@ -226,6 +229,7 @@ const EmployeePage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

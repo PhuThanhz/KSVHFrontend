@@ -28,7 +28,7 @@ const RolePage = () => {
     const { data, isLoading, refetch } = useRolesQuery(query);
     const deleteRoleMutation = useDeleteRoleMutation();
 
-    const { data: permissionsData, isLoading: isPermissionsLoading } = usePermissionsQuery("page=1&size=100");
+    const { data: permissionsData } = usePermissionsQuery("page=1&size=500");
 
     useEffect(() => {
         if (permissionsData?.result) {
@@ -41,7 +41,6 @@ const RolePage = () => {
         if (!id) return;
         try {
             await deleteRoleMutation.mutateAsync(id);
-            // Không cần gọi refetch vì invalidateQueries đã tự động reload
         } catch (err) {
             console.error(err);
         }
@@ -58,7 +57,7 @@ const RolePage = () => {
         if (clone.name) q.filter = `${sfLike("name", clone.name)}`;
         if (!q.filter) delete q.filter;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
         let sortBy = "";
 
         if (sort?.name) sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
@@ -163,6 +162,8 @@ const RolePage = () => {
                     }}
                     scroll={{ x: true }}
                     pagination={{
+                        defaultPageSize: 10,
+
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

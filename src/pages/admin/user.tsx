@@ -25,13 +25,13 @@ const UserPage = () => {
     const [roleFilter, setRoleFilter] = useState<string | null>(null);
     const [roleOptions, setRoleOptions] = useState<{ label: string; value: string }[]>([]);
 
-    const [query, setQuery] = useState<string>(() => {
-        return queryString.stringify({
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
             page: 1,
             size: 10,
             sort: "createdAt,desc",
-        });
-    });
+        }, { encode: false })
+    );
 
     const { data, isFetching } = useUsersQuery(query);
 
@@ -83,7 +83,7 @@ const UserPage = () => {
 
         if (!q.filter) delete q.filter;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
 
         // Sort
         let sortBy = "";
@@ -190,6 +190,7 @@ const UserPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize || 10,
                         defaultPageSize: 10,

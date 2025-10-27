@@ -561,8 +561,6 @@ export interface ICreateDeviceRequest {
 }
 
 /** ========================== INTERFACE: UPDATE DTO ========================== */
-/**
- * Payload cập nhật thiết bị — có thể chỉ gửi một phần (PATCH).
- */
+
 export interface IUpdateDeviceRequest extends Partial<ICreateDeviceRequest> { }
 

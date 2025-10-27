@@ -28,13 +28,12 @@ const DevicePage = () => {
     const [openView, setOpenView] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
-    // ==== Query state mặc định ====
-    const [query, setQuery] = useState(
+    const [query, setQuery] = useState(() =>
         queryString.stringify({
             page: 1,
             size: 10,
             sort: "createdAt,desc",
-        })
+        }, { encode: false })
     );
 
     const { data, isFetching } = useDevicesQuery(query);
@@ -288,6 +287,8 @@ const DevicePage = () => {
                         });
                     }}
                     pagination={{
+                        defaultPageSize: 10,
+
                         current: data?.meta?.page,
                         pageSize: 10,
                         showSizeChanger: false,

@@ -3,7 +3,7 @@ import type { ICompany } from "@/types/backend";
 import { EditOutlined, PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
 import { Button, Space, Tag, Popconfirm } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import queryString from "query-string";
 import ModalCompany from "@/components/admin/company/modal.company";
 import ViewDetailCompany from "@/components/admin/company/view.company";
@@ -21,13 +21,14 @@ const CompanyPage = () => {
 
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
 
-    const [query, setQuery] = useState<string>(() => {
-        return queryString.stringify({
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
             page: 1,
             size: 10,
             sort: "createdAt,desc",
-        });
-    });
+        }, { encode: false })
+    );
+
 
     const { data, isFetching } = useCompaniesQuery(query);
     const { mutate: deleteCompany } = useDeleteCompanyMutation();
@@ -51,7 +52,7 @@ const CompanyPage = () => {
 
         if (!q.filter) delete q.filter;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
 
         // Sort
         let sortBy = "";
@@ -165,6 +166,7 @@ const CompanyPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

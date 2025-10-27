@@ -20,8 +20,13 @@ const UnitPage = () => {
     const [dataInit, setDataInit] = useState<IUnit | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
-
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
+    );
     const tableRef = useRef<ActionType>(null);
 
     const { data, isFetching } = useUnitsQuery(query);

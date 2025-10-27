@@ -19,8 +19,12 @@ const CustomerPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState<string>(() =>
-        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" })
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
     );
 
     const { data, isFetching } = useCustomersQuery(query);
@@ -131,6 +135,7 @@ const CustomerPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

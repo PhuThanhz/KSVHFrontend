@@ -19,8 +19,12 @@ const DevicePartPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedPartId, setSelectedPartId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState<string>(
-        "page=1&size=10&sort=createdAt,desc"
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
     );
 
     const { data, isFetching } = useDevicePartsQuery(query);
@@ -53,7 +57,7 @@ const DevicePartPage = () => {
 
         if (!q.filter) delete q.filter;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
 
         let sortBy = "";
         if (sort?.partCode)

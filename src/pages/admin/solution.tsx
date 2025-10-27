@@ -22,8 +22,14 @@ const SolutionPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
 
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
+    );
     const tableRef = useRef<ActionType>(null);
 
     const { data, isFetching } = useSolutionsQuery(query);
@@ -53,7 +59,7 @@ const SolutionPage = () => {
             q.filter = `solutionName ~ '${params.solutionName}'`;
         }
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
 
         if (sort?.solutionName) {
             const dir = sort.solutionName === "ascend" ? "asc" : "desc";
@@ -160,6 +166,8 @@ const SolutionPage = () => {
                         });
                     }}
                     pagination={{
+                        defaultPageSize: 10,
+
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

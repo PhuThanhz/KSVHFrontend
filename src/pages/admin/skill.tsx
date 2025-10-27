@@ -18,8 +18,12 @@ const SkillPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedSkillId, setSelectedSkillId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState<string>(
-        "page=1&size=10&sort=createdAt,desc"
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
     );
 
     const { data, isFetching } = useSkillsQuery(query);
@@ -150,6 +154,8 @@ const SkillPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
+
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         total: data?.meta?.total,

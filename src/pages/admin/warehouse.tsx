@@ -51,7 +51,7 @@ const WarehousePage = () => {
             q.filter = `warehouseName ~ '${params.warehouseName}'`;
         }
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
 
         if (sort?.warehouseName) {
             const dir = sort.warehouseName === "ascend" ? "asc" : "desc";
@@ -162,6 +162,7 @@ const WarehousePage = () => {
                         });
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

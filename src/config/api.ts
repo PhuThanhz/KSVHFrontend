@@ -205,6 +205,7 @@ export const callFetchCompany = (query: string) => {
 export const callFetchCompanyById = (id: number | string) => {
     return axios.get<IBackendRes<ICompany>>(`/api/v1/companies/${id}`);
 };
+
 //================================Module AssetType  ================================//
 export const callCreateAssetType = (assetType: IAssetType) => {
     const payload = {

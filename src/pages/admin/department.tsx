@@ -24,12 +24,12 @@ const DepartmentPage = () => {
 
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
 
-    const [query, setQuery] = useState<string>(() =>
+    const [query, setQuery] = useState(() =>
         queryString.stringify({
             page: 1,
             size: 10,
             sort: "createdAt,desc",
-        })
+        }, { encode: false })
     );
 
     const { data, isFetching } = useDepartmentsQuery(query);
@@ -59,7 +59,7 @@ const DepartmentPage = () => {
 
         if (!q.filter) delete q.filter;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
 
         // sort
         let sortBy = "";
@@ -166,6 +166,7 @@ const DepartmentPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

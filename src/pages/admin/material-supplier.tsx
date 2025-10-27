@@ -39,7 +39,7 @@ const MaterialSupplierPage = () => {
         if (params.supplierCode) q.supplierCode = params.supplierCode;
         if (params.supplierName) q.supplierName = params.supplierName;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
 
         // Sort
         const sortField =

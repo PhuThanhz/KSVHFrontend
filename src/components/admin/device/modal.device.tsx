@@ -1,5 +1,8 @@
-import { ModalForm, ProForm, ProFormTextArea, ProFormDigit, ProFormDatePicker, ProFormText } from "@ant-design/pro-components";
-import { Col, Modal, Form, Row, Upload, Radio, Select, Space, Typography, Divider, message, } from "antd";
+import {
+    ModalForm, ProForm, ProFormTextArea, ProFormDigit, ProFormDatePicker, ProFormText,
+    ProFormList, ProFormGroup
+} from "@ant-design/pro-components";
+import { Col, Modal, Form, Row, Upload, Radio, Select, Space, Typography, Divider, message, Card } from "antd";
 import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { isMobile } from "react-device-detect";
 import { callUploadMultipleFiles } from "@/config/api";
@@ -23,7 +26,6 @@ import {
     callFetchDepartment,
     callFetchMaterialSupplier,
     callFetchUser,
-    callUploadSingleFile,
 } from "@/config/api";
 
 const { Text } = Typography;
@@ -51,11 +53,11 @@ const STATUS_OPTIONS: { label: string; value: DeviceStatus }[] = [
 ];
 
 const OWNERSHIP_OPTIONS: { label: string; value: DeviceOwnershipType }[] = [
-    { label: "Thiết bị nội bộ (INTERNAL)", value: "INTERNAL" },
-    { label: "Thuộc khách hàng (CUSTOMER)", value: "CUSTOMER" },
+    { label: "Nội bộ", value: "INTERNAL" },
+    { label: "Khách hàng", value: "CUSTOMER" },
 ];
 
-const DEPRE_UNITS: TimeUnitType[] = ["MONTH", "QUARTER", "YEAR"]; // theo UI mẫu
+const DEPRE_UNITS: TimeUnitType[] = ["MONTH", "QUARTER", "YEAR"];
 const FREQ_UNITS: TimeUnitType[] = ["DAY", "WEEK", "MONTH", "YEAR"];
 
 const WEEK_DAYS = [
@@ -129,6 +131,7 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
         const res = await callFetchUser(`page=1&size=100&name=/${name}/i`);
         return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
     }
+
     const getBase64 = (img: File, callback: (url: string) => void) => {
         const reader = new FileReader();
         reader.addEventListener("load", () => callback(reader.result as string));
@@ -154,15 +157,34 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
 
     /** ==================== Init form when open ==================== */
     useEffect(() => {
-        if (dataInit?.id) {
-            // set selects (some ids might not be present in response DTO → only name,
-            // nên để value tạm null và giữ label hiển thị)
-            const dt = dataInit.deviceType?.typeName ? { label: dataInit.deviceType.typeName, value: (dataInit as any).deviceType?.id ?? null } : null;
-            const un = dataInit.unit?.name ? { label: dataInit.unit.name, value: (dataInit as any).unit?.id ?? null } : null;
-            const sup = dataInit.supplier?.supplierName ? { label: dataInit.supplier.supplierName, value: (dataInit as any).supplier?.id ?? null } : null;
-            const comp = dataInit.company?.name ? { label: dataInit.company.name, value: (dataInit as any).company?.id ?? null } : null;
-            const dep = dataInit.department?.name ? { label: dataInit.department.name, value: (dataInit as any).department?.id ?? null } : null;
-            const man = dataInit.manager?.name ? { label: dataInit.manager.name, value: (dataInit as any).manager?.id ?? null } : null;
+        if (dataInit?.id && openModal) {
+            // Lấy ID thực từ các đối tượng nested
+            const deviceTypeId = (dataInit as any).deviceType?.id || (dataInit as any).deviceTypeId;
+            const unitId = (dataInit as any).unit?.id || (dataInit as any).unitId;
+            const supplierId = (dataInit as any).supplier?.id || (dataInit as any).supplierId;
+            const companyId = (dataInit as any).company?.id || (dataInit as any).companyId;
+            const departmentId = (dataInit as any).department?.id || (dataInit as any).departmentId;
+            const managerId = (dataInit as any).manager?.id || (dataInit as any).managerUserId;
+
+            // Set selected items với ID thực
+            const dt = dataInit.deviceType?.typeName && deviceTypeId
+                ? { label: dataInit.deviceType.typeName, value: deviceTypeId }
+                : null;
+            const un = dataInit.unit?.name && unitId
+                ? { label: dataInit.unit.name, value: unitId }
+                : null;
+            const sup = dataInit.supplier?.supplierName && supplierId
+                ? { label: dataInit.supplier.supplierName, value: supplierId }
+                : null;
+            const comp = dataInit.company?.name && companyId
+                ? { label: dataInit.company.name, value: companyId }
+                : null;
+            const dep = dataInit.department?.name && departmentId
+                ? { label: dataInit.department.name, value: departmentId }
+                : null;
+            const man = dataInit.manager?.name && managerId
+                ? { label: dataInit.manager.name, value: managerId }
+                : null;
 
             setSelectedDeviceType(dt);
             setSelectedUnit(un);
@@ -171,7 +193,7 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
             setSelectedDepartment(dep);
             setSelectedManager(man);
 
-            // map images into Upload list (if any)
+            // map images
             const images = [dataInit.image1, dataInit.image2, dataInit.image3].filter(Boolean) as string[];
             setFileList(
                 images.map((url, idx) => ({
@@ -182,9 +204,20 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
                 }))
             );
 
-            // infer frequency unit from existing fields
-            if (dataInit.maintenanceFrequencyUnit) setFreqUnit(dataInit.maintenanceFrequencyUnit);
+            // Set frequency unit và mode
+            const currentFreqUnit = dataInit.maintenanceFrequencyUnit || "MONTH";
+            setFreqUnit(currentFreqUnit);
 
+            // Xác định mode cho YEAR
+            if (currentFreqUnit === "YEAR") {
+                if (dataInit.maintenanceDayOfWeek && dataInit.maintenanceWeekOrder) {
+                    setFreqModeYear("weekday");
+                } else {
+                    setFreqModeYear("anyday");
+                }
+            }
+
+            // Set form values
             form.setFieldsValue({
                 deviceCode: dataInit.deviceCode,
                 accountingCode: dataInit.accountingCode,
@@ -202,22 +235,29 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
                 width: (dataInit as any)?.width,
                 height: (dataInit as any)?.height,
                 unitPrice: dataInit.unitPrice,
-                startDate: dataInit.startDate ? (dataInit.startDate as any) : undefined,
-                warrantyExpiryDate: dataInit.warrantyExpiryDate ? (dataInit.warrantyExpiryDate as any) : undefined,
+                startDate: dataInit.startDate,
+                warrantyExpiryDate: dataInit.warrantyExpiryDate,
                 depreciationPeriodValue: dataInit.depreciationPeriodValue,
-                depreciationPeriodUnit: dataInit.depreciationPeriodUnit,
+                depreciationPeriodUnit: dataInit.depreciationPeriodUnit || "YEAR",
                 maintenanceFrequencyValue: dataInit.maintenanceFrequencyValue,
-                maintenanceFrequencyUnit: dataInit.maintenanceFrequencyUnit ?? freqUnit,
+                maintenanceFrequencyUnit: currentFreqUnit,
                 maintenanceDayOfMonth: dataInit.maintenanceDayOfMonth,
                 maintenanceDayOfWeek: dataInit.maintenanceDayOfWeek,
                 maintenanceWeekOrder: dataInit.maintenanceWeekOrder,
                 maintenanceMonth: dataInit.maintenanceMonth,
                 note: (dataInit as any)?.note,
-                status: dataInit.status ?? "NEW",
-                ownershipType: dataInit.ownershipType ?? "INTERNAL",
+                status: dataInit.status || "NEW",
+                ownershipType: dataInit.ownershipType || "INTERNAL",
+                parts: (dataInit?.parts && dataInit.parts.length > 0)
+                    ? dataInit.parts.map(p => ({
+                        partCode: p.partCode,
+                        partName: p.partName,
+                        quantity: p.quantity ?? 1,
+                    }))
+                    : [{ partCode: "", partName: "", quantity: 1 }],
             });
-        } else {
-            // create → default
+        } else if (!isEdit && openModal) {
+            // Reset cho create mode
             form.resetFields();
             setSelectedDeviceType(null);
             setSelectedUnit(null);
@@ -230,13 +270,14 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
             setFreqModeYear("anyday");
 
             form.setFieldsValue({
-                maintenanceFrequencyUnit: "MONTH" as TimeUnitType,
-                depreciationPeriodUnit: "YEAR" as TimeUnitType,
-                status: "NEW" as DeviceStatus,
-                ownershipType: "INTERNAL" as DeviceOwnershipType,
+                maintenanceFrequencyUnit: "MONTH",
+                depreciationPeriodUnit: "YEAR",
+                status: "NEW",
+                ownershipType: "INTERNAL",
+                parts: [{ partCode: "", partName: "", quantity: 1 }],
             });
         }
-    }, [dataInit, form]);
+    }, [dataInit, form, isEdit, openModal]);
 
     /** ==================== Upload handlers ==================== */
     const uploadProps: UploadProps = {
@@ -274,12 +315,20 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
         onPreview: handlePreview,
     };
 
-
     /** ==================== Submit ==================== */
     const handleReset = () => {
         form.resetFields();
         setDataInit(null);
         setOpenModal(false);
+        setSelectedDeviceType(null);
+        setSelectedUnit(null);
+        setSelectedSupplier(null);
+        setSelectedCompany(null);
+        setSelectedDepartment(null);
+        setSelectedManager(null);
+        setFileList([]);
+        setFreqUnit("MONTH");
+        setFreqModeYear("anyday");
     };
 
     const buildPayload = (values: any): ICreateDeviceRequest | IUpdateDeviceRequest => {
@@ -290,7 +339,7 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
             deviceCode: values.deviceCode,
             accountingCode: values.accountingCode,
             deviceName: values.deviceName,
-            deviceTypeId: Number(values.device?.value || values.deviceType?.value),
+            deviceTypeId: Number(values.deviceType?.value),
             unitId: Number(values.unit?.value),
             supplierId: Number(values.supplier?.value),
             companyId: Number(values.company?.value),
@@ -305,7 +354,7 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
             width: values.width ? Number(values.width) : undefined,
             height: values.height ? Number(values.height) : undefined,
 
-            unitPrice: values.unitPrice ? Number(values.unitPrice) : undefined, // chỉ giữ dòng này
+            unitPrice: values.unitPrice ? Number(values.unitPrice) : undefined,
 
             image1,
             image2,
@@ -342,6 +391,13 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
             note: values.note,
         };
 
+        base.parts = (values.parts || [])
+            .filter((p: any) => p && (p.partCode || p.partName))
+            .map((p: any) => ({
+                partCode: String(p.partCode || "").trim(),
+                partName: String(p.partName || "").trim(),
+                quantity: Number(p.quantity || 1),
+            }));
 
         return base;
     };
@@ -355,7 +411,6 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
                 { onSuccess: () => handleReset() }
             );
         } else {
-            // tạo mới luôn set status NEW (đã ép ở payload)
             createDevice(payload as ICreateDeviceRequest, {
                 onSuccess: () => handleReset(),
             });
@@ -369,408 +424,576 @@ const ModalDevice = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps)
 
     return (
         <ModalForm
-            title={isEdit ? "Cập nhật thiết bị/công cụ dụng cụ" : "Thêm mới thiết bị/công cụ dụng cụ"}
+            title={
+                <Text strong style={{ fontSize: 18 }}>
+                    {isEdit ? "Cập nhật thiết bị/công cụ dụng cụ" : "Thêm mới thiết bị/công cụ dụng cụ"}
+                </Text>
+            }
             open={openModal}
             modalProps={{
                 onCancel: handleReset,
                 afterClose: handleReset,
                 destroyOnClose: true,
-                width: isMobile ? "100%" : 1100,
+                forceRender: true,
+                width: isMobile ? "100%" : 1200,
                 okText: isEdit ? "Cập nhật" : "Tạo mới",
                 cancelText: "Hủy",
                 confirmLoading: isCreating || isUpdating,
                 maskClosable: false,
+                style: { top: 20 },
             }}
             scrollToFirstError
             preserve={false}
             form={form}
             onFinish={submitDevice}
-            initialValues={
-                isEdit
-                    ? {
-                        status: dataInit?.status ?? "NEW",
-                        ownershipType: dataInit?.ownershipType ?? "INTERNAL",
-                    }
-                    : {
-                        status: "NEW",
-                        ownershipType: "INTERNAL",
-                        maintenanceFrequencyUnit: "MONTH",
-                        depreciationPeriodUnit: "YEAR",
-                    }
-            }
         >
-            <Row gutter={[16, 8]}>
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProFormText
-                        label="Mã thiết bị"
-                        name="deviceCode"
-                        rules={[{ required: true, message: "Vui lòng nhập mã thiết bị" }]}
-                        placeholder="Nhập mã thiết bị"
-                    />
-                </Col>
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProFormText
-                        label="Mã kế toán"
-                        name="accountingCode"
-                        placeholder="Nhập mã kế toán"
-                    />
-                </Col>
-
-                <Col lg={24} md={24} sm={24} xs={24}>
-                    <ProFormText
-                        label="Tên thiết bị"
-                        name="deviceName"
-                        rules={[{ required: true, message: "Vui lòng nhập tên thiết bị" }]}
-                        placeholder="Nhập tên thiết bị"
-                    />
-                </Col>
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="deviceType"
-                        label="Loại thiết bị/công cụ dụng cụ"
-                        rules={[{ required: true, message: "Vui lòng chọn loại thiết bị" }]}
-                    >
-                        <DebounceSelect
-                            allowClear
-                            showSearch
-                            placeholder="Chọn loại thiết bị"
-                            fetchOptions={fetchDeviceTypeList}
-                            value={selectedDeviceType as any}
-                            onChange={(v: any) => setSelectedDeviceType(v as ISelectItem)}
-                            style={{ width: "100%" }}
-                        />
-                    </ProForm.Item>
-                </Col>
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="unit"
-                        label="Đơn vị"
-                        rules={[{ required: true, message: "Vui lòng chọn đơn vị" }]}
-                    >
-                        <DebounceSelect
-                            allowClear
-                            showSearch
-                            placeholder="Chọn đơn vị"
-                            fetchOptions={fetchUnitList}
-                            value={selectedUnit as any}
-                            onChange={(v: any) => setSelectedUnit(v as ISelectItem)}
-                            style={{ width: "100%" }}
-                        />
-                    </ProForm.Item>
-                </Col>
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="ownershipType"
-                        label="Loại sở hữu"
-                        rules={[{ required: true, message: "Vui lòng chọn loại sở hữu" }]}
-                    >
-                        <Radio.Group optionType="button" buttonStyle="solid">
-                            {OWNERSHIP_OPTIONS.map((o) => (
-                                <Radio.Button key={o.value} value={o.value}>
-                                    {o.label}
-                                </Radio.Button>
-                            ))}
-                        </Radio.Group>
-                    </ProForm.Item>
-                </Col>
-                <ProFormDigit
-                    label="Đơn giá (VNĐ)"
-                    name="unitPrice"
-                    min={0}
-                    placeholder="Nhập đơn giá"
-                    fieldProps={{
-                        precision: 0,
-                        formatter: (value?: number) =>
-                            value ? `${Number(value).toLocaleString("vi-VN")} ₫` : "",
-                        parser: (value?: string) =>
-                            value ? Number(value.replace(/\s?₫|(,*)/g, "")) : 0, // <-- trả về number
-                    }}
-                    rules={[{ required: true, message: "Vui lòng nhập đơn giá" }]}
-                />
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    {isEdit ? (
-                        <ProForm.Item name="status" label="Trạng thái">
-                            <Select options={STATUS_OPTIONS} placeholder="Chọn trạng thái" />
-                        </ProForm.Item>
-                    ) : (
-                        <ProForm.Item label="Trạng thái">
-                            <Text strong>NEW</Text>
-                            <Text type="secondary" style={{ marginLeft: 8 }}>
-                                (mặc định khi tạo mới)
-                            </Text>
-                        </ProForm.Item>
-                    )}
-                </Col>
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProFormText label="Nhãn hiệu" name="brand" placeholder="Nhập tên nhãn hiệu" />
-                </Col>
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProFormText label="Model" name="modelDesc" placeholder="Nhập số Model" />
-                </Col>
-
-                <Col lg={24} md={24} sm={24} xs={24}>
-                    <ProFormText label="Công suất/Năng lượng" name="powerCapacity" placeholder="Nhập công suất/Năng lượng" />
-                </Col>
-
-                <Col lg={8} md={8} sm={24} xs={24}>
-                    <ProFormDigit label="Chiều dài (cm)" name="length" min={0} fieldProps={{ precision: 2 }} />
-                </Col>
-                <Col lg={8} md={8} sm={24} xs={24}>
-                    <ProFormDigit label="Chiều rộng (cm)" name="width" min={0} fieldProps={{ precision: 2 }} />
-                </Col>
-                <Col lg={8} md={8} sm={24} xs={24}>
-                    <ProFormDigit label="Chiều cao (cm)" name="height" min={0} fieldProps={{ precision: 2 }} />
-                </Col>
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="supplier"
-                        label="Nhà cung cấp"
-                        rules={[{ required: true, message: "Vui lòng chọn nhà cung cấp" }]}
-                    >
-                        <DebounceSelect
-                            allowClear
-                            showSearch
-                            placeholder="Chọn nhà cung cấp"
-                            fetchOptions={fetchSupplierList}
-                            value={selectedSupplier as any}
-                            onChange={(v: any) => setSelectedSupplier(v as ISelectItem)}
-                            style={{ width: "100%" }}
-                        />
-                    </ProForm.Item>
-                </Col>
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="company"
-                        label="Công ty"
-                        rules={[{ required: true, message: "Vui lòng chọn công ty" }]}
-                    >
-                        <DebounceSelect
-                            allowClear
-                            showSearch
-                            placeholder="Chọn công ty"
-                            fetchOptions={fetchCompanyList}
-                            value={selectedCompany as any}
-                            onChange={(v: any) => setSelectedCompany(v as ISelectItem)}
-                            style={{ width: "100%" }}
-                        />
-                    </ProForm.Item>
-                </Col>
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="department"
-                        label="Phòng ban/Nhà hàng"
-                        rules={[{ required: true, message: "Vui lòng chọn phòng ban" }]}
-                    >
-                        <DebounceSelect
-                            allowClear
-                            showSearch
-                            placeholder="Chọn phòng ban/nhà hàng"
-                            fetchOptions={fetchDepartmentList}
-                            value={selectedDepartment as any}
-                            onChange={(v: any) => setSelectedDepartment(v as ISelectItem)}
-                            style={{ width: "100%" }}
-                        />
-                    </ProForm.Item>
-                </Col>
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="manager"
-                        label="Nhân viên quản lý/phụ trách"
-                        rules={[{ required: true, message: "Vui lòng chọn nhân viên quản lý" }]}
-                    >
-                        <DebounceSelect
-                            allowClear
-                            showSearch
-                            placeholder="Chọn nhân viên quản lý"
-                            fetchOptions={fetchManagerList}
-                            value={selectedManager as any}
-                            onChange={(v: any) => setSelectedManager(v as ISelectItem)}
-                            style={{ width: "100%" }}
-                        />
-                    </ProForm.Item>
-                </Col>
-
+            <Row gutter={[20, 16]}>
+                {/* Thông tin cơ bản */}
                 <Col span={24}>
-                    <Divider />
-                    <Text strong>Hình ảnh thiết bị/công cụ dụng cụ (tối đa 3 ảnh)</Text>
-                    <Form.Item
-                        name="images"
-                        style={{ marginTop: 8 }}
-                        rules={[
-                            {
-                                validator: () => {
-                                    if (fileList.length > 0) return Promise.resolve();
-                                    return Promise.reject("Vui lòng upload ít nhất 1 hình ảnh");
+                    <Card size="small" title=" Thông tin cơ bản" bordered={false} style={{ background: '#fafafa' }}>
+                        <Row gutter={[16, 8]}>
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                <ProFormText
+                                    label="Mã thiết bị"
+                                    name="deviceCode"
+                                    rules={[{ required: true, message: "Vui lòng nhập mã thiết bị" }]}
+                                    placeholder="Nhập mã thiết bị"
+                                />
+                            </Col>
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                <ProFormText
+                                    label="Mã kế toán"
+                                    name="accountingCode"
+                                    placeholder="Nhập mã kế toán"
+                                />
+                            </Col>
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="ownershipType"
+                                    label="Loại sở hữu"
+                                    rules={[{ required: true, message: "Vui lòng chọn loại sở hữu" }]}
+                                >
+                                    <Radio.Group optionType="button" buttonStyle="solid">
+                                        {OWNERSHIP_OPTIONS.map((o) => (
+                                            <Radio.Button key={o.value} value={o.value}>
+                                                {o.label}
+                                            </Radio.Button>
+                                        ))}
+                                    </Radio.Group>
+                                </ProForm.Item>
+                            </Col>
+
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProFormText
+                                    label="Tên thiết bị"
+                                    name="deviceName"
+                                    rules={[{ required: true, message: "Vui lòng nhập tên thiết bị" }]}
+                                    placeholder="Nhập tên thiết bị"
+                                />
+                            </Col>
+
+                            <Col lg={6} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="deviceType"
+                                    label="Loại thiết bị"
+                                    rules={[{ required: true, message: "Vui lòng chọn loại" }]}
+                                >
+                                    <DebounceSelect
+                                        allowClear
+                                        showSearch
+                                        placeholder="Chọn loại thiết bị"
+                                        fetchOptions={fetchDeviceTypeList}
+                                        value={selectedDeviceType as any}
+                                        onChange={(v: any) => setSelectedDeviceType(v as ISelectItem)}
+                                        style={{ width: "100%" }}
+                                    />
+                                </ProForm.Item>
+                            </Col>
+
+                            <Col lg={6} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="unit"
+                                    label="Đơn vị"
+                                    rules={[{ required: true, message: "Vui lòng chọn đơn vị" }]}
+                                >
+                                    <DebounceSelect
+                                        allowClear
+                                        showSearch
+                                        placeholder="Chọn đơn vị"
+                                        fetchOptions={fetchUnitList}
+                                        value={selectedUnit as any}
+                                        onChange={(v: any) => setSelectedUnit(v as ISelectItem)}
+                                        style={{ width: "100%" }}
+                                    />
+                                </ProForm.Item>
+                            </Col>
+
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                <ProFormDigit
+                                    label="Đơn giá (VNĐ)"
+                                    name="unitPrice"
+                                    min={0}
+                                    placeholder="Nhập đơn giá"
+                                    fieldProps={{
+                                        precision: 0,
+                                        formatter: (value?: number) =>
+                                            value ? `${Number(value).toLocaleString("vi-VN")} ₫` : "",
+                                        parser: (value?: string) =>
+                                            value ? Number(value.replace(/\s?₫|(,*)/g, "")) : 0,
+                                    }}
+                                    rules={[{ required: true, message: "Vui lòng nhập đơn giá" }]}
+                                />
+                            </Col>
+
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                {isEdit ? (
+                                    <ProForm.Item name="status" label="Trạng thái">
+                                        <Select options={STATUS_OPTIONS} placeholder="Chọn trạng thái" />
+                                    </ProForm.Item>
+                                ) : (
+                                    <ProForm.Item label="Trạng thái">
+                                        <Text strong>Mới tạo (NEW)</Text>
+                                    </ProForm.Item>
+                                )}
+                            </Col>
+                        </Row>
+                    </Card>
+                </Col>
+
+                {/* Linh kiện */}
+                <Col span={24}>
+                    <Card size="small" title=" Linh kiện / Vật tư" bordered={false} style={{ background: '#fafafa' }}>
+                        <ProFormList
+                            name="parts"
+                            alwaysShowItemLabel
+                            creatorButtonProps={{
+                                position: "bottom",
+                                creatorButtonText: "+ Thêm linh kiện",
+                                type: "dashed",
+                            }}
+                            copyIconProps={false}
+                            deleteIconProps={{ tooltipText: "Xóa dòng này" }}
+                            rules={[
+                                {
+                                    validator: async (_, value) => {
+                                        if (!value || value.length === 0) {
+                                            return Promise.reject(new Error("Vui lòng thêm ít nhất 1 linh kiện"));
+                                        }
+                                    },
                                 },
-                            },
-                        ]}
-                    >
-                        <Upload {...uploadProps}>
-                            {fileList.length >= 3 ? null : (
-                                <div>
-                                    {loadingUpload ? <LoadingOutlined /> : <PlusOutlined />}
-                                    <div style={{ marginTop: 8 }}>Upload</div>
-                                </div>
-                            )}
-                        </Upload>
-                    </Form.Item>
-
-                    <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancelPreview}>
-                        <img alt="example" style={{ width: "100%" }} src={previewImage} />
-                    </Modal>
-                </Col>
-
-
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProFormDatePicker label="Ngày đưa vào sử dụng" name="startDate" rules={[{ required: true, message: "Chọn ngày đưa vào sử dụng" }]} />
-                </Col>
-                <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProFormDatePicker label="Ngày hết hạn bảo hành" name="warrantyExpiryDate" rules={[{ required: true, message: "Chọn ngày hết bảo hành" }]} />
-                </Col>
-
-                <Col span={24}>
-                    <Divider />
-                    <Text strong>Thời gian khấu hao (tính từ ngày đưa vào sử dụng)</Text>
-                </Col>
-
-                <Col lg={8} md={8} sm={24} xs={24}>
-                    <ProFormDigit
-                        label="Số kỳ"
-                        name="depreciationPeriodValue"
-                        min={1}
-                        rules={[{ required: true, message: "Nhập số kỳ khấu hao" }]}
-                    />
-                </Col>
-                <Col lg={8} md={8} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="depreciationPeriodUnit"
-                        label="Mốc thời gian"
-                        rules={[{ required: true, message: "Chọn mốc thời gian" }]}
-                    >
-                        <Select
-                            options={DEPRE_UNITS.map((u) => ({ label: u === "MONTH" ? "Tháng" : u === "QUARTER" ? "Quý" : "Năm", value: u }))}
-                            placeholder="Chọn mốc thời gian"
-                        />
-                    </ProForm.Item>
-                </Col>
-
-                <Col span={24}>
-                    <Divider />
-                    <Text strong>Tần suất bảo dưỡng</Text>
-                </Col>
-
-                <Col lg={8} md={8} sm={24} xs={24}>
-                    <ProFormDigit
-                        label="Số lần"
-                        name="maintenanceFrequencyValue"
-                        min={1}
-                        rules={[{ required: true, message: "Nhập số lần" }]}
-                    />
-                </Col>
-                <Col lg={16} md={16} sm={24} xs={24}>
-                    <ProForm.Item
-                        name="maintenanceFrequencyUnit"
-                        label="Đơn vị"
-                        rules={[{ required: true, message: "Chọn đơn vị tần suất" }]}
-                    >
-                        <Radio.Group
-                            optionType="button"
-                            buttonStyle="solid"
-                            onChange={(e) => setFreqUnit(e.target.value)}
+                            ]}
                         >
-                            {FREQ_UNITS.map((u) => (
-                                <Radio.Button key={u} value={u}>
-                                    {u === "DAY" ? "Ngày" : u === "WEEK" ? "Tuần" : u === "MONTH" ? "Tháng" : "Năm"}
-                                </Radio.Button>
-                            ))}
-                        </Radio.Group>
-                    </ProForm.Item>
+                            <ProFormGroup>
+                                <Row gutter={[16, 8]} style={{ width: "100%" }}>
+                                    <Col lg={10} md={10} sm={24} xs={24}>
+                                        <ProFormText
+                                            name="partCode"
+                                            label="Mã linh kiện"
+                                            placeholder="Nhập mã linh kiện"
+                                            rules={[{ required: true, message: "Nhập mã" }]}
+                                        />
+                                    </Col>
+                                    <Col lg={10} md={10} sm={24} xs={24}>
+                                        <ProFormText
+                                            name="partName"
+                                            label="Tên linh kiện"
+                                            placeholder="Nhập tên linh kiện"
+                                            rules={[{ required: true, message: "Nhập tên" }]}
+                                        />
+                                    </Col>
+                                    <Col lg={4} md={4} sm={24} xs={24}>
+                                        <ProFormDigit
+                                            name="quantity"
+                                            label="Số lượng"
+                                            min={1}
+                                            placeholder="SL"
+                                            fieldProps={{ precision: 0 }}
+                                            rules={[{ required: true, message: "Nhập SL" }]}
+                                        />
+                                    </Col>
+                                </Row>
+                            </ProFormGroup>
+                        </ProFormList>
+                    </Card>
                 </Col>
 
-
-                {/* WEEK: Vào thứ + thứ tự tuần */}
-                {showWeekFields && (
-                    <>
-                        <Col lg={12} md={12} sm={24} xs={24}>
-                            <ProForm.Item name="maintenanceDayOfWeek" label="Vào thứ" rules={[{ required: true, message: "Chọn thứ" }]}>
-                                <Select options={WEEK_DAYS} placeholder="Chọn thứ" />
-                            </ProForm.Item>
-                        </Col>
-                        <Col lg={12} md={12} sm={24} xs={24}>
-                            <ProForm.Item name="maintenanceWeekOrder" label="Thuộc tuần" rules={[{ required: true, message: "Chọn thứ tự tuần" }]}>
-                                <Select options={WEEK_ORDERS} placeholder="Chọn thứ tự tuần" />
-                            </ProForm.Item>
-                        </Col>
-                    </>
-                )}
-
-                {/* MONTH: ngày trong tháng */}
-                {showMonthFields && (
-                    <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProFormDigit
-                            label="Ngày trong tháng"
-                            name="maintenanceDayOfMonth"
-                            min={1}
-                            max={31}
-                            rules={[{ required: true, message: "Nhập ngày trong tháng" }]}
-                        />
-                    </Col>
-                )}
-
-                {/* YEAR: 2 chế độ */}
-                {showYearFields && (
-                    <>
-                        <Col span={24}>
-                            <Space align="center">
-                                <Radio checked={freqModeYear === "anyday"} onChange={() => setFreqModeYear("anyday")} />
-                                <Text>Vào ngày bất kỳ trong tháng</Text>
-                                <Form.Item name="maintenanceMonth" style={{ margin: 0 }} rules={[{ required: freqModeYear === "anyday", message: "Chọn tháng" }]}>
-                                    <Select disabled={freqModeYear !== "anyday"} placeholder="Chọn tháng" options={MONTHS} style={{ width: 180, marginLeft: 8 }} />
-                                </Form.Item>
-                            </Space>
-                        </Col>
-                        <Col span={24} style={{ marginTop: 8 }}>
-                            <Space wrap align="center">
-                                <Radio checked={freqModeYear === "weekday"} onChange={() => setFreqModeYear("weekday")} />
-                                <Text>Vào thứ</Text>
-                                <Form.Item name="maintenanceDayOfWeek" style={{ margin: 0 }} rules={[{ required: freqModeYear === "weekday", message: "Chọn thứ" }]}>
-                                    <Select disabled={freqModeYear !== "weekday"} placeholder="Chọn thứ" options={WEEK_DAYS} style={{ width: 160, marginLeft: 8 }} />
-                                </Form.Item>
-                                <Text>Thuộc tuần</Text>
-                                <Form.Item name="maintenanceWeekOrder" style={{ margin: 0 }} rules={[{ required: freqModeYear === "weekday", message: "Chọn thứ tự tuần" }]}>
-                                    <Select disabled={freqModeYear !== "weekday"} placeholder="Chọn thứ tự tuần" options={WEEK_ORDERS} style={{ width: 180, marginLeft: 8 }} />
-                                </Form.Item>
-                                <Text>Thuộc tháng</Text>
-                                <Form.Item name="maintenanceMonth" style={{ margin: 0 }} rules={[{ required: freqModeYear === "weekday", message: "Chọn tháng" }]}>
-                                    <Select disabled={freqModeYear !== "weekday"} placeholder="Chọn tháng" options={MONTHS} style={{ width: 160, marginLeft: 8 }} />
-                                </Form.Item>
-                            </Space>
-                        </Col>
-                    </>
-                )}
+                {/* Thông số kỹ thuật */}
                 <Col span={24}>
-                    <Divider />
-                    <ProFormTextArea
-                        name="note"
-                        label="Ghi chú"
-                        placeholder="Nhập ghi chú (nếu có)"
-                        fieldProps={{
-                            autoSize: { minRows: 2, maxRows: 4 },
-                            maxLength: 500,
-                            showCount: true,
-                        }}
-                    />
+                    <Card size="small" title=" Thông số kỹ thuật" bordered={false} style={{ background: '#fafafa' }}>
+                        <Row gutter={[16, 8]}>
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                <ProFormText label="Nhãn hiệu" name="brand" placeholder="Nhập tên nhãn hiệu" />
+                            </Col>
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                <ProFormText label="Model" name="modelDesc" placeholder="Nhập số Model" />
+                            </Col>
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                <ProFormText label="Công suất" name="powerCapacity" placeholder="Nhập công suất" />
+                            </Col>
+
+                            <Col lg={8} md={8} sm={24} xs={24}>
+                                <ProFormDigit label="Chiều dài (cm)" name="length" min={0} fieldProps={{ precision: 2 }} placeholder="Dài" />
+                            </Col>
+                            <Col lg={8} md={8} sm={24} xs={24}>
+                                <ProFormDigit label="Chiều rộng (cm)" name="width" min={0} fieldProps={{ precision: 2 }} placeholder="Rộng" />
+                            </Col>
+                            <Col lg={8} md={8} sm={24} xs={24}>
+                                <ProFormDigit label="Chiều cao (cm)" name="height" min={0} fieldProps={{ precision: 2 }} placeholder="Cao" />
+                            </Col>
+                        </Row>
+                    </Card>
                 </Col>
 
+                {/* Thông tin đơn vị quản lý */}
+                <Col span={24}>
+                    <Card size="small" title=" Đơn vị quản lý" bordered={false} style={{ background: '#fafafa' }}>
+                        <Row gutter={[16, 8]}>
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="supplier"
+                                    label="Nhà cung cấp"
+                                    rules={[{ required: true, message: "Vui lòng chọn nhà cung cấp" }]}
+                                >
+                                    <DebounceSelect
+                                        allowClear
+                                        showSearch
+                                        placeholder="Chọn nhà cung cấp"
+                                        fetchOptions={fetchSupplierList}
+                                        value={selectedSupplier as any}
+                                        onChange={(v: any) => setSelectedSupplier(v as ISelectItem)}
+                                        style={{ width: "100%" }}
+                                    />
+                                </ProForm.Item>
+                            </Col>
+
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="company"
+                                    label="Công ty"
+                                    rules={[{ required: true, message: "Vui lòng chọn công ty" }]}
+                                >
+                                    <DebounceSelect
+                                        allowClear
+                                        showSearch
+                                        placeholder="Chọn công ty"
+                                        fetchOptions={fetchCompanyList}
+                                        value={selectedCompany as any}
+                                        onChange={(v: any) => setSelectedCompany(v as ISelectItem)}
+                                        style={{ width: "100%" }}
+                                    />
+                                </ProForm.Item>
+                            </Col>
+
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="department"
+                                    label="Phòng ban/Nhà hàng"
+                                    rules={[{ required: true, message: "Vui lòng chọn phòng ban" }]}
+                                >
+                                    <DebounceSelect
+                                        allowClear
+                                        showSearch
+                                        placeholder="Chọn phòng ban/nhà hàng"
+                                        fetchOptions={fetchDepartmentList}
+                                        value={selectedDepartment as any}
+                                        onChange={(v: any) => setSelectedDepartment(v as ISelectItem)}
+                                        style={{ width: "100%" }}
+                                    />
+                                </ProForm.Item>
+                            </Col>
+
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="manager"
+                                    label="Nhân viên quản lý"
+                                    rules={[{ required: true, message: "Vui lòng chọn nhân viên quản lý" }]}
+                                >
+                                    <DebounceSelect
+                                        allowClear
+                                        showSearch
+                                        placeholder="Chọn nhân viên quản lý"
+                                        fetchOptions={fetchManagerList}
+                                        value={selectedManager as any}
+                                        onChange={(v: any) => setSelectedManager(v as ISelectItem)}
+                                        style={{ width: "100%" }}
+                                    />
+                                </ProForm.Item>
+                            </Col>
+                        </Row>
+                    </Card>
+                </Col>
+
+                {/* Hình ảnh */}
+                <Col span={24}>
+                    <Card size="small" title=" Hình ảnh thiết bị (tối đa 3 ảnh)" bordered={false} style={{ background: '#fafafa' }}>
+                        <Form.Item
+                            name="images"
+                            rules={[
+                                {
+                                    validator: () => {
+                                        if (fileList.length > 0) return Promise.resolve();
+                                        return Promise.reject("Vui lòng upload ít nhất 1 hình ảnh");
+                                    },
+                                },
+                            ]}
+                        >
+                            <Upload {...uploadProps}>
+                                {fileList.length >= 3 ? null : (
+                                    <div>
+                                        {loadingUpload ? <LoadingOutlined /> : <PlusOutlined />}
+                                        <div style={{ marginTop: 8 }}>Upload</div>
+                                    </div>
+                                )}
+                            </Upload>
+                        </Form.Item>
+
+                        <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancelPreview}>
+                            <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+                        </Modal>
+                    </Card>
+                </Col>
+
+                {/* Thời gian & Bảo hành */}
+                <Col span={24}>
+                    <Card size="small" title=" Thời gian & Bảo hành" bordered={false} style={{ background: '#fafafa' }}>
+                        <Row gutter={[16, 8]}>
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProFormDatePicker
+                                    label="Ngày đưa vào sử dụng"
+                                    name="startDate"
+                                    rules={[{ required: true, message: "Chọn ngày đưa vào sử dụng" }]}
+                                    placeholder="Chọn ngày"
+                                    fieldProps={{ style: { width: '100%' } }}
+                                />
+                            </Col>
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProFormDatePicker
+                                    label="Ngày hết hạn bảo hành"
+                                    name="warrantyExpiryDate"
+                                    rules={[{ required: true, message: "Chọn ngày hết bảo hành" }]}
+                                    placeholder="Chọn ngày"
+                                    fieldProps={{ style: { width: '100%' } }}
+                                />
+                            </Col>
+                        </Row>
+                    </Card>
+                </Col>
+
+                {/* Khấu hao */}
+                <Col span={24}>
+                    <Card size="small" title=" Thời gian khấu hao" bordered={false} style={{ background: '#fafafa' }}>
+                        <Row gutter={[16, 8]}>
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProFormDigit
+                                    label="Số kỳ khấu hao"
+                                    name="depreciationPeriodValue"
+                                    min={1}
+                                    placeholder="Nhập số kỳ"
+                                    rules={[{ required: true, message: "Nhập số kỳ khấu hao" }]}
+                                />
+                            </Col>
+                            <Col lg={12} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="depreciationPeriodUnit"
+                                    label="Đơn vị thời gian"
+                                    rules={[{ required: true, message: "Chọn đơn vị" }]}
+                                >
+                                    <Select
+                                        options={DEPRE_UNITS.map((u) => ({
+                                            label: u === "MONTH" ? "Tháng" : u === "QUARTER" ? "Quý" : "Năm",
+                                            value: u
+                                        }))}
+                                        placeholder="Chọn đơn vị"
+                                    />
+                                </ProForm.Item>
+                            </Col>
+                        </Row>
+                    </Card>
+                </Col>
+
+                {/* Bảo dưỡng */}
+                <Col span={24}>
+                    <Card size="small" title=" Tần suất bảo dưỡng" bordered={false} style={{ background: '#fafafa' }}>
+                        <Row gutter={[16, 8]}>
+                            <Col lg={8} md={12} sm={24} xs={24}>
+                                <ProFormDigit
+                                    label="Tần suất (số lần)"
+                                    name="maintenanceFrequencyValue"
+                                    min={1}
+                                    placeholder="Nhập số lần"
+                                    rules={[{ required: true, message: "Nhập số lần" }]}
+                                />
+                            </Col>
+                            <Col lg={16} md={12} sm={24} xs={24}>
+                                <ProForm.Item
+                                    name="maintenanceFrequencyUnit"
+                                    label="Đơn vị thời gian"
+                                    rules={[{ required: true, message: "Chọn đơn vị" }]}
+                                >
+                                    <Radio.Group
+                                        optionType="button"
+                                        buttonStyle="solid"
+                                        onChange={(e) => setFreqUnit(e.target.value)}
+                                    >
+                                        {FREQ_UNITS.map((u) => (
+                                            <Radio.Button key={u} value={u}>
+                                                {u === "DAY" ? "Ngày" : u === "WEEK" ? "Tuần" : u === "MONTH" ? "Tháng" : "Năm"}
+                                            </Radio.Button>
+                                        ))}
+                                    </Radio.Group>
+                                </ProForm.Item>
+                            </Col>
+
+                            {/* WEEK: Vào thứ + thứ tự tuần */}
+                            {showWeekFields && (
+                                <>
+                                    <Col lg={12} md={12} sm={24} xs={24}>
+                                        <ProForm.Item
+                                            name="maintenanceDayOfWeek"
+                                            label="Vào thứ"
+                                            rules={[{ required: true, message: "Chọn thứ" }]}
+                                        >
+                                            <Select options={WEEK_DAYS} placeholder="Chọn thứ" />
+                                        </ProForm.Item>
+                                    </Col>
+                                    <Col lg={12} md={12} sm={24} xs={24}>
+                                        <ProForm.Item
+                                            name="maintenanceWeekOrder"
+                                            label="Thuộc tuần"
+                                            rules={[{ required: true, message: "Chọn thứ tự tuần" }]}
+                                        >
+                                            <Select options={WEEK_ORDERS} placeholder="Chọn thứ tự tuần" />
+                                        </ProForm.Item>
+                                    </Col>
+                                </>
+                            )}
+
+                            {/* MONTH: ngày trong tháng */}
+                            {showMonthFields && (
+                                <Col lg={12} md={12} sm={24} xs={24}>
+                                    <ProFormDigit
+                                        label="Ngày trong tháng"
+                                        name="maintenanceDayOfMonth"
+                                        min={1}
+                                        max={31}
+                                        placeholder="Nhập ngày (1-31)"
+                                        rules={[{ required: true, message: "Nhập ngày trong tháng" }]}
+                                    />
+                                </Col>
+                            )}
+
+                            {/* YEAR: 2 chế độ */}
+                            {showYearFields && (
+                                <>
+                                    <Col span={24}>
+                                        <Space direction="vertical" style={{ width: '100%' }}>
+                                            <Space align="center">
+                                                <Radio
+                                                    checked={freqModeYear === "anyday"}
+                                                    onChange={() => setFreqModeYear("anyday")}
+                                                />
+                                                <Text>Vào ngày bất kỳ trong tháng</Text>
+                                                <Form.Item
+                                                    name="maintenanceMonth"
+                                                    style={{ margin: 0 }}
+                                                    rules={[
+                                                        {
+                                                            required: freqModeYear === "anyday",
+                                                            message: "Chọn tháng"
+                                                        }
+                                                    ]}
+                                                >
+                                                    <Select
+                                                        disabled={freqModeYear !== "anyday"}
+                                                        placeholder="Chọn tháng"
+                                                        options={MONTHS}
+                                                        style={{ width: 180 }}
+                                                    />
+                                                </Form.Item>
+                                            </Space>
+
+                                            <Space align="center" wrap>
+                                                <Radio
+                                                    checked={freqModeYear === "weekday"}
+                                                    onChange={() => setFreqModeYear("weekday")}
+                                                />
+                                                <Text>Vào thứ</Text>
+                                                <Form.Item
+                                                    name="maintenanceDayOfWeek"
+                                                    style={{ margin: 0 }}
+                                                    rules={[
+                                                        {
+                                                            required: freqModeYear === "weekday",
+                                                            message: "Chọn thứ"
+                                                        }
+                                                    ]}
+                                                >
+                                                    <Select
+                                                        disabled={freqModeYear !== "weekday"}
+                                                        placeholder="Chọn thứ"
+                                                        options={WEEK_DAYS}
+                                                        style={{ width: 140 }}
+                                                    />
+                                                </Form.Item>
+                                                <Text>Thuộc tuần</Text>
+                                                <Form.Item
+                                                    name="maintenanceWeekOrder"
+                                                    style={{ margin: 0 }}
+                                                    rules={[
+                                                        {
+                                                            required: freqModeYear === "weekday",
+                                                            message: "Chọn tuần"
+                                                        }
+                                                    ]}
+                                                >
+                                                    <Select
+                                                        disabled={freqModeYear !== "weekday"}
+                                                        placeholder="Chọn tuần"
+                                                        options={WEEK_ORDERS}
+                                                        style={{ width: 140 }}
+                                                    />
+                                                </Form.Item>
+                                                <Text>Thuộc tháng</Text>
+                                                <Form.Item
+                                                    name="maintenanceMonth"
+                                                    style={{ margin: 0 }}
+                                                    rules={[
+                                                        {
+                                                            required: freqModeYear === "weekday",
+                                                            message: "Chọn tháng"
+                                                        }
+                                                    ]}
+                                                >
+                                                    <Select
+                                                        disabled={freqModeYear !== "weekday"}
+                                                        placeholder="Chọn tháng"
+                                                        options={MONTHS}
+                                                        style={{ width: 140 }}
+                                                    />
+                                                </Form.Item>
+                                            </Space>
+                                        </Space>
+                                    </Col>
+                                </>
+                            )}
+                        </Row>
+                    </Card>
+                </Col>
+
+                {/* Ghi chú */}
+                <Col span={24}>
+                    <Card size="small" title=" Ghi chú" bordered={false} style={{ background: '#fafafa' }}>
+                        <ProFormTextArea
+                            name="note"
+                            placeholder="Nhập ghi chú bổ sung (nếu có)"
+                            fieldProps={{
+                                autoSize: { minRows: 3, maxRows: 5 },
+                                maxLength: 500,
+                                showCount: true,
+                            }}
+                        />
+                    </Card>
+                </Col>
             </Row>
         </ModalForm>
     );

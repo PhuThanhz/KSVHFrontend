@@ -37,7 +37,7 @@ const TechnicianPage = () => {
     const [skillOptions, setSkillOptions] = useState<{ label: string; value: string }[]>([]);
 
     const [query, setQuery] = useState<string>(() =>
-        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" })
+        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" }, { encode: false })
     );
 
     const { data, isFetching } = useTechniciansQuery(query);
@@ -175,6 +175,8 @@ const TechnicianPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
+
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

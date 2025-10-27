@@ -3,7 +3,7 @@ import type { IDeviceType } from "@/types/backend";
 import { EditOutlined, PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
 import { Button, Space, Tag, Select, Popconfirm } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import queryString from "query-string";
 import ModalDeviceType from "@/components/admin/devicetype/modal.device-type";
 import ViewDetailDeviceType from "@/components/admin/devicetype/view.device-type";
@@ -14,6 +14,10 @@ import { useDeviceTypesQuery, useDeleteDeviceTypeMutation } from "@/hooks/useDev
 import DateRangeFilter from "@/components/common/DateRangeFilter";
 import { callFetchAssetType } from "@/config/api";
 
+/**
+ * 🔹 Trang quản lý loại thiết bị
+ * Chuẩn hoá: tránh gọi API trùng, giữ query ổn định, refetch chính xác
+ */
 const DeviceTypePage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IDeviceType | null>(null);
@@ -24,69 +28,84 @@ const DeviceTypePage = () => {
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
     const [assetTypeOptions, setAssetTypeOptions] = useState<{ label: string; value: string }[]>([]);
 
-    const [query, setQuery] = useState<string>(() =>
-        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" })
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
     );
-
     const { data, isFetching } = useDeviceTypesQuery(query);
     const { mutate: deleteDeviceType, isPending: isDeleting } = useDeleteDeviceTypeMutation();
 
     /** ====================== Lấy danh sách loại tài sản để lọc ====================== */
     useEffect(() => {
+        let mounted = true;
         const fetchAssetTypes = async () => {
-            const res = await callFetchAssetType("page=1&size=100");
-            if (res?.data?.result) {
-                const list = res.data.result.map((a: any) => ({
-                    label: a.assetTypeName,
-                    value: a.assetTypeName,
-                }));
-                setAssetTypeOptions(list);
+            try {
+                const res = await callFetchAssetType("page=1&size=100");
+                if (mounted && res?.data?.result) {
+                    const list = res.data.result.map((a: any) => ({
+                        label: a.assetTypeName,
+                        value: a.assetTypeName,
+                    }));
+                    setAssetTypeOptions(list);
+                }
+            } catch (err) {
+                console.error("Failed to fetch asset types", err);
             }
         };
         fetchAssetTypes();
-    }, []);
-
-    /** ====================== Xây query filter ====================== */
-    const buildQuery = (params: any, sort: any) => {
-        const q: any = {
-            page: params.current,
-            size: params.pageSize,
-            filter: "",
+        return () => {
+            mounted = false;
         };
+    }, []); // ✅ chỉ gọi 1 lần khi mount
 
-        if (params.typeName) q.filter = sfLike("typeName", params.typeName);
+    /** ====================== Build query filter ====================== */
+    const buildQuery = useMemo(
+        () =>
+            (params: any, sort: any) => {
+                const q: any = {
+                    page: params.current,
+                    size: params.pageSize,
+                    filter: "",
+                };
 
-        if (params.deviceTypeCode)
-            q.filter = q.filter
-                ? `${q.filter} and ${sfLike("deviceTypeCode", params.deviceTypeCode)}`
-                : sfLike("deviceTypeCode", params.deviceTypeCode);
+                if (params.typeName) q.filter = sfLike("typeName", params.typeName);
 
-        if (assetTypeFilter) {
-            q.filter = q.filter
-                ? `${q.filter} and assetType.assetTypeName='${assetTypeFilter}'`
-                : `assetType.assetTypeName='${assetTypeFilter}'`;
-        }
+                if (params.deviceTypeCode)
+                    q.filter = q.filter
+                        ? `${q.filter} and ${sfLike("deviceTypeCode", params.deviceTypeCode)}`
+                        : sfLike("deviceTypeCode", params.deviceTypeCode);
 
-        if (createdAtFilter) {
-            q.filter = q.filter ? `${q.filter} and ${createdAtFilter}` : createdAtFilter;
-        }
+                if (assetTypeFilter) {
+                    q.filter = q.filter
+                        ? `${q.filter} and assetType.assetTypeName='${assetTypeFilter}'`
+                        : `assetType.assetTypeName='${assetTypeFilter}'`;
+                }
 
-        if (!q.filter) delete q.filter;
+                if (createdAtFilter) {
+                    q.filter = q.filter ? `${q.filter} and ${createdAtFilter}` : createdAtFilter;
+                }
 
-        let temp = queryString.stringify(q);
+                if (!q.filter) delete q.filter;
 
-        let sortBy = "";
-        if (sort?.typeName)
-            sortBy = sort.typeName === "ascend" ? "sort=typeName,asc" : "sort=typeName,desc";
-        else if (sort?.deviceTypeCode)
-            sortBy =
-                sort.deviceTypeCode === "ascend"
-                    ? "sort=deviceTypeCode,asc"
-                    : "sort=deviceTypeCode,desc";
-        else sortBy = "sort=createdAt,desc";
+                let temp = queryString.stringify(q, { encode: false });
 
-        return `${temp}&${sortBy}`;
-    };
+                let sortBy = "";
+                if (sort?.typeName)
+                    sortBy = sort.typeName === "ascend" ? "sort=typeName,asc" : "sort=typeName,desc";
+                else if (sort?.deviceTypeCode)
+                    sortBy =
+                        sort.deviceTypeCode === "ascend"
+                            ? "sort=deviceTypeCode,asc"
+                            : "sort=deviceTypeCode,desc";
+                else sortBy = "sort=createdAt,desc";
+
+                return `${temp}&${sortBy}`;
+            },
+        [assetTypeFilter, createdAtFilter]
+    );
 
     /** ====================== Cấu hình cột bảng ====================== */
     const columns: ProColumns<IDeviceType>[] = [
@@ -128,7 +147,6 @@ const DeviceTypePage = () => {
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    {/* Xem chi tiết */}
                     <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.GET_BY_ID} hideChildren>
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
@@ -139,7 +157,6 @@ const DeviceTypePage = () => {
                         />
                     </Access>
 
-                    {/* Chỉnh sửa */}
                     <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.UPDATE} hideChildren>
                         <EditOutlined
                             style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
@@ -150,7 +167,6 @@ const DeviceTypePage = () => {
                         />
                     </Access>
 
-                    {/* Xóa */}
                     <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.DELETE} hideChildren>
                         <Popconfirm
                             title="Xóa loại thiết bị?"
@@ -159,9 +175,7 @@ const DeviceTypePage = () => {
                             okText="Xóa"
                             cancelText="Hủy"
                         >
-                            <DeleteOutlined
-                                style={{ fontSize: 18, color: "red", cursor: "pointer" }}
-                            />
+                            <DeleteOutlined style={{ fontSize: 18, color: "red", cursor: "pointer" }} />
                         </Popconfirm>
                     </Access>
                 </Space>
@@ -181,9 +195,10 @@ const DeviceTypePage = () => {
                     dataSource={data?.result || []}
                     request={async (params, sort): Promise<any> => {
                         const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                        if (newQuery !== query) setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         total: data?.meta?.total,
@@ -244,7 +259,6 @@ const DeviceTypePage = () => {
                 />
             </Access>
 
-            {/* Modal Tạo / Sửa */}
             <ModalDeviceType
                 openModal={openModal}
                 setOpenModal={setOpenModal}
@@ -252,7 +266,6 @@ const DeviceTypePage = () => {
                 setDataInit={setDataInit}
             />
 
-            {/* Drawer Xem chi tiết */}
             <ViewDetailDeviceType
                 onClose={setOpenViewDetail}
                 open={openViewDetail}

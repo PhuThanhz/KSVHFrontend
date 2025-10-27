@@ -213,6 +213,7 @@ const PermissionPage = () => {
                     }}
                     scroll={{ x: true }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

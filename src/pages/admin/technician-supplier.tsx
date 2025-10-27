@@ -18,8 +18,13 @@ const TechnicianSupplierPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState<string>(() =>
-        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" })
+
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
     );
 
     const { data, isFetching } = useTechnicianSuppliersQuery(query);
@@ -41,7 +46,7 @@ const TechnicianSupplierPage = () => {
                 ? `${q.filter} and supplierCode ~ '${params.supplierCode}'`
                 : `supplierCode ~ '${params.supplierCode}'`;
 
-        let temp = queryString.stringify(q);
+        let temp = queryString.stringify(q, { encode: false });
 
         // Sort
         let sortBy = "";
@@ -165,6 +170,8 @@ const TechnicianSupplierPage = () => {
                         setQuery(newQuery);
                     }}
                     pagination={{
+                        defaultPageSize: 10,
+
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,

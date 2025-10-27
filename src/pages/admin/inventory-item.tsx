@@ -34,8 +34,14 @@ const InventoryItemPage = () => {
     const [dataInit, setDataInit] = useState<IInventoryItem | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [query, setQuery] = useState("page=1&size=10&sort=createdAt,desc");
 
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
+    );
     // Bộ lọc nâng cao
     const [unitFilter, setUnitFilter] = useState<string | null>(null);
     const [deviceTypeFilter, setDeviceTypeFilter] = useState<string | null>(null);
@@ -230,6 +236,7 @@ const InventoryItemPage = () => {
                         });
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,
