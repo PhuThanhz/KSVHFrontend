@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     ModalForm,
     ProForm,
@@ -20,7 +20,8 @@ import {
 import { DebounceSelect } from "../debouce.select";
 
 export interface ISelectItem {
-    label?: string;
+    key?: string;
+    label: React.ReactNode;
     value: number | string;
 }
 
@@ -39,46 +40,44 @@ const ModalTechnician = ({
 }: IProps) => {
     const [form] = Form.useForm();
     const isEdit = Boolean(dataInit?.id);
-
-    const [technicianType, setTechnicianType] = useState<string>("INTERNAL");
-    const [selectedSupplier, setSelectedSupplier] = useState<ISelectItem | null>(null);
-    const [selectedSkills, setSelectedSkills] = useState<ISelectItem[]>([]);
-    const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
+    const [loadingDetail, setLoadingDetail] = useState(false);
 
     const { mutate: createTechnician, isPending: isCreating } =
         useCreateTechnicianMutation();
     const { mutate: updateTechnician, isPending: isUpdating } =
         useUpdateTechnicianMutation();
 
+    /** ==================== State ==================== */
+    const [technicianType, setTechnicianType] =
+        useState<"INTERNAL" | "OUTSOURCE">("INTERNAL");
+
+    /** ==================== Fetch detail khi edit ==================== */
     useEffect(() => {
         const fetchDetail = async (id: number | string) => {
             setLoadingDetail(true);
             try {
                 const res = await callFetchTechnicianById(id);
-                const detail = res?.data;
+                const detail = res?.data as ITechnician;
 
                 if (detail) {
-                    const supplierItem: ISelectItem | null = detail.supplier
-                        ? {
-                            label: detail.supplier.name,
-                            value: detail.supplier.id,
-                        }
-                        : null;
-
-                    const skillsItems: ISelectItem[] =
-                        detail.skills?.map((s: any) => ({
-                            label: s.techniqueName,
-                            value: s.id,
-                        })) || [];
-
-                    //  Đặt type trước
                     const type = detail.technicianType || "INTERNAL";
                     setTechnicianType(type);
 
-                    //  Đợi kỹ thuật viên type mount xong rồi mới setFieldValue
+                    // ✅ Đợi React render lại state trước khi set form
                     setTimeout(() => {
-                        setSelectedSupplier(supplierItem);
-                        setSelectedSkills(skillsItems);
+                        const supplierItem =
+                            detail.supplier && detail.supplier.id
+                                ? {
+                                    label: detail.supplier.name,
+                                    value: String(detail.supplier.id),
+                                }
+                                : undefined;
+
+                        const skillItems =
+                            detail.skills?.map((s) => ({
+                                label: s.techniqueName,
+                                value: String(s.id),
+                            })) || [];
 
                         form.setFieldsValue({
                             technicianCode: detail.technicianCode,
@@ -87,14 +86,14 @@ const ModalTechnician = ({
                             email: detail.email,
                             technicianType: type,
                             costPerHire:
-                                type === "OUTSOURCE" && detail.costPerHire
+                                type === "OUTSOURCE" && detail.costPerHire != null
                                     ? Number(detail.costPerHire)
                                     : undefined,
-                            technicianSupplier: supplierItem,
-                            skillIds: skillsItems,
+                            technicianSupplier: type === "OUTSOURCE" ? supplierItem : undefined,
+                            skillIds: skillItems,
                             activeStatus: detail.activeStatus ?? true,
                         });
-                    }, 100); // delay nhỏ đảm bảo các field OUTSOURCE được mount
+                    }, 0);
                 }
             } catch (error) {
                 console.error("Không thể load chi tiết kỹ thuật viên:", error);
@@ -108,8 +107,6 @@ const ModalTechnician = ({
         } else if (!openModal) {
             form.resetFields();
             setTechnicianType("INTERNAL");
-            setSelectedSupplier(null);
-            setSelectedSkills([]);
         }
     }, [openModal, dataInit, form]);
 
@@ -117,8 +114,6 @@ const ModalTechnician = ({
     const handleReset = () => {
         form.resetFields();
         setTechnicianType("INTERNAL");
-        setSelectedSupplier(null);
-        setSelectedSkills([]);
         setDataInit(null);
         setOpenModal(false);
     };
@@ -133,6 +128,7 @@ const ModalTechnician = ({
             )
         ) as (string | number)[];
 
+
         const payload: ITechnician = {
             id: dataInit?.id,
             technicianCode: values.technicianCode,
@@ -141,9 +137,7 @@ const ModalTechnician = ({
             phone: values.phone,
             technicianType: values.technicianType,
             costPerHire:
-                values.technicianType === "OUTSOURCE"
-                    ? values.costPerHire
-                    : 0,
+                values.technicianType === "OUTSOURCE" ? values.costPerHire || 0 : 0,
             activeStatus: values.activeStatus ?? true,
             technicianSupplierId:
                 values.technicianType === "OUTSOURCE"
@@ -152,15 +146,12 @@ const ModalTechnician = ({
             skillIds: uniqueSkillIds,
         };
 
-        if (isEdit) {
-            updateTechnician(payload, { onSuccess: handleReset });
-        } else {
-            createTechnician(payload, { onSuccess: handleReset });
-        }
+        const mutation = isEdit ? updateTechnician : createTechnician;
+        mutation(payload, { onSuccess: handleReset });
     };
 
     /** ==================== Fetch danh sách chọn ==================== */
-    async function fetchSupplierList(name: string): Promise<ISelectItem[]> {
+    const fetchSupplierList = async (name: string): Promise<ISelectItem[]> => {
         const res = await callFetchTechnicianSupplier(`page=1&size=100&name=/${name}/i`);
         return (
             res?.data?.result?.map((item: any) => ({
@@ -168,9 +159,9 @@ const ModalTechnician = ({
                 value: item.id,
             })) || []
         );
-    }
+    };
 
-    async function fetchSkillList(name: string): Promise<ISelectItem[]> {
+    const fetchSkillList = async (name: string): Promise<ISelectItem[]> => {
         const res = await callFetchSkill(`page=1&size=100&techniqueName=/${name}/i`);
         return (
             res?.data?.result?.map((item: any) => ({
@@ -178,30 +169,36 @@ const ModalTechnician = ({
                 value: item.id,
             })) || []
         );
-    }
+    };
+
+    /** ==================== Initial Values ==================== */
+    const initialValues = useMemo(
+        () => ({
+            activeStatus: true,
+            technicianType: "INTERNAL",
+        }),
+        []
+    );
 
     /** ==================== Render ==================== */
     return (
         <ModalForm
             title={isEdit ? "Cập nhật kỹ thuật viên" : "Thêm mới kỹ thuật viên"}
             open={openModal}
+            form={form}
+            initialValues={initialValues}
+            onFinish={submitForm}
+            scrollToFirstError
+            preserve={false}
             modalProps={{
                 onCancel: handleReset,
-                afterClose: handleReset,
+                afterClose: () => form.resetFields(),
                 destroyOnClose: true,
                 width: isMobile ? "100%" : 800,
                 okText: isEdit ? "Cập nhật" : "Tạo mới",
                 cancelText: "Hủy",
                 confirmLoading: isCreating || isUpdating || loadingDetail,
                 maskClosable: false,
-            }}
-            scrollToFirstError
-            preserve={false}
-            form={form}
-            onFinish={submitForm}
-            initialValues={{
-                activeStatus: true,
-                technicianType: "INTERNAL",
             }}
         >
             <Row gutter={16}>
@@ -260,7 +257,6 @@ const ModalTechnician = ({
                                         technicianSupplier: undefined,
                                         costPerHire: undefined,
                                     });
-                                    setSelectedSupplier(null);
                                 }
                             }}
                         />
@@ -292,6 +288,7 @@ const ModalTechnician = ({
                                 placeholder="Nhập chi phí thuê"
                             />
                         </Col>
+
                         <Col lg={12} md={12}>
                             <ProForm.Item
                                 name="technicianSupplier"
@@ -303,11 +300,6 @@ const ModalTechnician = ({
                                     showSearch
                                     placeholder="Chọn nhà cung cấp"
                                     fetchOptions={fetchSupplierList}
-                                    value={selectedSupplier as any}
-                                    onChange={(newValue: any) => {
-                                        setSelectedSupplier(newValue as ISelectItem);
-                                        form.setFieldsValue({ technicianSupplier: newValue });
-                                    }}
                                     style={{ width: "100%" }}
                                 />
                             </ProForm.Item>
@@ -328,16 +320,6 @@ const ModalTechnician = ({
                             showSearch
                             placeholder="Chọn kỹ năng"
                             fetchOptions={fetchSkillList}
-                            value={selectedSkills as any}
-                            onChange={(newValue: any) => {
-                                const unique = Array.from(
-                                    new Map(
-                                        (newValue as ISelectItem[]).map((s) => [s.value, s])
-                                    ).values()
-                                );
-                                setSelectedSkills(unique);
-                                form.setFieldsValue({ skillIds: unique });
-                            }}
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>

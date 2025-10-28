@@ -1,35 +1,34 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Select, Spin } from 'antd';
-import type { SelectProps } from 'antd/es/select';
-import debounce from 'lodash/debounce';
+import React, { useMemo, useRef, useState } from "react";
+import { Select, Spin } from "antd";
+import type { SelectProps } from "antd/es/select";
+import debounce from "lodash/debounce";
 
 export interface DebounceSelectProps<ValueType = any>
-    extends Omit<SelectProps<ValueType | ValueType[]>, 'options' | 'children'> {
+    extends Omit<SelectProps<ValueType | ValueType[]>, "options" | "children"> {
     fetchOptions: (search: string) => Promise<ValueType[]>;
     debounceTimeout?: number;
 }
 
 export function DebounceSelect<
-    ValueType extends { key?: string; label: React.ReactNode; value: string | number } = any
+    ValueType extends { key?: string | number; label: React.ReactNode; value: string | number } = any
 >({
     fetchOptions,
     debounceTimeout = 800,
     value,
+    onChange,
     ...props
 }: DebounceSelectProps<ValueType>) {
     const [fetching, setFetching] = useState(false);
     const [options, setOptions] = useState<ValueType[]>([]);
     const fetchRef = useRef(0);
 
-    /** ================== Debounce Fetch ================== */
     const debounceFetcher = useMemo(() => {
         const loadOptions = (searchText: string) => {
             fetchRef.current += 1;
             const fetchId = fetchRef.current;
             setFetching(true);
-
             fetchOptions(searchText).then((newOptions) => {
-                if (fetchId !== fetchRef.current) return; // ignore old fetches
+                if (fetchId !== fetchRef.current) return;
                 setOptions(newOptions);
                 setFetching(false);
             });
@@ -37,15 +36,8 @@ export function DebounceSelect<
         return debounce(loadOptions, debounceTimeout);
     }, [fetchOptions, debounceTimeout]);
 
-    /** ================== Fetch khi focus ================== */
     const handleOnFocus = () => {
-        if (options.length === 0) {
-            fetchOptions('').then((newOptions) => setOptions(newOptions));
-        }
-    };
-
-    const handleOnBlur = () => {
-        // giữ nguyên options
+        if (options.length === 0) fetchOptions("").then((newOptions) => setOptions(newOptions));
     };
 
     return (
@@ -58,8 +50,8 @@ export function DebounceSelect<
             {...props}
             options={options}
             value={value}
+            onChange={(v) => onChange?.(v)}
             onFocus={handleOnFocus}
-            onBlur={handleOnBlur}
         />
     );
 }

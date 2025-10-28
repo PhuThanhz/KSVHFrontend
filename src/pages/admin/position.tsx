@@ -17,13 +17,13 @@ const PositionPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<IPosition | null>(null);
 
-    const [query, setQuery] = useState<string>(() => {
-        return queryString.stringify({
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
             page: 1,
             size: 10,
             sort: "createdAt,desc",
-        });
-    });
+        }, { encode: false })
+    );
 
     const { data, isFetching, refetch } = usePositionsQuery(query);
     const { mutate: deletePosition } = useDeletePositionMutation();

@@ -1,7 +1,7 @@
 import { ModalForm, ProForm, ProFormText } from "@ant-design/pro-components";
 import { Col, Form, Row } from "antd";
 import { isMobile } from "react-device-detect";
-import { useEffect } from "react";
+import { useMemo } from "react";
 import type { ICustomer } from "@/types/backend";
 import {
     useCreateCustomerMutation,
@@ -22,32 +22,26 @@ const ModalCustomer = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
     const { mutate: createCustomer, isPending: isCreating } = useCreateCustomerMutation();
     const { mutate: updateCustomer, isPending: isUpdating } = useUpdateCustomerMutation();
 
-    /** ==================== Khi mở modal: fill dữ liệu nếu có ==================== */
-    useEffect(() => {
-        if (dataInit?.id) {
-            // dùng timeout để đợi form mount xong mới fill (fix lỗi form rỗng)
-            setTimeout(() => {
-                form.setFieldsValue({
-                    customerCode: dataInit.customerCode || "",
-                    name: dataInit.name || "",
-                    phone: dataInit.phone || "",
-                    email: dataInit.email || "",
-                    address: dataInit.address || "",
-                });
-            }, 0);
-        } else {
-            form.resetFields();
-        }
-    }, [dataInit, form]);
-
-    /** ==================== Đóng & reset modal ==================== */
-    const handleReset = () => {
+    /** ==================== Đóng modal & reset ==================== */
+    const handleClose = () => {
         form.resetFields();
         setDataInit(null);
         setOpenModal(false);
     };
 
-    /** ==================== Submit ==================== */
+    /** ==================== Dữ liệu ban đầu cho Form ==================== */
+    const initialValues = useMemo(() => {
+        if (!dataInit) return {};
+        return {
+            customerCode: dataInit.customerCode || "",
+            name: dataInit.name || "",
+            phone: dataInit.phone || "",
+            email: dataInit.email || "",
+            address: dataInit.address || "",
+        };
+    }, [dataInit]);
+
+    /** ==================== Submit Form ==================== */
     const submitCustomer = async (values: any) => {
         const payload = {
             name: values.name,
@@ -57,9 +51,12 @@ const ModalCustomer = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
         };
 
         if (isEdit && dataInit?.id) {
-            updateCustomer({ ...dataInit, ...payload }, { onSuccess: () => handleReset() });
+            updateCustomer(
+                { id: dataInit.id, ...payload },
+                { onSuccess: () => handleClose() }
+            );
         } else {
-            createCustomer(payload, { onSuccess: () => handleReset() });
+            createCustomer(payload, { onSuccess: () => handleClose() });
         }
     };
 
@@ -68,9 +65,14 @@ const ModalCustomer = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
         <ModalForm
             title={isEdit ? "Cập nhật khách hàng" : "Thêm mới khách hàng"}
             open={openModal}
+            form={form}
+            initialValues={initialValues}
+            onFinish={submitCustomer}
+            scrollToFirstError
+            preserve={false}
             modalProps={{
-                onCancel: handleReset,
-                afterClose: handleReset,
+                onCancel: handleClose,
+                afterClose: () => form.resetFields(),
                 destroyOnClose: true,
                 width: isMobile ? "100%" : 700,
                 okText: isEdit ? "Cập nhật" : "Tạo mới",
@@ -78,10 +80,6 @@ const ModalCustomer = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                 confirmLoading: isCreating || isUpdating,
                 maskClosable: false,
             }}
-            scrollToFirstError
-            preserve={false}
-            form={form}
-            onFinish={submitCustomer}
         >
             <Row gutter={16}>
                 {isEdit && (

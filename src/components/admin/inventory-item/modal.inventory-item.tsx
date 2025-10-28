@@ -1,7 +1,7 @@
 import { ModalForm, ProForm, ProFormText, ProFormDigit } from "@ant-design/pro-components";
 import { Col, Form, Row } from "antd";
 import { isMobile } from "react-device-detect";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { IInventoryItem } from "@/types/backend";
 import { DebounceSelect } from "@/components/admin/debouce.select";
 import {
@@ -17,10 +17,10 @@ import {
 } from "@/config/api";
 
 export interface ISelectItem {
-    label?: string;
+    key?: string;
+    label: React.ReactNode;
     value: number | string;
 }
-
 
 interface IProps {
     openModal: boolean;
@@ -32,17 +32,12 @@ interface IProps {
 const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) => {
     const [form] = Form.useForm();
     const isEdit = Boolean(dataInit?.id);
-
-    const [selectedUnit, setSelectedUnit] = useState<ISelectItem | null>(null);
-    const [selectedDeviceType, setSelectedDeviceType] = useState<ISelectItem | null>(null);
-    const [selectedWarehouse, setSelectedWarehouse] = useState<ISelectItem | null>(null);
-    const [selectedSupplier, setSelectedSupplier] = useState<ISelectItem | null>(null);
-    const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
+    const [loadingDetail, setLoadingDetail] = useState(false);
 
     const { mutate: createItem, isPending: isCreating } = useCreateInventoryItemMutation();
     const { mutate: updateItem, isPending: isUpdating } = useUpdateInventoryItemMutation();
 
-    /** ==================== Load chi tiết khi edit ==================== */
+    /** ==================== Fetch chi tiết khi edit ==================== */
     useEffect(() => {
         const fetchDetail = async (id: number | string) => {
             setLoadingDetail(true);
@@ -50,34 +45,24 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
                 const res = await callFetchInventoryItemById(id);
                 const detail = res?.data;
                 if (detail) {
-                    const unit = detail.unit
-                        ? { label: detail.unit.name, value: detail.unit.id }
-                        : null;
-                    const deviceType = detail.deviceType
-                        ? { label: detail.deviceType.typeName, value: detail.deviceType.id }
-                        : null;
-                    const warehouse = detail.warehouse
-                        ? { label: detail.warehouse.warehouseName, value: detail.warehouse.id }
-                        : null;
-                    const supplier = detail.materialSupplier
-                        ? { label: detail.materialSupplier.supplierName, value: detail.materialSupplier.id }
-                        : null;
-
-                    // set state chọn
-                    setSelectedUnit(unit);
-                    setSelectedDeviceType(deviceType);
-                    setSelectedWarehouse(warehouse);
-                    setSelectedSupplier(supplier);
-
                     form.setFieldsValue({
                         itemCode: detail.itemCode,
                         itemName: detail.itemName,
                         quantity: detail.quantity,
                         unitPrice: detail.unitPrice,
-                        unit,
-                        deviceType,
-                        warehouse,
-                        materialSupplier: supplier,
+                        unit: detail.unit ? { label: detail.unit.name, value: detail.unit.id } : undefined,
+                        deviceType: detail.deviceType
+                            ? { label: detail.deviceType.typeName, value: detail.deviceType.id }
+                            : undefined,
+                        warehouse: detail.warehouse
+                            ? { label: detail.warehouse.warehouseName, value: detail.warehouse.id }
+                            : undefined,
+                        materialSupplier: detail.materialSupplier
+                            ? {
+                                label: detail.materialSupplier.supplierName,
+                                value: detail.materialSupplier.id,
+                            }
+                            : undefined,
                     });
                 }
             } catch (err) {
@@ -90,17 +75,13 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
         if (openModal && dataInit?.id) {
             fetchDetail(dataInit.id);
         } else if (!openModal) {
-            handleReset();
+            form.resetFields();
         }
     }, [openModal, dataInit, form]);
 
     /** ==================== Reset modal ==================== */
     const handleReset = () => {
         form.resetFields();
-        setSelectedUnit(null);
-        setSelectedDeviceType(null);
-        setSelectedWarehouse(null);
-        setSelectedSupplier(null);
         setDataInit(null);
         setOpenModal(false);
     };
@@ -113,48 +94,53 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
             itemName: values.itemName,
             quantity: Number(values.quantity),
             unitPrice: Number(values.unitPrice),
-            unit: { id: values.unit?.value },
-            deviceType: { id: values.deviceType?.value },
-            warehouse: { id: values.warehouse?.value },
-            materialSupplier: { id: values.materialSupplier?.value },
+            unit: { id: Number(values.unit?.value) },
+            deviceType: { id: Number(values.deviceType?.value) },
+            warehouse: { id: Number(values.warehouse?.value) },
+            materialSupplier: { id: Number(values.materialSupplier?.value) },
         };
 
-        if (isEdit) {
-            updateItem(payload, { onSuccess: handleReset });
-        } else {
-            createItem(payload, { onSuccess: handleReset });
-        }
+        const mutation = isEdit ? updateItem : createItem;
+        mutation(payload, { onSuccess: handleReset });
     };
 
-    /** ==================== Fetch dropdown ==================== */
-    async function fetchUnitList(name: string): Promise<ISelectItem[]> {
+    /** ==================== Fetch dropdowns ==================== */
+    const fetchUnitList = async (name: string): Promise<ISelectItem[]> => {
         const res = await callFetchUnit(`page=1&size=100&name=/${name}/i`);
         return res?.data?.result?.map((i: any) => ({ label: i.name, value: i.id })) || [];
-    }
+    };
 
-    async function fetchDeviceTypeList(name: string): Promise<ISelectItem[]> {
+    const fetchDeviceTypeList = async (name: string): Promise<ISelectItem[]> => {
         const res = await callFetchDeviceType(`page=1&size=100&typeName=/${name}/i`);
         return res?.data?.result?.map((i: any) => ({ label: i.typeName, value: i.id })) || [];
-    }
+    };
 
-    async function fetchWarehouseList(name: string): Promise<ISelectItem[]> {
+    const fetchWarehouseList = async (name: string): Promise<ISelectItem[]> => {
         const res = await callFetchWarehouse(`page=1&size=100&warehouseName=/${name}/i`);
         return res?.data?.result?.map((i: any) => ({ label: i.warehouseName, value: i.id })) || [];
-    }
+    };
 
-    async function fetchSupplierList(name: string): Promise<ISelectItem[]> {
+    const fetchSupplierList = async (name: string): Promise<ISelectItem[]> => {
         const res = await callFetchMaterialSupplier(`page=1&size=100&supplierName=/${name}/i`);
         return res?.data?.result?.map((i: any) => ({ label: i.supplierName, value: i.id })) || [];
-    }
+    };
+
+    /** ==================== Initial Values ==================== */
+    const initialValues = useMemo(() => ({}), []);
 
     /** ==================== Render ==================== */
     return (
         <ModalForm
             title={isEdit ? "Cập nhật vật tư tồn kho" : "Thêm mới vật tư tồn kho"}
             open={openModal}
+            form={form}
+            onFinish={submitForm}
+            initialValues={initialValues}
+            scrollToFirstError
+            preserve={false}
             modalProps={{
                 onCancel: handleReset,
-                afterClose: handleReset,
+                afterClose: () => form.resetFields(),
                 destroyOnClose: true,
                 width: isMobile ? "100%" : 800,
                 okText: isEdit ? "Cập nhật" : "Tạo mới",
@@ -162,10 +148,6 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
                 confirmLoading: isCreating || isUpdating || loadingDetail,
                 maskClosable: false,
             }}
-            scrollToFirstError
-            preserve={false}
-            form={form}
-            onFinish={submitForm}
         >
             <Row gutter={16}>
                 <Col lg={12}>
@@ -197,27 +179,28 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
                     />
                 </Col>
 
-                <ProFormDigit
-                    label="Đơn giá (₫)"
-                    name="unitPrice"
-                    min={0}
-                    rules={[
-                        { required: true, message: "Vui lòng nhập đơn giá" },
-                        {
-                            validator: (_, value) =>
-                                value > 0
-                                    ? Promise.resolve()
-                                    : Promise.reject("Đơn giá phải lớn hơn 0"),
-                        },
-                    ]}
-                    fieldProps={{
-                        formatter: (value) =>
-                            value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "",
-                        parser: (value?: string) =>
-                            value ? Number(value.replace(/₫|,/g, "")) : 0,
-                    }}
-                    placeholder="Nhập đơn giá"
-                />
+                <Col lg={12}>
+                    <ProFormDigit
+                        label="Đơn giá (₫)"
+                        name="unitPrice"
+                        min={0}
+                        rules={[
+                            { required: true, message: "Vui lòng nhập đơn giá" },
+                            {
+                                validator: (_, value) =>
+                                    value > 0 ? Promise.resolve() : Promise.reject("Đơn giá phải lớn hơn 0"),
+                            },
+                        ]}
+                        fieldProps={{
+                            formatter: (value) =>
+                                value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "",
+                            parser: (value?: string) =>
+                                value ? Number(value.replace(/₫|,/g, "")) : 0,
+                        }}
+                        placeholder="Nhập đơn giá"
+                    />
+                </Col>
+
                 <Col lg={12}>
                     <ProForm.Item
                         name="unit"
@@ -227,11 +210,6 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
                         <DebounceSelect
                             placeholder="Chọn đơn vị"
                             fetchOptions={fetchUnitList}
-                            value={selectedUnit as any}
-                            onChange={(v: any) => {
-                                setSelectedUnit(v);
-                                form.setFieldsValue({ unit: v });
-                            }}
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>
@@ -246,11 +224,6 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
                         <DebounceSelect
                             placeholder="Chọn loại thiết bị"
                             fetchOptions={fetchDeviceTypeList}
-                            value={selectedDeviceType as any}
-                            onChange={(v: any) => {
-                                setSelectedDeviceType(v);
-                                form.setFieldsValue({ deviceType: v });
-                            }}
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>
@@ -265,11 +238,6 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
                         <DebounceSelect
                             placeholder="Chọn kho"
                             fetchOptions={fetchWarehouseList}
-                            value={selectedWarehouse as any}
-                            onChange={(v: any) => {
-                                setSelectedWarehouse(v);
-                                form.setFieldsValue({ warehouse: v });
-                            }}
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>
@@ -284,11 +252,6 @@ const ModalInventoryItem = ({ openModal, setOpenModal, dataInit, setDataInit }: 
                         <DebounceSelect
                             placeholder="Chọn nhà cung cấp"
                             fetchOptions={fetchSupplierList}
-                            value={selectedSupplier as any}
-                            onChange={(v: any) => {
-                                setSelectedSupplier(v);
-                                form.setFieldsValue({ materialSupplier: v });
-                            }}
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>

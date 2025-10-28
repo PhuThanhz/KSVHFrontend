@@ -17,14 +17,13 @@ const IssuePage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState<string>(() => {
-        return queryString.stringify({
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
             page: 1,
             size: 10,
             sort: "createdAt,desc",
-        });
-    });
-
+        }, { encode: false })
+    );
     const { data, isFetching } = useIssuesQuery(query);
     const deleteMutation = useDeleteIssueMutation();
 

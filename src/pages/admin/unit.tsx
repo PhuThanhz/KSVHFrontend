@@ -156,6 +156,7 @@ const UnitPage = () => {
                         });
                     }}
                     pagination={{
+                        defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         total: data?.meta?.total,

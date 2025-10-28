@@ -18,12 +18,17 @@ import {
     useDevicesQuery,
     useDeleteDeviceMutation,
 } from "@/hooks/useDevices";
-import ModalDevice from "@/components/admin/device/modal.device";
+
+// === THAY ĐỔI Ở ĐÂY ===
+import CreateDeviceModal from "@/components/admin/device/CreateDeviceModal";
+import UpdateDeviceModal from "@/components/admin/device/UpdateDeviceModal";
 import ViewDevice from "@/components/admin/device/view.device";
 import { formatCurrency, truncateText } from "@/config/format";
 
 const DevicePage = () => {
-    const [openModal, setOpenModal] = useState(false);
+    // === THAY ĐỔI Ở ĐÂY ===
+    const [openCreate, setOpenCreate] = useState(false);
+    const [openEdit, setOpenEdit] = useState(false);
     const [dataInit, setDataInit] = useState<IDevice | null>(null);
     const [openView, setOpenView] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -245,7 +250,7 @@ const DevicePage = () => {
                             style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
                             onClick={() => {
                                 setDataInit(entity);
-                                setOpenModal(true);
+                                setOpenEdit(true); // <== thay openModal bằng openEdit
                             }}
                         />
                     </Access>
@@ -288,7 +293,6 @@ const DevicePage = () => {
                     }}
                     pagination={{
                         defaultPageSize: 10,
-
                         current: data?.meta?.page,
                         pageSize: 10,
                         showSizeChanger: false,
@@ -316,7 +320,7 @@ const DevicePage = () => {
                                 type="primary"
                                 onClick={() => {
                                     setDataInit(null);
-                                    setOpenModal(true);
+                                    setOpenCreate(true);
                                 }}
                             >
                                 Thêm mới
@@ -326,9 +330,10 @@ const DevicePage = () => {
                 />
             </Access>
 
-            <ModalDevice
-                openModal={openModal}
-                setOpenModal={setOpenModal}
+            <CreateDeviceModal openModal={openCreate} setOpenModal={setOpenCreate} />
+            <UpdateDeviceModal
+                openModal={openEdit}
+                setOpenModal={setOpenEdit}
                 dataInit={dataInit}
                 setDataInit={setDataInit}
             />
