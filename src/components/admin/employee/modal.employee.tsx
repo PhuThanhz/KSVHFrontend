@@ -1,7 +1,6 @@
 import { ModalForm, ProForm, ProFormText } from "@ant-design/pro-components";
 import { Col, Form, Row } from "antd";
 import { isMobile } from "react-device-detect";
-import { useEffect } from "react";
 import type { IEmployee } from "@/types/backend";
 import {
     useCreateEmployeeMutation,
@@ -37,6 +36,7 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
     /** ==================== Submit form ==================== */
     const submitEmployee = async (values: any) => {
         const payload = {
+            id: dataInit?.id, // chỉ cần khi update
             employeeCode: values.employeeCode,
             fullName: values.fullName,
             phone: values.phone,
@@ -47,12 +47,9 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
         };
 
         if (isEdit && dataInit?.id) {
-            updateEmployee(
-                { id: dataInit.id, payload },
-                {
-                    onSuccess: () => handleClose(),
-                }
-            );
+            updateEmployee(payload, {
+                onSuccess: () => handleClose(),
+            });
         } else {
             createEmployee(payload, {
                 onSuccess: () => handleClose(),

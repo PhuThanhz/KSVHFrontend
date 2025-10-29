@@ -7,7 +7,7 @@ const { Text, Title } = Typography;
 interface IProps {
     onClose: (v: boolean) => void;
     open: boolean;
-    userId?: string | number | null;
+    userId?: string | null;
 }
 
 const ViewDetailUser = ({ onClose, open, userId }: IProps) => {

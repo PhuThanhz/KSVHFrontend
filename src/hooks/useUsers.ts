@@ -9,7 +9,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notify } from '@/components/common/notify';
 
 
-// Lấy danh sách người dùng (có thể kèm query string: page, size, search,...)
 export const useUsersQuery = (query: string) => {
     return useQuery({
         queryKey: ['users', query],
@@ -20,8 +19,6 @@ export const useUsersQuery = (query: string) => {
         },
     });
 };
-
-// Lấy chi tiết người dùng theo ID
 export const useUserByIdQuery = (id?: string | number) => {
     return useQuery({
         queryKey: ['user', id],
@@ -31,9 +28,10 @@ export const useUserByIdQuery = (id?: string | number) => {
             if (!res?.data) throw new Error('Không thể lấy thông tin người dùng');
             return res.data as IUser;
         },
-        enabled: !!id, // chỉ fetch khi có ID
+        enabled: !!id,
     });
 };
+
 
 // Tạo mới người dùng
 export const useCreateUserMutation = () => {

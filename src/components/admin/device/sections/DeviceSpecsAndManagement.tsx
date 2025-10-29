@@ -46,16 +46,36 @@ const DeviceSpecsAndManagement = ({
                     <Col lg={8} md={12} sm={24} xs={24}>
                         <ProFormText label="Công suất" name="powerCapacity" placeholder="Nhập công suất" />
                     </Col>
+                    <Col lg={8} md={8} sm={24} xs={24}>
+                        <ProFormDigit
+                            label="Chiều dài (cm)"
+                            name="length"
+                            min={0}
+
+                            placeholder="Dài"
+                        />
+                    </Col>
 
                     <Col lg={8} md={8} sm={24} xs={24}>
-                        <ProFormDigit label="Chiều dài (cm)" name="length" min={0} fieldProps={{ precision: 2 }} placeholder="Dài" />
+                        <ProFormDigit
+                            label="Chiều rộng (cm)"
+                            name="width"
+                            min={0}
+
+                            placeholder="Rộng"
+                        />
                     </Col>
+
                     <Col lg={8} md={8} sm={24} xs={24}>
-                        <ProFormDigit label="Chiều rộng (cm)" name="width" min={0} fieldProps={{ precision: 2 }} placeholder="Rộng" />
+                        <ProFormDigit
+                            label="Chiều cao (cm)"
+                            name="height"
+                            min={0}
+
+                            placeholder="Cao"
+                        />
                     </Col>
-                    <Col lg={8} md={8} sm={24} xs={24}>
-                        <ProFormDigit label="Chiều cao (cm)" name="height" min={0} fieldProps={{ precision: 2 }} placeholder="Cao" />
-                    </Col>
+
                 </Row>
             </Card>
 

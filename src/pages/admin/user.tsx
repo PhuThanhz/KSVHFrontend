@@ -18,7 +18,7 @@ const UserPage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IUser | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
     const [activeFilter, setActiveFilter] = useState<boolean | null>(null);
@@ -152,7 +152,7 @@ const UserPage = () => {
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
                             onClick={() => {
-                                setSelectedUserId(Number(entity.id));
+                                setSelectedUserId(String(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />

@@ -58,14 +58,8 @@ export const useCreateEmployeeMutation = () => {
 export const useUpdateEmployeeMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({
-            id,
-            payload,
-        }: {
-            id: string | number;
-            payload: any;
-        }) => {
-            const res = await callUpdateEmployee(id, payload);
+        mutationFn: async (payload: any) => {
+            const res = await callUpdateEmployee(payload);
             if (!res?.data)
                 throw new Error(res?.message || "Không thể cập nhật nhân viên");
             return res;
@@ -79,6 +73,7 @@ export const useUpdateEmployeeMutation = () => {
         },
     });
 };
+
 
 /** ========================= Xóa nhân viên ========================= */
 export const useDeleteEmployeeMutation = () => {

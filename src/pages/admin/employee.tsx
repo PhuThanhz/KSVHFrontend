@@ -35,7 +35,7 @@ const EmployeePage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IEmployee | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
     const [companyFilter, setCompanyFilter] = useState<string | null>(null);
@@ -79,7 +79,6 @@ const EmployeePage = () => {
     }, [positionsData]);
 
 
-    // build query string
     const buildQuery = (params: any, sort: any) => {
         const q: any = { page: params.current, size: params.pageSize, filter: "" };
 
@@ -169,7 +168,7 @@ const EmployeePage = () => {
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
                             onClick={() => {
-                                setSelectedId(Number(entity.id));
+                                setSelectedId(String(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />

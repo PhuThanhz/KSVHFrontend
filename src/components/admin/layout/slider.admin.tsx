@@ -288,15 +288,6 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
-                ...(checkPermission(ALL_PERMISSIONS.DEVICE_PART?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/device-part">Quản lý linh kiện</Link>,
-                            key: "/admin/device-part",
-                            icon: <ToolOutlined />,
-                        },
-                    ]
-                    : []),
 
                 ...(checkPermission(ALL_PERMISSIONS.DEVICE.GET_PAGINATE)
                     ? [

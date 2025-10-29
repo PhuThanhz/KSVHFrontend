@@ -28,7 +28,7 @@ export const useDevicesQuery = (query: string) => {
     });
 };
 
-export const useDeviceByIdQuery = (id?: string | number) => {
+export const useDeviceByIdQuery = (id?: string) => {
     return useQuery({
         queryKey: ["device", id],
         enabled: !!id,
@@ -40,7 +40,6 @@ export const useDeviceByIdQuery = (id?: string | number) => {
         },
     });
 };
-
 
 export const useCreateDeviceMutation = () => {
     const queryClient = useQueryClient();
@@ -60,7 +59,6 @@ export const useCreateDeviceMutation = () => {
     });
 };
 
-
 export const useUpdateDeviceMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -68,16 +66,19 @@ export const useUpdateDeviceMutation = () => {
             id,
             payload,
         }: {
-            id: string | number;
+            id: string;
             payload: IUpdateDeviceRequest;
         }) => {
             const res = await callUpdateDevice(id, payload);
             if (!res?.data) throw new Error(res?.message || "Không thể cập nhật thiết bị");
             return res;
         },
-        onSuccess: (res) => {
+        onSuccess: (res, variables) => {
             notify.updated(res?.message || "Cập nhật thiết bị thành công");
+            // Invalidate danh sách devices
             queryClient.invalidateQueries({ queryKey: ["devices"] });
+            // Invalidate device cụ thể vừa update
+            queryClient.invalidateQueries({ queryKey: ["device", variables.id] });
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi cập nhật thiết bị");
@@ -85,20 +86,20 @@ export const useUpdateDeviceMutation = () => {
     });
 };
 
-
 export const useDeleteDeviceMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (id: string | number) => {
+        mutationFn: async (id: string) => {
             const res = await callDeleteDevice(id);
             if (!res?.statusCode || res.statusCode !== 200) {
                 throw new Error(res?.message || "Không thể xóa thiết bị");
             }
             return res.data;
         },
-        onSuccess: () => {
+        onSuccess: (_, id) => {
             notify.deleted("Xóa thiết bị thành công");
             queryClient.invalidateQueries({ queryKey: ["devices"], exact: false });
+            queryClient.removeQueries({ queryKey: ["device", id] });
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi xóa thiết bị");

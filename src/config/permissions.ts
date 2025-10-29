@@ -59,7 +59,7 @@ export const ALL_PERMISSIONS = {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
         CREATE: { method: "POST", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
-        UPDATE: { method: "PUT", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
+        UPDATE: { method: "PUT", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
     },
 
@@ -146,14 +146,6 @@ export const ALL_PERMISSIONS = {
         CREATE: { method: "POST", apiPath: "/api/v1/inventory-items", module: "INVENTORY_ITEM" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/inventory-items", module: "INVENTORY_ITEM" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/inventory-items/{id}", module: "INVENTORY_ITEM" },
-    },
-
-    DEVICE_PART: {
-        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/parts", module: "DEVICE_PART" },
-        GET_BY_ID: { method: "GET", apiPath: "/api/v1/parts/{id}", module: "DEVICE_PART" },
-        CREATE: { method: "POST", apiPath: "/api/v1/parts", module: "DEVICE_PART" },
-        UPDATE: { method: "PUT", apiPath: "/api/v1/parts/{id}", module: "DEVICE_PART" },
-        DELETE: { method: "DELETE", apiPath: "/api/v1/parts/{id}", module: "DEVICE_PART" },
     },
     DEVICE: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/devices", module: "DEVICE" },

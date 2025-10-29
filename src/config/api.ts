@@ -26,7 +26,6 @@ import type {
     IMaterialSupplier,
     ITechnician,
     IInventoryItem,
-    IDevicePart,
     IDevice,
     ICreateDeviceRequest,
     IUpdateDeviceRequest,
@@ -324,19 +323,17 @@ export const callCreateEmployee = (data: {
     });
 };
 
-export const callUpdateEmployee = (
-    id: string | number,
-    data: {
-        employeeCode: string;
-        fullName: string;
-        phone?: string;
-        email?: string;
-        departmentId: number;
-        positionId: number;
-        companyId: number;
-    }
-) => {
-    return axios.put<IBackendRes<IEmployee>>(`/api/v1/employees/${id}`, data, {
+export const callUpdateEmployee = (data: {
+    id: string;
+    employeeCode: string;
+    fullName: string;
+    phone?: string;
+    email?: string;
+    departmentId: number;
+    positionId: number;
+    companyId: number;
+}) => {
+    return axios.put<IBackendRes<IEmployee>>(`/api/v1/employees`, data, {
         headers: { "Content-Type": "application/json" },
     });
 };
@@ -344,7 +341,6 @@ export const callUpdateEmployee = (
 export const callDeleteEmployee = (id: string | number) => {
     return axios.delete<IBackendRes<IEmployee>>(`/api/v1/employees/${id}`);
 };
-
 
 /** ======================== Module Customer ======================== **/
 
@@ -367,7 +363,7 @@ export const callCreateCustomer = (data: {
     });
 };
 export const callUpdateCustomer = (data: {
-    id: string | number;
+    id: string;
     name: string;
     email: string;
     phone?: string;
@@ -761,61 +757,29 @@ export const callDeleteInventoryItem = (id: string | number) => {
     return axios.delete<IBackendRes<null>>(`/api/v1/inventory-items/${id}`);
 };
 
-/** ======================== Module DevicePart ======================== **/
-export const callFetchDevicePart = (query: string) => {
-    return axios.get<IBackendRes<IModelPaginate<IDevicePart>>>(`/api/v1/parts?${query}`);
-};
-
-export const callFetchDevicePartById = (id: string | number) => {
-    return axios.get<IBackendRes<IDevicePart>>(`/api/v1/parts/${id}`);
-};
-
-export const callCreateDevicePart = (data: IDevicePart) => {
-    const payload = {
-        partCode: data.partCode,
-        partName: data.partName,
-        quantity: data.quantity,
-        deviceId: Number(data.device?.id),
-    };
-    return axios.post<IBackendRes<IDevicePart>>("/api/v1/parts", payload, {
-        headers: { "Content-Type": "application/json" },
-    });
-};
-
-export const callUpdateDevicePart = (id: string | number, data: IDevicePart) => {
-    const payload = {
-        partCode: data.partCode,
-        partName: data.partName,
-        quantity: data.quantity,
-        deviceId: Number(data.device?.id),
-    };
-    return axios.put<IBackendRes<IDevicePart>>(`/api/v1/parts/${id}`, payload, {
-        headers: { "Content-Type": "application/json" },
-    });
-};
-
-export const callDeleteDevicePart = (id: string | number) => {
-    return axios.delete<IBackendRes<string>>(`/api/v1/parts/${id}`);
-};
 
 
 /** ======================== Module Devices ======================== **/
 export const callFetchDevice = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IDevice>>>(`/api/v1/devices?${query}`);
 };
-export const callFetchDeviceById = (id: string | number) => {
+
+export const callFetchDeviceById = (id: string) => {
     return axios.get<IBackendRes<IDevice>>(`/api/v1/devices/${id}`);
 };
+
 export const callCreateDevice = (data: ICreateDeviceRequest) => {
     return axios.post<IBackendRes<IDevice>>(`/api/v1/devices`, data, {
         headers: { "Content-Type": "application/json" },
     });
 };
-export const callUpdateDevice = (id: string | number, data: IUpdateDeviceRequest) => {
+
+export const callUpdateDevice = (id: string, data: IUpdateDeviceRequest) => {
     return axios.put<IBackendRes<IDevice>>(`/api/v1/devices/${id}`, data, {
         headers: { "Content-Type": "application/json" },
     });
 };
-export const callDeleteDevice = (id: string | number) => {
-    return axios.delete<IBackendRes<string>>(`/api/v1/devices/${id}`);
+
+export const callDeleteDevice = (id: string) => {
+    return axios.delete<IBackendRes<null>>(`/api/v1/devices/${id}`);
 };

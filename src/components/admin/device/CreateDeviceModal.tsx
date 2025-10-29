@@ -20,7 +20,7 @@ import {
     callFetchUser,
 } from "@/config/api";
 
-// Import components
+// Components
 import DeviceBasicInfo from "./sections/DeviceBasicInfo";
 import DevicePartsSection from "./sections/DevicePartsSection";
 import DeviceSpecsAndManagement from "./sections/DeviceSpecsAndManagement";
@@ -59,7 +59,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
 
     const { mutate: createDevice, isPending: isCreating } = useCreateDeviceMutation();
 
-    /** ==================== Fetch options functions ==================== */
+    /** ==================== Fetch option lists ==================== */
     async function fetchDeviceTypeList(name: string): Promise<ISelectItem[]> {
         const res = await callFetchDeviceType(`page=1&size=100&typeName=/${name}/i`);
         return res?.data?.result?.map((e: any) => ({ label: e.typeName, value: e.id })) || [];
@@ -90,29 +90,22 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
         return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
     }
 
-    /** ==================== Image handlers ==================== */
-    const getBase64 = (img: File, callback: (url: string) => void) => {
-        const reader = new FileReader();
-        reader.addEventListener("load", () => callback(reader.result as string));
-        reader.readAsDataURL(img);
-    };
-
+    /** ==================== Upload Image Handlers ==================== */
     const handlePreview = async (file: any) => {
         if (!file.url && !file.preview) {
-            getBase64(file.originFileObj as File, (url) => {
-                file.preview = url;
-                setPreviewImage(url);
+            const reader = new FileReader();
+            reader.readAsDataURL(file.originFileObj as File);
+            reader.onload = () => {
+                setPreviewImage(reader.result as string);
                 setPreviewOpen(true);
-                setPreviewTitle(file.name || file.url?.substring(file.url.lastIndexOf("/") + 1));
-            });
+                setPreviewTitle(file.name);
+            };
         } else {
             setPreviewImage(file.url || file.preview);
             setPreviewOpen(true);
-            setPreviewTitle(file.name || file.url?.substring(file.url.lastIndexOf("/") + 1));
+            setPreviewTitle(file.name);
         }
     };
-
-    const handleCancelPreview = () => setPreviewOpen(false);
 
     const uploadProps: UploadProps = {
         listType: "picture-card",
@@ -133,23 +126,19 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                     }));
                     setFileList((prev) => [...prev, ...newFiles].slice(0, 3));
                     onSuccess?.("ok");
-                } else {
-                    throw new Error("Upload thất bại");
-                }
-            } catch (e: any) {
-                message.error(e?.message || "Không thể upload ảnh");
-                onError?.(e);
+                } else throw new Error("Upload thất bại");
+            } catch (err: any) {
+                message.error(err?.message || "Không thể upload ảnh");
+                onError?.(err);
             } finally {
                 setLoadingUpload(false);
             }
         },
-        onRemove: (file) => {
-            setFileList((prev) => prev.filter((f) => f.uid !== file.uid));
-        },
+        onRemove: (file) => setFileList((prev) => prev.filter((f) => f.uid !== file.uid)),
         onPreview: handlePreview,
     };
 
-    /** ==================== Submit handlers ==================== */
+    /** ==================== Helpers ==================== */
     const handleReset = () => {
         form.resetFields();
         setOpenModal(false);
@@ -165,19 +154,19 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
     };
 
     const buildPayload = (values: any): ICreateDeviceRequest => {
-        const images = (fileList || []).map((f) => f.url).slice(0, 3);
-        const [image1, image2, image3] = [images[0] || "", images[1] || "", images[2] || ""];
+        const images = fileList.map((f) => f.name || "").slice(0, 3);
+        const [image1, image2, image3] = images;
 
-        const base: ICreateDeviceRequest = {
+        return {
             deviceCode: values.deviceCode,
             accountingCode: values.accountingCode,
             deviceName: values.deviceName,
-            deviceTypeId: Number(values.deviceType?.value),
-            unitId: Number(values.unit?.value),
-            supplierId: Number(values.supplier?.value),
-            companyId: Number(values.company?.value),
-            departmentId: Number(values.department?.value),
-            managerUserId: Number(values.manager?.value),
+            companyId: values.company?.value,
+            departmentId: values.department?.value,
+            deviceTypeId: values.deviceType?.value,
+            supplierId: values.supplier?.value,
+            managerUserId: values.manager?.value,
+            unitId: values.unit?.value,
             brand: values.brand,
             modelDesc: values.modelDesc,
             powerCapacity: values.powerCapacity,
@@ -210,7 +199,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
             maintenanceMonth: values.maintenanceMonth
                 ? Number(values.maintenanceMonth)
                 : undefined,
-            ownershipType: values.ownershipType as DeviceOwnershipType,
+            ownershipType: (values.ownershipType as DeviceOwnershipType) || "INTERNAL",
             status: "NEW",
             note: values.note,
             parts: (values.parts || [])
@@ -221,25 +210,17 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                     quantity: Number(p.quantity || 1),
                 })),
         };
-
-        return base;
     };
 
     const submitDevice = async (values: any) => {
         const payload = buildPayload(values);
-        createDevice(payload as ICreateDeviceRequest, {
-            onSuccess: () => handleReset(),
-        });
+        createDevice(payload, { onSuccess: () => handleReset() });
     };
 
     /** ==================== Render ==================== */
     return (
         <ModalForm
-            title={
-                <Text strong style={{ fontSize: 18 }}>
-                    Thêm mới thiết bị/công cụ dụng cụ
-                </Text>
-            }
+            title={<Text strong style={{ fontSize: 18 }}>Thêm mới thiết bị / công cụ dụng cụ</Text>}
             open={openModal}
             modalProps={{
                 onCancel: handleReset,
@@ -260,8 +241,8 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
             initialValues={{
                 maintenanceFrequencyUnit: "MONTH",
                 depreciationPeriodUnit: "YEAR",
-                status: "NEW",
                 ownershipType: "INTERNAL",
+                status: "NEW",
                 parts: [{ partCode: "", partName: "", quantity: 1 }],
             }}
         >
@@ -278,9 +259,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                     />
                 </Col>
 
-                <Col span={24}>
-                    <DevicePartsSection />
-                </Col>
+                <Col span={24}><DevicePartsSection /></Col>
 
                 <Col span={24}>
                     <DeviceSpecsAndManagement
@@ -308,7 +287,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                         previewImage={previewImage}
                         previewTitle={previewTitle}
                         uploadProps={uploadProps}
-                        handleCancelPreview={handleCancelPreview}
+                        handleCancelPreview={() => setPreviewOpen(false)}
                     />
                 </Col>
 

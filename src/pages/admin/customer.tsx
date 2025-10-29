@@ -17,7 +17,7 @@ const CustomerPage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<ICustomer | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const [query, setQuery] = useState(() =>
         queryString.stringify({
@@ -87,7 +87,7 @@ const CustomerPage = () => {
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
                             onClick={() => {
-                                setSelectedId(Number(entity.id));
+                                setSelectedId(String(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />

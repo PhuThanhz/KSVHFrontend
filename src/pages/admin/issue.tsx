@@ -15,7 +15,7 @@ const IssuePage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IIssue | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
+    const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
     const [query, setQuery] = useState(() =>
         queryString.stringify({
@@ -79,7 +79,7 @@ const IssuePage = () => {
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
                             onClick={() => {
-                                setSelectedIssueId(Number(record.id));
+                                setSelectedIssueId(String(record.id));
                                 setOpenViewDetail(true);
                             }}
                         />
