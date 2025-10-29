@@ -154,6 +154,10 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/devices/{id}", module: "DEVICE" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/devices/{id}", module: "DEVICE" },
     },
+    // DEVICE_PART: {
+    //     GET_BY_DEVICE_ID: { method: "GET", apiPath: "/api/v1/device-parts/{deviceId}", module: "DEVICE_PART" },
+    //     SYNC_BY_DEVICE_ID: { method: "POST", apiPath: "/api/v1/device-parts/{deviceId}", module: "DEVICE_PART" },
+    // },
 
 };
 
@@ -178,10 +182,7 @@ export const ALL_MODULES = {
     ISSUE: "ISSUE",
     MATERIAL_SUPPLIER: "MATERIAL_SUPPLIER",
     TECHNICIAN: "TECHNICIAN",
-    DEVICE_PART: "DEVICE_PART",
+    // DEVICE_PART: "DEVICE_PART",
     DEVICE: "DEVICE",
-
-
-
 
 };

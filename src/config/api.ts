@@ -30,6 +30,7 @@ import type {
     ICreateDeviceRequest,
     IUpdateDeviceRequest,
     IResUploadFileDTO,
+    IDevicePart
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 
@@ -757,6 +758,17 @@ export const callDeleteInventoryItem = (id: string | number) => {
     return axios.delete<IBackendRes<null>>(`/api/v1/inventory-items/${id}`);
 };
 
+// /** ======================== Module Device Parts ======================== **/
+
+// export const callFetchDeviceParts = (deviceId: string) => {
+//     return axios.get<IBackendRes<IDevicePart[]>>(`/api/v1/device-parts/${deviceId}`);
+// };
+
+// export const callSyncDeviceParts = (deviceId: string, parts: IDevicePart[]) => {
+//     return axios.post<IBackendRes<null>>(`/api/v1/device-parts/${deviceId}`, parts, {
+//         headers: { "Content-Type": "application/json" },
+//     });
+// };
 
 
 /** ======================== Module Devices ======================== **/

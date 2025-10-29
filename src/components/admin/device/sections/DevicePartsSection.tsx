@@ -9,9 +9,10 @@ const DevicePartsSection = () => {
                 alwaysShowItemLabel
                 creatorButtonProps={{
                     position: "bottom",
-                    creatorButtonText: "+ Thêm linh kiện",
+                    creatorButtonText: "Thêm linh kiện",
                     type: "dashed",
                 }}
+
                 copyIconProps={false}
                 deleteIconProps={{ tooltipText: "Xóa dòng này" }}
             >

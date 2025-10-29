@@ -409,13 +409,19 @@ export interface IInventoryItem {
     updatedBy?: string | null;
 }
 
-/** ==============================
-
-
 /** ========================== ENUM TYPES ========================== */
 export type TimeUnitType = "DAY" | "WEEK" | "MONTH" | "QUARTER" | "YEAR";
 export type DeviceStatus = "NEW" | "IN_USE" | "IN_STORAGE" | "NOT_IN_USE" | "LIQUIDATED";
 export type DeviceOwnershipType = "INTERNAL" | "CUSTOMER";
+
+/** ========================== INTERFACE: DEVICE PART ========================== */
+export interface IDevicePart {
+    id?: number | string;
+    partCode: string;
+    partName: string;
+    quantity: number;
+    deviceId?: string;
+}
 
 /** ========================== INTERFACE: RESPONSE (READ DTO) ========================== */
 export interface IDevice {
@@ -481,19 +487,12 @@ export interface IDevice {
     maintenanceFrequencyValue?: number | null;
     maintenanceFrequencyUnit?: TimeUnitType | null;
     maintenanceDayOfMonth?: number | null;
-    maintenanceDayOfWeek?: number | null;
-    maintenanceWeekOrder?: number | null;
     maintenanceMonth?: number | null;
 
     note?: string;
     status?: DeviceStatus | null;
 
-    parts?: Array<{
-        id?: string;
-        partCode: string;
-        partName: string;
-        quantity: number;
-    }>;
+    parts?: IDevicePart[];
 
     createdAt?: string | null;
     updatedAt?: string | null;
@@ -511,7 +510,7 @@ export interface ICreateDeviceRequest {
     departmentId: number;
     deviceTypeId: number;
     supplierId: number;
-    managerUserId: string; //  String UUID trong backend
+    managerUserId: string; // UUID
     unitId: number;
 
     brand?: string;
@@ -532,34 +531,22 @@ export interface ICreateDeviceRequest {
     startDate?: string | null;
     warrantyExpiryDate?: string | null;
 
+    // Khấu hao
     depreciationPeriodValue?: number;
     depreciationPeriodUnit?: TimeUnitType;
     depreciationEndDate?: string | null;
 
+    // Bảo trì
     maintenanceFrequencyValue?: number;
     maintenanceFrequencyUnit?: TimeUnitType;
     maintenanceDayOfMonth?: number;
-    maintenanceDayOfWeek?: number;
-    maintenanceWeekOrder?: number;
     maintenanceMonth?: number;
 
     note?: string;
     status?: DeviceStatus;
 
-    parts?: Array<{
-        id?: string;
-        partCode: string;
-        partName: string;
-        quantity: number;
-    }>;
+    parts?: IDevicePart[];
 }
 
 /** ========================== INTERFACE: UPDATE DTO ========================== */
 export interface IUpdateDeviceRequest extends Partial<ICreateDeviceRequest> { }
-
-
-
-
-
-
-

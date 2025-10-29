@@ -190,12 +190,6 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
             maintenanceDayOfMonth: values.maintenanceDayOfMonth
                 ? Number(values.maintenanceDayOfMonth)
                 : undefined,
-            maintenanceDayOfWeek: values.maintenanceDayOfWeek
-                ? Number(values.maintenanceDayOfWeek)
-                : undefined,
-            maintenanceWeekOrder: values.maintenanceWeekOrder
-                ? Number(values.maintenanceWeekOrder)
-                : undefined,
             maintenanceMonth: values.maintenanceMonth
                 ? Number(values.maintenanceMonth)
                 : undefined,
@@ -295,9 +289,8 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                     <DeviceWarrantyAndMaintenance
                         freqUnit={freqUnit}
                         setFreqUnit={setFreqUnit}
-                        freqModeYear={freqModeYear}
-                        setFreqModeYear={setFreqModeYear}
                     />
+                    ➡ V
                 </Col>
             </Row>
         </ModalForm>

@@ -15,7 +15,7 @@
     width: 56px;
     height: 56px;
     display: grid;
-    color: #f568e2;
+    color: #4288ea;
     background: radial-gradient(farthest-side,
             currentColor calc(100% - 7px),
             #0000 calc(100% - 6px) 0);

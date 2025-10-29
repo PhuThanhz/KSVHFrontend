@@ -5,18 +5,20 @@ import {
     callCreateDevice,
     callUpdateDevice,
     callDeleteDevice,
+    // callFetchDeviceParts,
+    // callSyncDeviceParts,
 } from "@/config/api";
+
 import type {
     IDevice,
     IModelPaginate,
     ICreateDeviceRequest,
     IUpdateDeviceRequest,
+    // IDevicePart,
 } from "@/types/backend";
 import { notify } from "@/components/common/notify";
 
-/** =========================
- *  Lấy danh sách thiết bị
- *  ========================= */
+
 export const useDevicesQuery = (query: string) => {
     return useQuery({
         queryKey: ["devices", query],
@@ -27,7 +29,6 @@ export const useDevicesQuery = (query: string) => {
         },
     });
 };
-
 export const useDeviceByIdQuery = (id?: string) => {
     return useQuery({
         queryKey: ["device", id],
@@ -38,6 +39,7 @@ export const useDeviceByIdQuery = (id?: string) => {
             if (!res?.data) throw new Error("Không thể lấy thông tin thiết bị");
             return res.data as IDevice;
         },
+        placeholderData: (prev) => prev,
     });
 };
 
@@ -105,4 +107,40 @@ export const useDeleteDeviceMutation = () => {
             notify.error(error.message || "Lỗi khi xóa thiết bị");
         },
     });
+
+
+
+    // export const useDevicePartsQuery = (deviceId?: string) => {
+    //     return useQuery<IDevicePart[], Error>({
+    //         queryKey: ["device-parts", deviceId],
+    //         enabled: !!deviceId,
+    //         queryFn: async () => {
+    //             if (!deviceId) throw new Error("Thiếu ID thiết bị");
+    //             const res = await callFetchDeviceParts(deviceId);
+    //             if (!res?.data) throw new Error("Không thể lấy danh sách linh kiện");
+    //             return res.data as IDevicePart[];
+    //         },
+    //     });
+    // };
+
+    // export const useSyncDevicePartsMutation = () => {
+    //     const queryClient = useQueryClient();
+
+    //     return useMutation({
+    //         mutationFn: async ({ deviceId, parts }: { deviceId: string; parts: IDevicePart[] }) => {
+    //             const res = await callSyncDeviceParts(deviceId, parts);
+    //             if (res?.statusCode !== 200 && res?.statusCode !== "200")
+    //                 throw new Error(res?.message || "Không thể đồng bộ linh kiện");
+    //             return res;
+    //         },
+    //         onSuccess: (_, { deviceId }) => {
+    //             notify.updated("Đồng bộ linh kiện thành công");
+    //             queryClient.invalidateQueries({ queryKey: ["device-parts", deviceId] });
+    //         },
+    //         onError: (error: any) => {
+    //             notify.error(error.message || "Lỗi khi đồng bộ linh kiện");
+    //         },
+    //     });
+    // };
+
 };

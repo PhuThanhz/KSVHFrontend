@@ -10,7 +10,10 @@ import type {
     TimeUnitType,
     DeviceOwnershipType,
 } from "@/types/backend";
-import { useDeviceByIdQuery, useUpdateDeviceMutation } from "@/hooks/useDevices";
+import {
+    useDeviceByIdQuery,
+    useUpdateDeviceMutation,
+} from "@/hooks/useDevices";
 import {
     callFetchDeviceType,
     callFetchUnit,
@@ -20,7 +23,7 @@ import {
     callFetchUser,
 } from "@/config/api";
 import DeviceBasicInfo from "./sections/DeviceBasicInfo";
-import DevicePartsSection from "./sections/DevicePartsSection";
+import DevicePartsUpdateSection from "./sections/DevicePartsUpdateSection";
 import DeviceSpecsAndManagement from "./sections/DeviceSpecsAndManagement";
 import DeviceWarrantyAndMaintenance from "./sections/DeviceWarrantyAndMaintenance";
 import DeviceImagesAndNotes from "./sections/DeviceImagesAndNotes";
@@ -34,19 +37,16 @@ function toSelect(label?: string | null, value?: string | number | null): ISelec
     return { label: String(label), value } as ISelectItem;
 }
 
-// /storage/device/{fileName}  hoặc  http(s)://.../storage/device/{fileName}
 function extractFileNameFromUrl(url: string): string {
     if (!url) return "";
     try {
         const mark = "/storage/device/";
         const idx = url.indexOf(mark);
         if (idx >= 0) return url.slice(idx + mark.length);
-        // fallback: lấy đoạn cuối nếu là URL trực tiếp tên file
         const u = new URL(url);
         const last = u.pathname.split("/").pop() || "";
         return last;
     } catch {
-        // không phải URL tuyệt đối => có thể đã là fileName
         return url.split("/").pop() || url;
     }
 }
@@ -76,7 +76,6 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
     const [previewTitle, setPreviewTitle] = useState("");
 
     const [freqUnit, setFreqUnit] = useState<TimeUnitType>("MONTH");
-    const [freqModeYear, setFreqModeYear] = useState<"anyday" | "weekday">("anyday");
 
     // === fetch detail ===
     const deviceId = useMemo(
@@ -86,55 +85,33 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
     const { data: detail } = useDeviceByIdQuery(deviceId || undefined);
     const { mutate: updateDevice, isPending: isUpdating } = useUpdateDeviceMutation();
 
-    // === populate form & state ===
+    /** ========= Prefill form khi mở modal ========= */
     useEffect(() => {
         if (!openModal || !detail) return;
 
+        form.resetFields();
+
+        const mappedParts =
+            Array.isArray(detail.parts) && detail.parts.length > 0
+                ? detail.parts.map((p) => ({
+                    partCode: p.partCode || "",
+                    partName: p.partName || "",
+                    quantity: Number(p.quantity || 1),
+                }))
+                : [{ partCode: "", partName: "", quantity: 1 }];
+
         form.setFieldsValue({
-            deviceCode: detail.deviceCode,
-            accountingCode: detail.accountingCode,
-            deviceName: detail.deviceName,
-            deviceType: toSelect(detail.deviceType?.typeName, detail.deviceType?.id) || undefined,
-            unit: toSelect(detail.unit?.name, detail.unit?.id) || undefined,
-            supplier: toSelect(detail.supplier?.supplierName, detail.supplier?.id) || undefined,
-            company: toSelect(detail.company?.name, detail.company?.id) || undefined,
-            department: toSelect(detail.department?.name, detail.department?.id) || undefined,
-            manager: toSelect(detail.manager?.name, detail.manager?.id) || undefined,
-
-            brand: detail.brand,
-            modelDesc: detail.modelDesc,
-            powerCapacity: detail.powerCapacity,
-            length: detail.length,
-            width: detail.width,
-            height: detail.height,
-            unitPrice: detail.unitPrice,
-
-            startDate: detail.startDate,
-            warrantyExpiryDate: detail.warrantyExpiryDate,
-
-            depreciationPeriodValue: detail.depreciationPeriodValue,
-            depreciationPeriodUnit: detail.depreciationPeriodUnit,
-            maintenanceFrequencyValue: detail.maintenanceFrequencyValue,
-            maintenanceFrequencyUnit: detail.maintenanceFrequencyUnit,
-            maintenanceDayOfMonth: detail.maintenanceDayOfMonth,
-            maintenanceDayOfWeek: detail.maintenanceDayOfWeek,
-            maintenanceWeekOrder: detail.maintenanceWeekOrder,
-            maintenanceMonth: detail.maintenanceMonth,
-
-            ownershipType: detail.ownershipType,
-            status: detail.status,
-            note: detail.note,
-
-            parts:
-                Array.isArray(detail.parts) && detail.parts.length
-                    ? detail.parts.map((p) => ({
-                        partCode: p.partCode ?? "",
-                        partName: p.partName ?? "",
-                        quantity: Number(p.quantity ?? 1),
-                    }))
-                    : [],
+            ...detail,
+            parts: mappedParts,
+            deviceType: toSelect(detail.deviceType?.typeName, detail.deviceType?.id),
+            unit: toSelect(detail.unit?.name, detail.unit?.id),
+            supplier: toSelect(detail.supplier?.supplierName, detail.supplier?.id),
+            company: toSelect(detail.company?.name, detail.company?.id),
+            department: toSelect(detail.department?.name, detail.department?.id),
+            manager: toSelect(detail.manager?.name, detail.manager?.id),
         });
 
+        // === Prefill select states ===
         setSelectedDeviceType(toSelect(detail.deviceType?.typeName, detail.deviceType?.id));
         setSelectedUnit(toSelect(detail.unit?.name, detail.unit?.id));
         setSelectedSupplier(toSelect(detail.supplier?.supplierName, detail.supplier?.id));
@@ -142,37 +119,23 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         setSelectedDepartment(toSelect(detail.department?.name, detail.department?.id));
         setSelectedManager(toSelect(detail.manager?.name, detail.manager?.id));
 
+        // === Prefill ảnh ===
         const imgs = [detail.image1, detail.image2, detail.image3].filter(Boolean) as string[];
-        const normalized: UploadFile[] = imgs.map((raw, idx) => {
+        const normalized = imgs.map((raw) => {
             const safe = String(raw);
             const fullUrl = safe.startsWith("http")
                 ? safe
                 : safe.startsWith("/storage/")
                     ? `${import.meta.env.VITE_BACKEND_URL}${safe}`
                     : `${import.meta.env.VITE_BACKEND_URL}/storage/device/${safe}`;
-            // dùng fileName thực sự ở field name để build payload
             const fileName = extractFileNameFromUrl(fullUrl);
-            return {
-                uid: uuidv4(),
-                name: fileName,
-                status: "done",
-                url: fullUrl,
-            } as UploadFile;
+            return { uid: uuidv4(), name: fileName, status: "done", url: fullUrl } as UploadFile;
         });
         setFileList(normalized.slice(0, 3));
 
+        // === Prefill thông tin bảo trì ===
         setFreqUnit((detail.maintenanceFrequencyUnit as TimeUnitType) || "MONTH");
-        if (
-            detail.maintenanceDayOfWeek &&
-            detail.maintenanceWeekOrder &&
-            detail.maintenanceMonth
-        ) {
-            setFreqModeYear("weekday");
-        } else {
-            setFreqModeYear("anyday");
-        }
-        setFreqModeYear(detail.maintenanceDayOfWeek ? "weekday" : "anyday");
-    }, [openModal, detail, form]);
+    }, [openModal, detail]);
 
     // === fetch options ===
     async function fetchDeviceTypeList(name: string): Promise<ISelectItem[]> {
@@ -230,15 +193,13 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                 if (res?.data && Array.isArray(res.data)) {
                     const next: UploadFile[] = res.data.map((f) => ({
                         uid: uuidv4(),
-                        name: f.fileName, // quan trọng: giữ fileName để build payload
+                        name: f.fileName,
                         status: "done",
                         url: `${import.meta.env.VITE_BACKEND_URL}/storage/device/${f.fileName}`,
                     }));
                     setFileList((prev) => [...prev, ...next].slice(0, 3));
                     onSuccess?.("ok");
-                } else {
-                    throw new Error("Upload thất bại");
-                }
+                } else throw new Error("Upload thất bại");
             } catch (e: any) {
                 message.error(e?.message || "Không thể upload ảnh");
                 onError?.(e);
@@ -252,59 +213,46 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
 
     // === build payload ===
     const buildPayload = (values: any): IUpdateDeviceRequest => {
-        // chỉ lấy tên file
         const imageNames = (fileList || [])
             .map((f) => f.name || extractFileNameFromUrl(String(f.url || "")))
             .filter(Boolean)
             .slice(0, 3);
         const [image1, image2, image3] = [imageNames[0] || "", imageNames[1] || "", imageNames[2] || ""];
 
-        const payload: IUpdateDeviceRequest = {
+        return {
             deviceCode: values.deviceCode,
             accountingCode: values.accountingCode,
             deviceName: values.deviceName,
-
-            // để nguyên value từ select (backend Long parse được). managerUserId là string UUID
             deviceTypeId: values.deviceType?.value,
             unitId: values.unit?.value,
             supplierId: values.supplier?.value,
             companyId: values.company?.value,
             departmentId: values.department?.value,
             managerUserId: values.manager?.value,
-
             brand: values.brand,
             modelDesc: values.modelDesc,
             powerCapacity: values.powerCapacity,
-
             length: values.length ? Number(values.length) : undefined,
             width: values.width ? Number(values.width) : undefined,
             height: values.height ? Number(values.height) : undefined,
-
-            unitPrice: values.unitPrice !== undefined && values.unitPrice !== null && values.unitPrice !== ""
-                ? Number(values.unitPrice)
-                : undefined,
-
+            unitPrice:
+                values.unitPrice !== undefined && values.unitPrice !== null && values.unitPrice !== ""
+                    ? Number(values.unitPrice)
+                    : undefined,
             image1,
             image2,
             image3,
-
             startDate: values.startDate,
             warrantyExpiryDate: values.warrantyExpiryDate,
-
             depreciationPeriodValue: values.depreciationPeriodValue ? Number(values.depreciationPeriodValue) : undefined,
             depreciationPeriodUnit: values.depreciationPeriodUnit,
-
             maintenanceFrequencyValue: values.maintenanceFrequencyValue ? Number(values.maintenanceFrequencyValue) : undefined,
             maintenanceFrequencyUnit: values.maintenanceFrequencyUnit,
             maintenanceDayOfMonth: values.maintenanceDayOfMonth ? Number(values.maintenanceDayOfMonth) : undefined,
-            maintenanceDayOfWeek: values.maintenanceDayOfWeek ? Number(values.maintenanceDayOfWeek) : undefined,
-            maintenanceWeekOrder: values.maintenanceWeekOrder ? Number(values.maintenanceWeekOrder) : undefined,
             maintenanceMonth: values.maintenanceMonth ? Number(values.maintenanceMonth) : undefined,
-
             ownershipType: (values.ownershipType as DeviceOwnershipType) || "INTERNAL",
             status: values.status,
             note: values.note,
-
             parts: (values.parts || [])
                 .filter((p: any) => p && (p.partCode || p.partName))
                 .map((p: any) => ({
@@ -313,8 +261,6 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                     quantity: Number(p.quantity || 1),
                 })),
         };
-
-        return payload;
     };
 
     // === reset ===
@@ -329,7 +275,6 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         setSelectedManager(null);
         setFileList([]);
         setFreqUnit("MONTH");
-        setFreqModeYear("anyday");
         setDataInit?.(null);
     };
 
@@ -342,7 +287,7 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         }
         const payload = buildPayload(values);
         updateDevice(
-            { id: String(id), payload }, // ✅ đúng chữ ký mutation
+            { id: String(id), payload },
             { onSuccess: () => handleReset() }
         );
     };
@@ -380,8 +325,11 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                         fetchUnitList={fetchUnitList}
                     />
                 </Col>
-
-                <Col span={24}><DevicePartsSection /></Col>
+                <Col span={24}>
+                    <Form.Item name="parts" label={false}>
+                        <DevicePartsUpdateSection />
+                    </Form.Item>
+                </Col>
 
                 <Col span={24}>
                     <DeviceSpecsAndManagement
@@ -417,8 +365,6 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                     <DeviceWarrantyAndMaintenance
                         freqUnit={freqUnit}
                         setFreqUnit={setFreqUnit}
-                        freqModeYear={freqModeYear}
-                        setFreqModeYear={setFreqModeYear}
                     />
                 </Col>
             </Row>
