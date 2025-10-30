@@ -30,10 +30,14 @@ export const PATHS = {
         DEVICE: "/admin/device",
         SHIFT_TEMPLATE: "/admin/shift-template",
         TECHNICIAN_AVAILABILITY: "/admin/technician-availability",
-
     },
 
     CLIENT: {
         ROOT: "/",
+        CREATE_MAINTENANCE_REQUEST: "/create-maintenance-request",
+    },
+
+    TECHNICIAN: {
+        ROOT: "/technician",
     },
 };

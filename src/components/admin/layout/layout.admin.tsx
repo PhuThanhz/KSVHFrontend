@@ -26,7 +26,7 @@ const LayoutAdmin = () => {
                     setActiveMenu={setActiveMenu}
                 />
             )}
-            <Layout>
+            <Layout style={{ marginLeft: !isMobile ? (collapsed ? 80 : 260) : 0, transition: 'margin-left 0.2s' }}>
                 {!isMobile && (
                     <HeaderAdmin collapsed={collapsed} setCollapsed={setCollapsed} />
                 )}

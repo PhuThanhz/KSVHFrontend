@@ -408,7 +408,6 @@ export interface IInventoryItem {
     createdBy?: string | null;
     updatedBy?: string | null;
 }
-
 /** ========================== ENUM TYPES ========================== */
 export type TimeUnitType = "DAY" | "WEEK" | "MONTH" | "QUARTER" | "YEAR";
 export type DeviceStatus = "NEW" | "IN_USE" | "IN_STORAGE" | "NOT_IN_USE" | "LIQUIDATED";
@@ -422,6 +421,8 @@ export interface IDevicePart {
     quantity: number;
     deviceId?: string;
 }
+
+/** ========================== LIST ITEM ========================== */
 export interface IDeviceList {
     id?: string;
     deviceCode: string;
@@ -435,43 +436,22 @@ export interface IDeviceList {
     ownershipType?: DeviceOwnershipType;
     status?: DeviceStatus;
 }
+
+/** ========================== DEVICE DETAIL ========================== */
 export interface IDevice {
     id?: string;
     deviceCode: string;
     accountingCode?: string;
     deviceName: string;
 
-    company?: {
-        id?: number | string;
-        name?: string;
-    };
+    company?: { id?: number | string; name?: string };
+    department?: { id?: number | string; name?: string };
+    deviceType?: { id?: number | string; typeName?: string };
+    supplier?: { id?: number | string; supplierName?: string; phone?: string };
+    manager?: { id?: string; name?: string; email?: string };
+    unit?: { id?: number | string; name?: string };
 
-    department?: {
-        id?: number | string;
-        name?: string;
-    };
-
-    deviceType?: {
-        id?: number | string;
-        typeName?: string;
-    };
-
-    supplier?: {
-        id?: number | string;
-        supplierName?: string;
-        phone?: string;
-    };
-
-    manager?: {
-        id?: string;
-        name?: string;
-        email?: string;
-    };
-
-    unit?: {
-        id?: number | string;
-        name?: string;
-    };
+    customer?: { id?: string; name?: string };
 
     brand?: string;
     modelDesc?: string;
@@ -510,6 +490,8 @@ export interface IDevice {
     createdBy?: string | null;
     updatedBy?: string | null;
 }
+
+/** ========================== REQUEST: CREATE ========================== */
 export interface ICreateDeviceRequest {
     deviceCode: string;
     accountingCode?: string;
@@ -526,6 +508,8 @@ export interface ICreateDeviceRequest {
     modelDesc?: string;
     powerCapacity?: string;
     ownershipType?: DeviceOwnershipType;
+
+    customerId?: string;
 
     length?: number;
     width?: number;
@@ -555,6 +539,7 @@ export interface ICreateDeviceRequest {
     parts?: IDevicePart[];
 }
 
+/** ========================== REQUEST: UPDATE ========================== */
 export interface IUpdateDeviceRequest extends Partial<ICreateDeviceRequest> { }
 
 /** ==============================
@@ -640,3 +625,171 @@ export interface IReqTechnicianAvailability {
     isSpecial?: boolean;
     note?: string | null;
 }
+/** ==============================
+ *   ENUM TYPES TỪ BACKEND
+ *  ============================== */
+
+/** Mức độ hư hỏng */
+export type DamageLevel = "NHE" | "TRUNG_BINH" | "NANG" | "RAT_NANG";
+
+/** Loại bảo trì */
+export type MaintenanceType = "DOT_XUAT" | "DINH_KY" | "SUA_CHUA";
+
+/** Mức độ ưu tiên */
+export type PriorityLevel = "KHAN_CAP" | "CAO" | "TRUNG_BINH" | "THAP";
+
+/** Trạng thái phiếu yêu cầu bảo trì */
+export type MaintenanceRequestStatus =
+    | "CHO_PHAN_CONG"
+    | "DANG_PHAN_CONG"
+    | "DA_XAC_NHAN"
+    | "DA_KHAO_SAT"
+    | "DA_LAP_KE_HOACH"
+    | "TU_CHOI_PHE_DUYET"
+    | "DA_PHE_DUYET"
+    | "DANG_BAO_TRI"
+    | "CHO_NGHIEM_THU"
+    | "TU_CHOI_NGHIEM_THU"
+    | "HOAN_THANH"
+    | "HUY";
+
+/** ==============================
+ *   COMMON RESPONSE DTOs
+ *  ============================== */
+
+/** Thông tin chung của phiếu bảo trì */
+export interface IResRequestCommonDTO {
+    requestId?: string;
+    requestCode?: string;
+    employeeOrCustomerCode?: string;
+    fullName?: string;
+    phone?: string;
+    position?: string;
+    companyName?: string;
+    departmentName?: string;
+    locationDetail?: string;
+    deviceCode?: string;
+    deviceName?: string;
+    issueName?: string;
+    priorityLevel?: PriorityLevel;
+    maintenanceType?: MaintenanceType;
+    status?: MaintenanceRequestStatus;
+    attachment1?: string;
+    attachment2?: string;
+    attachment3?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+/** ==============================
+ *   REJECT INFO
+ *  ============================== */
+export interface IResMaintenanceRejectDTO {
+    reasonName?: string;
+    note?: string;
+}
+
+/** ==============================
+ *   ASSIGNMENT INFO
+ *  ============================== */
+export interface IResMaintenanceAssignmentDTO {
+    id?: string;
+    requestCode?: string;
+    technicianName?: string;
+    assignedAt?: string;
+    assignedBy?: string;
+}
+
+/** ==============================
+ *   SURVEY COMMON DTO
+ *  ============================== */
+export interface IResSurveyCommonDTO {
+    actualIssueDescription?: string;
+    causeName?: string;
+    damageLevel?: DamageLevel;
+    maintenanceTypeActual?: MaintenanceType;
+    surveyDate?: string;
+    technicianName?: string;
+    attachment1?: string;
+    attachment2?: string;
+    attachment3?: string;
+}
+
+/** ==============================
+ *   SURVEY INFO DTO
+ *  ============================== */
+export interface IResMaintenanceSurveyDTO {
+    id?: string;
+    maintenanceRequestId?: string;
+    requestCode?: string;
+    deviceName?: string;
+    issueName?: string;
+    surveyInfo?: IResSurveyCommonDTO;
+}
+
+/** ==============================
+ *   LIST ITEM DTO (ResMaintenanceRequestDTO)
+ *  ============================== */
+export interface IResMaintenanceRequestDTO {
+    requestInfo: IResRequestCommonDTO;
+    technicianName?: string;
+    assignedAt?: string;
+    rejectInfo?: IResMaintenanceRejectDTO;
+}
+
+/** ==============================
+ *   DETAIL DTO (ResMaintenanceRequestDetailDTO)
+ *  ============================== */
+export interface IResMaintenanceRequestDetailDTO {
+    requestInfo: IResRequestCommonDTO;
+    assignmentInfo?: IResMaintenanceAssignmentDTO;
+    rejectInfo?: IResMaintenanceRejectDTO;
+    surveyInfo?: IResMaintenanceSurveyDTO;
+}
+
+/** ==============================
+ *   REQUEST DTOs
+ *  ============================== */
+
+/** Yêu cầu tạo phiếu bảo trì nội bộ */
+export interface IReqMaintenanceRequestDTO {
+    deviceId: string;
+    issueId: string;
+    priorityLevel: PriorityLevel;
+    maintenanceType: MaintenanceType;
+    attachment1?: string | null;
+    attachment2?: string | null;
+    attachment3?: string | null;
+}
+
+/** Yêu cầu tạo phiếu bảo trì cho khách hàng */
+export interface IReqMaintenanceRequestCustomerDTO {
+    deviceName: string;
+    issueDescription?: string | null;
+    priorityLevel: PriorityLevel;
+    maintenanceType: MaintenanceType;
+    attachment1?: string | null;
+    attachment2?: string | null;
+    attachment3?: string | null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

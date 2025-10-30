@@ -8,7 +8,7 @@ import NotFound from "components/share/not.found";
 import LoginPage from "pages/auth/login";
 import LayoutAdmin from "@/components/admin/layout/layout.admin";
 import ProtectedRoute from "components/share/protected-route.ts";
-import HomePage from "pages/home";
+import HomeClientPage from "@/pages/client/home-client";
 import DashboardPage from "./pages/admin/dashboard";
 import PermissionPage from "./pages/admin/permission";
 import RolePage from "./pages/admin/role";
@@ -37,6 +37,8 @@ import InventoryItemPage from "./pages/admin/inventory-item";
 import DevicePage from "pages/admin/device";
 import ShiftTemplatePage from "@/pages/admin/shift-template";
 import TechnicianAvailabilityPage from "@/pages/admin/technician-availability";
+import HomeTechnicianPage from "pages/technician/home-technician";
+import CreateMaintenanceRequestClientPage from "@/pages/client/maintenance-request/create-request-client";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -50,16 +52,35 @@ export default function App() {
   }, []);
 
   const router = createBrowserRouter([
+    // =================== CUSTOMER =======================//
     {
-      path: PATHS.HOME,
+      path: PATHS.CLIENT.ROOT,
       element: (
         <LayoutApp>
           <LayoutClient />
         </LayoutApp>
       ),
       errorElement: <NotFound />,
-      children: [{ index: true, element: <HomePage /> }],
+      children: [
+        { index: true, element: <HomeClientPage /> },
+        {
+          path: PATHS.CLIENT.CREATE_MAINTENANCE_REQUEST,
+          element: <CreateMaintenanceRequestClientPage />,
+        },
+      ],
     },
+    // ==================== TECHNICIAN =====================//
+    {
+      path: PATHS.TECHNICIAN.ROOT,
+      element: (
+        <LayoutApp>
+          <LayoutClient />
+        </LayoutApp>
+      ),
+      errorElement: <NotFound />,
+      children: [{ index: true, element: <HomeTechnicianPage /> }],
+    },
+    // ==========================  ADMIN =======================//
     {
       path: PATHS.ADMIN.ROOT,
       element: (

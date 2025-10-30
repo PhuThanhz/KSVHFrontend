@@ -37,7 +37,13 @@ import type {
     IReqTechnicianAvailability
 } from '@/types/backend';
 import axios from 'config/axios-customize';
-
+import type {
+    IResMaintenanceRequestDTO,
+    IResMaintenanceRequestDetailDTO,
+    IReqMaintenanceRequestDTO,
+    IReqMaintenanceRequestCustomerDTO,
+    IResMaintenanceAssignmentDTO,
+} from '@/types/backend';
 //================================ Module Auth ================================//
 
 export const callLogin = (username: string, password: string) => {
@@ -879,5 +885,50 @@ export const callDeleteTechnicianAvailability = (id: string) => {
 export const callFetchMyTechnicianAvailability = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<ITechnicianAvailability>>>(
         `/api/v1/technician-availabilities/my?${query}`
+    );
+};
+
+
+
+/** ======================== Module Maintenance Request ======================== **/
+
+// Lấy danh sách phiếu bảo trì 
+export const callFetchMaintenanceRequest = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceRequestDTO>>>(
+        `/api/v1/maintenance-requests?${query}`
+    );
+};
+// Lấy chi tiết 1 phiếu bảo trì theo ID
+export const callFetchMaintenanceRequestById = (id: string) => {
+    return axios.get<IBackendRes<IResMaintenanceRequestDetailDTO>>(
+        `/api/v1/maintenance-requests/${id}`
+    );
+};
+// Tạo phiếu bảo trì nội bộ (nhân viên)
+export const callCreateInternalMaintenanceRequest = (data: IReqMaintenanceRequestDTO) => {
+    return axios.post<IBackendRes<IResMaintenanceRequestDTO>>(
+        `/api/v1/maintenance-requests/internal`,
+        data,
+        { headers: { 'Content-Type': 'application/json' } }
+    );
+};
+// Tạo phiếu bảo trì cho khách hàng
+export const callCreateCustomerMaintenanceRequest = (data: IReqMaintenanceRequestCustomerDTO) => {
+    return axios.post<IBackendRes<IResMaintenanceRequestDTO>>(
+        `/api/v1/maintenance-requests/customer`,
+        data,
+        { headers: { 'Content-Type': 'application/json' } }
+    );
+};
+// Phân công kỹ thuật viên tự động cho tất cả phiếu chờ
+export const callAutoAssignAllMaintenanceRequests = () => {
+    return axios.post<IBackendRes<Record<string, any>>>(
+        `/api/v1/maintenance-requests/auto-assign-all`
+    );
+};
+// Gán kỹ thuật viên thủ công cho phiếu
+export const callAssignTechnicianManual = (requestId: string, technicianId: string) => {
+    return axios.post<IBackendRes<IResMaintenanceAssignmentDTO>>(
+        `/api/v1/maintenance-requests/${requestId}/assign-technician/${technicianId}`
     );
 };

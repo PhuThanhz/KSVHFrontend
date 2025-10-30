@@ -38,7 +38,7 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                 </div>
             ) : data ? (
                 <>
-                    {/* THÔNG TIN CƠ BẢN */}
+                    {/* =============== THÔNG TIN CƠ BẢN =============== */}
                     <Descriptions bordered size="middle" column={2}>
                         <Descriptions.Item label="Mã thiết bị">{data.deviceCode}</Descriptions.Item>
                         <Descriptions.Item label="Mã kế toán">{data.accountingCode || "-"}</Descriptions.Item>
@@ -49,14 +49,23 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                         <Descriptions.Item label="Người phụ trách">{data.manager?.name || "-"}</Descriptions.Item>
                         <Descriptions.Item label="Nhà cung cấp">{data.supplier?.supplierName || "-"}</Descriptions.Item>
                         <Descriptions.Item label="Đơn vị">{data.unit?.name || "-"}</Descriptions.Item>
+
                         <Descriptions.Item label="Loại sở hữu">
                             {data.ownershipType === "INTERNAL"
                                 ? "Thiết bị nội bộ"
                                 : data.ownershipType === "CUSTOMER"
-                                    ? "Thuộc khách hàng"
+                                    ? "Thiết bị thuộc khách hàng"
                                     : "-"}
                         </Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">{renderTag(data.status)}</Descriptions.Item>
+
+                        {/* ✅ HIỂN THỊ KHÁCH HÀNG (NẾU CÓ) */}
+                        {data.ownershipType === "CUSTOMER" && data.customer && (
+                            <>
+                                <Descriptions.Item label="Khách hàng">{data.customer.name || "-"}</Descriptions.Item>
+                                <Descriptions.Item label="Mã khách hàng">{data.customer.id || "-"}</Descriptions.Item>
+                            </>
+                        )}
                     </Descriptions>
 
                     <Divider orientation="left">Thông tin kỹ thuật</Divider>

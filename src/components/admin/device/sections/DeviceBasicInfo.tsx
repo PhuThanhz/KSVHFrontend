@@ -3,6 +3,8 @@ import { ProFormText, ProForm } from "@ant-design/pro-components";
 import { DebounceSelect } from "@/components/admin/debouce.select";
 import type { ISelectItem } from "./types";
 import type { DeviceOwnershipType } from "@/types/backend";
+import { useEffect, useState } from "react";
+import type { FormInstance } from "antd";
 
 interface DeviceBasicInfoProps {
     isEdit: boolean;
@@ -12,6 +14,10 @@ interface DeviceBasicInfoProps {
     setSelectedUnit: (v: ISelectItem | null) => void;
     fetchDeviceTypeList: (name: string) => Promise<ISelectItem[]>;
     fetchUnitList: (name: string) => Promise<ISelectItem[]>;
+    fetchCustomerList: (name: string) => Promise<ISelectItem[]>;
+    initialOwnershipType?: DeviceOwnershipType;
+    initialCustomer?: ISelectItem | null;
+    form: FormInstance<any>;
 }
 
 const OWNERSHIP_OPTIONS: { label: string; value: DeviceOwnershipType }[] = [
@@ -21,13 +27,34 @@ const OWNERSHIP_OPTIONS: { label: string; value: DeviceOwnershipType }[] = [
 
 const DeviceBasicInfo = ({
     isEdit,
+    form, // 👈 thêm dòng này
     selectedDeviceType,
     setSelectedDeviceType,
     selectedUnit,
     setSelectedUnit,
     fetchDeviceTypeList,
     fetchUnitList,
+    fetchCustomerList,
+    initialOwnershipType,
+    initialCustomer,
 }: DeviceBasicInfoProps) => {
+
+    const [ownershipType, setOwnershipType] = useState<DeviceOwnershipType>("INTERNAL");
+    const [selectedCustomer, setSelectedCustomer] = useState<ISelectItem | null>(null);
+
+    useEffect(() => {
+        if (initialOwnershipType) {
+            setOwnershipType(initialOwnershipType);
+        }
+        if (initialCustomer) {
+            setSelectedCustomer(initialCustomer);
+            form.setFieldValue("customer", initialCustomer);
+        } else {
+            setSelectedCustomer(null);
+            form.setFieldValue("customer", null);
+        }
+    }, [initialOwnershipType, initialCustomer]);
+
     return (
         <Card
             size="small"
@@ -55,7 +82,19 @@ const DeviceBasicInfo = ({
                         label="Loại sở hữu"
                         rules={[{ required: true, message: "Vui lòng chọn loại sở hữu" }]}
                     >
-                        <Radio.Group optionType="button" buttonStyle="solid">
+                        <Radio.Group
+                            optionType="button"
+                            buttonStyle="solid"
+                            value={ownershipType}
+                            onChange={(e) => {
+                                setOwnershipType(e.target.value);
+                                if (e.target.value === "INTERNAL") {
+                                    setSelectedCustomer(null);
+                                    form.setFieldValue("customer", null);
+                                }
+                            }}
+
+                        >
                             {OWNERSHIP_OPTIONS.map((o) => (
                                 <Radio.Button key={o.value} value={o.value}>
                                     {o.label}
@@ -64,6 +103,26 @@ const DeviceBasicInfo = ({
                         </Radio.Group>
                     </ProForm.Item>
                 </Col>
+
+                {ownershipType === "CUSTOMER" && (
+                    <Col lg={12} md={12} sm={24} xs={24}>
+                        <ProForm.Item
+                            name="customer"
+                            label="Khách hàng"
+                            rules={[{ required: true, message: "Vui lòng chọn khách hàng" }]}
+                        >
+                            <DebounceSelect
+                                allowClear
+                                showSearch
+                                placeholder="Chọn khách hàng"
+                                fetchOptions={fetchCustomerList}
+                                value={selectedCustomer}
+                                onChange={(v: any) => setSelectedCustomer(v as ISelectItem)}
+                                style={{ width: "100%" }}
+                            />
+                        </ProForm.Item>
+                    </Col>
+                )}
 
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProFormText

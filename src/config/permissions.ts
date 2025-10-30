@@ -175,6 +175,17 @@ export const ALL_PERMISSIONS = {
         GET_MY_AVAILABILITIES: { method: "GET", apiPath: "/api/v1/technician-availabilities/my", module: "TECHNICIAN_AVAILABILITY" },
     },
 
+    MAINTENANCE_REQUESTS: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-requests", module: "MAINTENANCE_REQUESTS" },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/maintenance-requests/{id}", module: "MAINTENANCE_REQUESTS" },
+
+        CREATE_INTERNAL: { method: "POST", apiPath: "/api/v1/maintenance-requests/internal", module: "MAINTENANCE_REQUESTS" },
+        CREATE_CUSTOMER: { method: "POST", apiPath: "/api/v1/maintenance-requests/customer", module: "MAINTENANCE_REQUESTS" },
+
+        AUTO_ASSIGN_ALL: { method: "POST", apiPath: "/api/v1/maintenance-requests/auto-assign-all", module: "MAINTENANCE_REQUESTS" },
+        ASSIGN_TECHNICIAN: { method: "POST", apiPath: "/api/v1/maintenance-requests/{id}/assign-technician/{technicianId}", module: "MAINTENANCE_REQUESTS" },
+    },
+
 };
 
 export const ALL_MODULES = {
@@ -202,6 +213,8 @@ export const ALL_MODULES = {
     DEVICE: "DEVICE",
     SHIFT_TEMPLATE: "SHIFT_TEMPLATE",
     TECHNICIAN_AVAILABILITY: "TECHNICIAN_AVAILABILITY",
+    MAINTENANCE_REQUESTS: "MAINTENANCE_REQUESTS",
+
 
 
 };

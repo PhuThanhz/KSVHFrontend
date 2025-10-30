@@ -37,7 +37,7 @@ dayjs.locale("vi");
 
 const { Text, Title } = Typography;
 
-/** 🎨 Bảng màu đẹp cho các kỹ thuật viên */
+/** Bảng màu đẹp cho các kỹ thuật viên */
 const colorPalette = [
     "#1890ff", // Blue
     "#52c41a", // Green

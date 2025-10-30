@@ -22,11 +22,12 @@ import {
     callFetchDepartment,
     callFetchMaterialSupplier,
     callFetchUser,
+    callFetchCustomer
 } from "@/config/api";
 import DeviceBasicInfo from "./sections/DeviceBasicInfo";
 import DevicePartsUpdateSection from "./sections/DevicePartsUpdateSection";
 import DeviceSpecsAndManagement from "./sections/DeviceSpecsAndManagement";
-import DeviceWarrantyAndMaintenance from "./sections/DeviceWarrantyAndMaintenance";
+
 import DeviceImagesAndNotes from "./sections/DeviceImagesAndNotes";
 import type { ISelectItem } from "./sections/types";
 
@@ -116,7 +117,12 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
             department: toSelect(detail.department?.name, detail.department?.id),
             manager: toSelect(detail.manager?.name, detail.manager?.id),
         });
-
+        if (detail.ownershipType === "CUSTOMER" && detail.customer) {
+            form.setFieldValue(
+                "customer",
+                toSelect(detail.customer.name, detail.customer.id)
+            );
+        }
         // === Prefill select states ===
         setSelectedDeviceType(toSelect(detail.deviceType?.typeName, detail.deviceType?.id));
         setSelectedUnit(toSelect(detail.unit?.name, detail.unit?.id));
@@ -153,6 +159,16 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         const res = await callFetchDeviceType(`page=1&size=100&typeName=/${name}/i`);
         return res?.data?.result?.map((e: any) => ({ label: e.typeName, value: e.id })) || [];
     }
+    async function fetchCustomerList(name: string): Promise<ISelectItem[]> {
+        const res = await callFetchCustomer(`page=1&size=100&name=/${name}/i`);
+        return (
+            res?.data?.result?.map((e: any) => ({
+                label: e.name,
+                value: e.id,
+            })) || []
+        );
+    }
+
     async function fetchUnitList(name: string): Promise<ISelectItem[]> {
         const res = await callFetchUnit(`page=1&size=100&name=/${name}/i`);
         return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
@@ -240,6 +256,7 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
             companyId: values.company?.value,
             departmentId: values.department?.value,
             managerUserId: values.manager?.value,
+            customerId: values.customer?.value,
             brand: values.brand,
             modelDesc: values.modelDesc,
             powerCapacity: values.powerCapacity,
@@ -336,13 +353,23 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                 <Col span={24}>
                     <DeviceBasicInfo
                         isEdit
+                        form={form}
                         selectedDeviceType={selectedDeviceType}
                         setSelectedDeviceType={setSelectedDeviceType}
                         selectedUnit={selectedUnit}
                         setSelectedUnit={setSelectedUnit}
                         fetchDeviceTypeList={fetchDeviceTypeList}
                         fetchUnitList={fetchUnitList}
+                        fetchCustomerList={fetchCustomerList}
+                        initialOwnershipType={detail?.ownershipType}
+                        initialCustomer={
+                            detail?.ownershipType === "CUSTOMER" && detail?.customer
+                                ? { label: detail.customer.name, value: String(detail.customer.id) }
+                                : null
+                        }
                     />
+
+
                 </Col>
                 <Col span={24}>
                     <Form.Item name="parts" label={false}>

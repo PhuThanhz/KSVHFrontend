@@ -317,6 +317,8 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
+
+
             ];
 
             setMenuItems(full);
@@ -324,13 +326,25 @@ const SliderAdmin: React.FC<IProps> = ({
     }, [permissions]);
 
     return (
+
         <Sider
             theme="light"
             collapsible
             collapsed={collapsed}
             onCollapse={setCollapsed}
-            width={250}
+            width={260}
             collapsedWidth={80}
+            style={{
+                overflow: 'auto',
+                height: '100vh',
+                position: 'fixed',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                boxShadow: "2px 0 8px rgba(0,0,0,0.05)",
+                background: "#ffffff",
+                zIndex: 999,
+            }}
         >
             <div
                 style={{
@@ -350,6 +364,7 @@ const SliderAdmin: React.FC<IProps> = ({
                 onClick={(e) => setActiveMenu(e.key)}
             />
         </Sider>
+
     );
 };
 

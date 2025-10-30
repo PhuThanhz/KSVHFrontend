@@ -18,6 +18,7 @@ import {
     callFetchDepartment,
     callFetchMaterialSupplier,
     callFetchUser,
+    callFetchCustomer,
 } from "@/config/api";
 
 // Components
@@ -63,6 +64,15 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
     async function fetchDeviceTypeList(name: string): Promise<ISelectItem[]> {
         const res = await callFetchDeviceType(`page=1&size=100&typeName=/${name}/i`);
         return res?.data?.result?.map((e: any) => ({ label: e.typeName, value: e.id })) || [];
+    }
+    async function fetchCustomerList(name: string): Promise<ISelectItem[]> {
+        const res = await callFetchCustomer(`page=1&size=100&name=/${name}/i`);
+        return (
+            res?.data?.result?.map((e: any) => ({
+                label: e.name,
+                value: e.id,
+            })) || []
+        );
     }
 
     async function fetchUnitList(name: string): Promise<ISelectItem[]> {
@@ -167,6 +177,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
             supplierId: values.supplier?.value,
             managerUserId: values.manager?.value,
             unitId: values.unit?.value,
+            customerId: values.customer?.value,
             brand: values.brand,
             modelDesc: values.modelDesc,
             powerCapacity: values.powerCapacity,
@@ -244,13 +255,16 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                 <Col span={24}>
                     <DeviceBasicInfo
                         isEdit={false}
+                        form={form}
                         selectedDeviceType={selectedDeviceType}
                         setSelectedDeviceType={setSelectedDeviceType}
                         selectedUnit={selectedUnit}
                         setSelectedUnit={setSelectedUnit}
                         fetchDeviceTypeList={fetchDeviceTypeList}
                         fetchUnitList={fetchUnitList}
+                        fetchCustomerList={fetchCustomerList}
                     />
+
                 </Col>
 
                 <Col span={24}><DevicePartsSection /></Col>

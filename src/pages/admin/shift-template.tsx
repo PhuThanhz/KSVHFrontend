@@ -44,9 +44,7 @@ const PageShiftTemplate = () => {
     const handleDelete = (id?: string) => {
         if (!id) return;
         deleteShiftTemplate(id, {
-            onSuccess: () => {
-                notify.deleted("Xóa ca mẫu thành công");
-            },
+            onSuccess: () => { },
         });
     };
 
