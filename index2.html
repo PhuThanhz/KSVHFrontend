@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prototype Lịch Phân Ca (HTML/CSS)</title>
+    <style>
+        :root {
+            --bg: #f6f7fb;
+            --card: #fff;
+            --muted: #667085;
+            --text: #1f2937;
+            --line: #e5e7eb;
+            --primary: #1677ff;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --teal: #14b8a6;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto
+        }
+
+        /* Header */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--card);
+            border-bottom: 1px solid var(--line)
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 18px;
+            margin-right: auto
+        }
+
+        .btn {
+            border: 1px solid var(--line);
+            background: #fff;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary)
+        }
+
+        .seg {
+            display: flex;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden
+        }
+
+        .seg button {
+            padding: 8px 12px;
+            border: 0;
+            background: #fff;
+            cursor: pointer
+        }
+
+        .seg button.active {
+            background: var(--primary);
+            color: #fff
+        }
+
+        .filters {
+            display: flex;
+            gap: 8px
+        }
+
+        select {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 8px 10px;
+            background: #fff
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 16px auto;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 16px;
+            padding: 0 16px
+        }
+
+        /* Calendar card */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow: hidden
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .calendar-header .h2 {
+            font-weight: 700
+        }
+
+        /* Timegrid */
+        .timegrid {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            height: calc(100vh - 210px);
+            position: relative
+        }
+
+        .timegrid .col-head {
+            background: #fafafa;
+            border-bottom: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            padding: 10px;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 5
+        }
+
+        .timegrid .col-head small {
+            display: block;
+            color: var(--muted);
+            font-weight: 500
+        }
+
+        /* hours column */
+        .hours {
+            display: grid;
+            grid-auto-rows: 60px
+        }
+
+        .hour {
+            border-bottom: 1px dashed var(--line);
+            padding: 6px 8px;
+            color: var(--muted);
+            text-align: right
+        }
+
+        /* day columns */
+        .day {
+            display: grid;
+            grid-auto-rows: 60px;
+            border-left: 1px solid var(--line);
+            position: relative
+        }
+
+        .slot {
+            border-bottom: 1px dashed var(--line)
+        }
+
+        /* event card */
+        .event {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: #e8f2ff;
+            border: 1px solid #cee0ff;
+            box-shadow: 0 1px 0 rgba(16, 24, 40, .05)
+        }
+
+        .event .badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 999px;
+            margin-right: 6px
+        }
+
+        .event .title {
+            font-weight: 700;
+            margin: 4px 0 2px
+        }
+
+        .event .meta {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        /* color helpers */
+        .c-green {
+            background: #e8f9ef;
+            border-color: #c9f1d8
+        }
+
+        .c-green .badge {
+            background: var(--success);
+            color: #fff
+        }
+
+        .c-orange {
+            background: #fff4e6;
+            border-color: #ffe0b2
+        }
+
+        .c-orange .badge {
+            background: var(--warning);
+            color: #fff
+        }
+
+        .c-purple {
+            background: #f3e8ff;
+            border-color: #e9d5ff
+        }
+
+        .c-purple .badge {
+            background: var(--purple);
+            color: #fff
+        }
+
+        .c-teal {
+            background: #e6fffb;
+            border-color: #b2f5ea
+        }
+
+        .c-teal .badge {
+            background: var(--teal);
+            color: #0f766e
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .mini {
+            padding: 12px
+        }
+
+        .mini h4 {
+            margin: 0 0 8px
+        }
+
+        .list {
+            padding: 12px;
+            border-top: 1px solid var(--line)
+        }
+
+        .list h4 {
+            margin: 0 0 8px
+        }
+
+        .task {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            margin-bottom: 8px
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%
+        }
+
+        /* helpers */
+        .ml-auto {
+            margin-left: auto
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        @media (max-width: 1100px) {
+            .container {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Controls -->
+    <div class="topbar">
+        <div class="wrap">
+            <div class="title">Lịch</div>
+            <button class="btn primary">+ Lên lịch mới</button>
+            <div class="filters">
+                <select>
+                    <option>Tất cả nhân viên</option>
+                    <option>Nguyễn Văn A</option>
+                    <option>Trần Thị B</option>
+                </select>
+                <select>
+                    <option>Tất cả địa điểm</option>
+                    <option>Kho Hà Nội</option>
+                    <option>Nhà máy BD</option>
+                </select>
+            </div>
+            <div class="seg ml-auto">
+                <button>Tháng</button>
+                <button class="active">Tuần</button>
+                <button>Ngày</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Calendar -->
+        <div class="card">
+            <div class="calendar-header">
+                <button class="btn">◀</button>
+                <button class="btn">Hôm nay</button>
+                <button class="btn">▶</button>
+                <div class="h2" style="margin-left:8px">Tháng 2 2025</div>
+            </div>
+
+            <!-- Grid Header -->
+            <div class="timegrid">
+                <div class="col-head"></div>
+                <div class="col-head">T2 21 <small>Feb</small></div>
+                <div class="col-head">T3 22 <small>Feb</small></div>
+                <div class="col-head">T4 23 <small>Feb</small></div>
+                <div class="col-head">T5 24 <small>Feb</small></div>
+                <div class="col-head">T6 25 <small>Feb</small></div>
+                <div class="col-head">T7 26 <small>Feb</small></div>
+                <div class="col-head">CN 27 <small>Feb</small></div>
+
+                <!-- Hours -->
+                <div class="hours">
+                    <div class="hour">7 AM</div>
+                    <div class="hour">8 AM</div>
+                    <div class="hour">9 AM</div>
+                    <div class="hour">10 AM</div>
+                    <div class="hour">11 AM</div>
+                    <div class="hour">12 PM</div>
+                    <div class="hour">1 PM</div>
+                    <div class="hour">2 PM</div>
+                    <div class="hour">3 PM</div>
+                    <div class="hour">4 PM</div>
+                </div>
+
+                <!-- Days columns (7) -->
+                <div class="day">
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <!-- sample event 7:00-10:00 (height 3 slots) -->
+                    <div class="event c-teal" style="top:6px;height:180px">
+                        <span class="badge">7 AM</span><span class="badge"
+                            style="background:#0ea5e9;color:#fff">Ca</span>
+                        <div class="title">Sửa chữa băng tải</div>
+                        <div class="meta">Tại vị trí A2 • NV: A</div>
+                    </div>
+                    <!-- sample event 11:00-12:00 -->
+                    <div class="event c-purple" style="top:366px;height:60px">
+                        <span class="badge">11 AM</span>
+                        <div class="title">Bảo dưỡng</div>
+                        <div class="meta">Khu vực kho</div>
+                    </div>
+                </div>
+
+                <div class="day">
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="event c-orange" style="top:66px;height:240px">
+                        <span class="badge">8 AM</span>
+                        <div class="title">Lắp đặt tủ điện</div>
+                        <div class="meta">NV: B</div>
+                    </div>
+                </div>
+
+                <div class="day">
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="event c-green" style="top:126px;height:120px">
+                        <span class="badge">9 AM</span>
+                        <div class="title">Kiểm tra định kỳ</div>
+                        <div class="meta">NV: C</div>
+                    </div>
+                </div>
+
+                <div class="day">
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="event" style="top:66px;height:120px">
+                        <span class="badge" style="background:var(--primary);color:#fff">8 AM</span>
+                        <div class="title">Nhận máy mới</div>
+                        <div class="meta">NV: D</div>
+                    </div>
+                </div>
+
+                <div class="day">
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="event c-purple" style="top:6px;height:180px">
+                        <span class="badge">7 AM</span>
+                        <div class="title">Triển khai dây chuyền</div>
+                        <div class="meta">NV: E</div>
+                    </div>
+                    <div class="event c-orange" style="top:306px;height:120px">
+                        <span class="badge">1 PM</span>
+                        <div class="title">Test tải</div>
+                        <div class="meta">NV: F</div>
+                    </div>
+                </div>
+
+                <div class="day">
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="event c-teal" style="top:246px;height:120px">
+                        <span class="badge">12 PM</span>
+                        <div class="title">Bảo trì bơm</div>
+                        <div class="meta">NV: A</div>
+                    </div>
+                </div>
+
+                <div class="day">
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="slot"></div>
+                    <div class="event c-green" style="top:66px;height:240px">
+                        <span class="badge">8 AM</span>
+                        <div class="title">Sửa van khí</div>
+                        <div class="meta">NV: B</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="card sidebar">
+            <div class="mini">
+                <h4>Tháng 2/2025</h4>
+                <div class="muted">(Mini calendar placeholder)</div>
+            </div>
+            <div class="list">
+                <h4>Ca làm việc hôm nay</h4>
+                <div class="task"><span class="dot" style="background:var(--success)"></span> 08:00–10:00 • Ca sáng
+                </div>
+                <div class="task"><span class="dot" style="background:var(--warning)"></span> 13:00–15:00 • Ca chiều
+                </div>
+            </div>
+            <div class="list">
+                <h4>Nhiệm vụ trong ca</h4>
+                <div class="task"><span class="dot" style="background:var(--primary)"></span> Kiểm tra dây curoa</div>
+                <div class="task"><span class="dot" style="background:var(--purple)"></span> Ghi nhận thông số</div>
+                <div class="task"><span class="dot" style="background:var(--teal)"></span> Vệ sinh khu vực</div>
+            </div>
+        </aside>
+    </div>
+</body>
+
+</html>

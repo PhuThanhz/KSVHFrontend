@@ -422,8 +422,19 @@ export interface IDevicePart {
     quantity: number;
     deviceId?: string;
 }
+export interface IDeviceList {
+    id?: string;
+    deviceCode: string;
+    deviceName: string;
 
-/** ========================== INTERFACE: RESPONSE (READ DTO) ========================== */
+    deviceTypeName?: string;
+    departmentName?: string;
+    supplierName?: string;
+    companyName?: string;
+
+    ownershipType?: DeviceOwnershipType;
+    status?: DeviceStatus;
+}
 export interface IDevice {
     id?: string;
     deviceCode: string;
@@ -499,8 +510,6 @@ export interface IDevice {
     createdBy?: string | null;
     updatedBy?: string | null;
 }
-
-/** ========================== INTERFACE: CREATE DTO ========================== */
 export interface ICreateDeviceRequest {
     deviceCode: string;
     accountingCode?: string;
@@ -510,7 +519,7 @@ export interface ICreateDeviceRequest {
     departmentId: number;
     deviceTypeId: number;
     supplierId: number;
-    managerUserId: string; // UUID
+    managerUserId: string;
     unitId: number;
 
     brand?: string;
@@ -531,12 +540,10 @@ export interface ICreateDeviceRequest {
     startDate?: string | null;
     warrantyExpiryDate?: string | null;
 
-    // Khấu hao
     depreciationPeriodValue?: number;
     depreciationPeriodUnit?: TimeUnitType;
     depreciationEndDate?: string | null;
 
-    // Bảo trì
     maintenanceFrequencyValue?: number;
     maintenanceFrequencyUnit?: TimeUnitType;
     maintenanceDayOfMonth?: number;
@@ -548,5 +555,88 @@ export interface ICreateDeviceRequest {
     parts?: IDevicePart[];
 }
 
-/** ========================== INTERFACE: UPDATE DTO ========================== */
 export interface IUpdateDeviceRequest extends Partial<ICreateDeviceRequest> { }
+
+/** ==============================
+ *   MODULE SHIFT TEMPLATE
+ *  ============================== */
+export interface IShiftTemplate {
+    id?: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+    note?: string | null;
+    active?: boolean;
+
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+
+/** ==============================
+ *   MODULE TECHNICIAN
+ *  ============================== */
+export interface ITechnicianSummary {
+    id: string;
+    technicianCode: string;
+    fullName: string;
+    phone?: string | null;
+    email?: string | null;
+}
+
+/** ==============================
+ *   MODULE SHIFT TEMPLATE SUMMARY
+ *  ============================== */
+export interface IShiftTemplateSummary {
+    id: string;
+    name: string;
+    startTime?: string | null;
+    endTime?: string | null;
+}
+
+/** ==============================
+ *   MODULE TECHNICIAN AVAILABILITY
+ *  ============================== */
+export type TechnicianAvailabilityStatus =
+    | "AVAILABLE"
+    | "BUSY"
+    | "OFFLINE"
+    | "ON_LEAVE";
+
+export interface ITechnicianAvailability {
+    id?: string;
+
+    /** Nested object thay vì field phẳng */
+    technician?: ITechnicianSummary | null;
+    shiftTemplate?: IShiftTemplateSummary | null;
+
+    workDate: string;    // yyyy-MM-dd
+    startTime: string;   // HH:mm:ss
+    endTime: string;     // HH:mm:ss
+
+    status?: TechnicianAvailabilityStatus;
+    isSpecial?: boolean;
+    note?: string | null;
+
+    createdAt?: string;
+    updatedAt?: string;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+
+/** ==============================
+ *   REQUEST DTOs FOR TECHNICIAN AVAILABILITY
+ *  ============================== */
+export interface IReqTechnicianAvailability {
+    id?: string;
+    technicianId?: string;
+    workDate: string;
+    endDate?: string;
+    shiftTemplateId?: string | null;
+    startTime?: string;
+    endTime?: string;
+    status?: TechnicianAvailabilityStatus;
+    isSpecial?: boolean;
+    note?: string | null;
+}

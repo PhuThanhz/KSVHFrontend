@@ -5,6 +5,7 @@ import { isMobile } from "react-device-detect";
 import { callUploadMultipleFiles } from "@/config/api";
 import { v4 as uuidv4 } from "uuid";
 import { useEffect, useMemo, useState } from "react";
+import MaintenanceFrequencySection from "./sections/MaintenanceFrequencySection";
 import type {
     IUpdateDeviceRequest,
     TimeUnitType,
@@ -74,6 +75,11 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState("");
     const [previewTitle, setPreviewTitle] = useState("");
+    // === State cho tần suất bảo dưỡng ===
+    const [maintenanceFrequencyValue, setMaintenanceFrequencyValue] = useState<number | "">("");
+    const [maintenanceFrequencyUnit, setMaintenanceFrequencyUnit] = useState<TimeUnitType | "">("");
+    const [maintenanceDayOfMonth, setMaintenanceDayOfMonth] = useState<number | "">("");
+    const [maintenanceMonth, setMaintenanceMonth] = useState<number | "">("");
 
     const [freqUnit, setFreqUnit] = useState<TimeUnitType>("MONTH");
 
@@ -135,6 +141,11 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
 
         // === Prefill thông tin bảo trì ===
         setFreqUnit((detail.maintenanceFrequencyUnit as TimeUnitType) || "MONTH");
+        setMaintenanceFrequencyValue(detail.maintenanceFrequencyValue ?? "");
+        setMaintenanceFrequencyUnit((detail.maintenanceFrequencyUnit as TimeUnitType) ?? "");
+        setMaintenanceDayOfMonth(detail.maintenanceDayOfMonth ?? "");
+        setMaintenanceMonth(detail.maintenanceMonth ?? "");
+
     }, [openModal, detail]);
 
     // === fetch options ===
@@ -246,10 +257,14 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
             warrantyExpiryDate: values.warrantyExpiryDate,
             depreciationPeriodValue: values.depreciationPeriodValue ? Number(values.depreciationPeriodValue) : undefined,
             depreciationPeriodUnit: values.depreciationPeriodUnit,
-            maintenanceFrequencyValue: values.maintenanceFrequencyValue ? Number(values.maintenanceFrequencyValue) : undefined,
-            maintenanceFrequencyUnit: values.maintenanceFrequencyUnit,
-            maintenanceDayOfMonth: values.maintenanceDayOfMonth ? Number(values.maintenanceDayOfMonth) : undefined,
-            maintenanceMonth: values.maintenanceMonth ? Number(values.maintenanceMonth) : undefined,
+            maintenanceFrequencyValue:
+                maintenanceFrequencyValue === "" ? undefined : Number(maintenanceFrequencyValue),
+            maintenanceFrequencyUnit:
+                (maintenanceFrequencyUnit as TimeUnitType) || undefined,
+            maintenanceDayOfMonth:
+                maintenanceDayOfMonth === "" ? undefined : Number(maintenanceDayOfMonth),
+            maintenanceMonth:
+                maintenanceMonth === "" ? undefined : Number(maintenanceMonth),
             ownershipType: (values.ownershipType as DeviceOwnershipType) || "INTERNAL",
             status: values.status,
             note: values.note,
@@ -276,6 +291,10 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         setFileList([]);
         setFreqUnit("MONTH");
         setDataInit?.(null);
+        setMaintenanceFrequencyValue("");
+        setMaintenanceFrequencyUnit("");
+        setMaintenanceDayOfMonth("");
+        setMaintenanceMonth("");
     };
 
     // === submit ===
@@ -362,9 +381,15 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                 </Col>
 
                 <Col span={24}>
-                    <DeviceWarrantyAndMaintenance
-                        freqUnit={freqUnit}
-                        setFreqUnit={setFreqUnit}
+                    <MaintenanceFrequencySection
+                        maintenanceFrequencyValue={maintenanceFrequencyValue}
+                        setMaintenanceFrequencyValue={setMaintenanceFrequencyValue}
+                        maintenanceFrequencyUnit={maintenanceFrequencyUnit}
+                        setMaintenanceFrequencyUnit={setMaintenanceFrequencyUnit}
+                        maintenanceDayOfMonth={maintenanceDayOfMonth}
+                        setMaintenanceDayOfMonth={setMaintenanceDayOfMonth}
+                        maintenanceMonth={maintenanceMonth}
+                        setMaintenanceMonth={setMaintenanceMonth}
                     />
                 </Col>
             </Row>

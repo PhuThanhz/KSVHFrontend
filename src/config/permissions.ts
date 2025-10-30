@@ -158,6 +158,22 @@ export const ALL_PERMISSIONS = {
     //     GET_BY_DEVICE_ID: { method: "GET", apiPath: "/api/v1/device-parts/{deviceId}", module: "DEVICE_PART" },
     //     SYNC_BY_DEVICE_ID: { method: "POST", apiPath: "/api/v1/device-parts/{deviceId}", module: "DEVICE_PART" },
     // },
+    SHIFT_TEMPLATE: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/shift-templates", module: "SHIFT_TEMPLATE" },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/shift-templates/{id}", module: "SHIFT_TEMPLATE" },
+        CREATE: { method: "POST", apiPath: "/api/v1/shift-templates", module: "SHIFT_TEMPLATE" },
+        UPDATE: { method: "PUT", apiPath: "/api/v1/shift-templates", module: "SHIFT_TEMPLATE" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/shift-templates/{id}", module: "SHIFT_TEMPLATE" },
+    },
+
+    TECHNICIAN_AVAILABILITY: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/technician-availabilities", module: "TECHNICIAN_AVAILABILITY" },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/technician-availabilities/{id}", module: "TECHNICIAN_AVAILABILITY" },
+        CREATE: { method: "POST", apiPath: "/api/v1/technician-availabilities", module: "TECHNICIAN_AVAILABILITY" },
+        UPDATE: { method: "PUT", apiPath: "/api/v1/technician-availabilities/{id}", module: "TECHNICIAN_AVAILABILITY" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/technician-availabilities/{id}", module: "TECHNICIAN_AVAILABILITY" },
+        GET_MY_AVAILABILITIES: { method: "GET", apiPath: "/api/v1/technician-availabilities/my", module: "TECHNICIAN_AVAILABILITY" },
+    },
 
 };
 
@@ -184,5 +200,8 @@ export const ALL_MODULES = {
     TECHNICIAN: "TECHNICIAN",
     // DEVICE_PART: "DEVICE_PART",
     DEVICE: "DEVICE",
+    SHIFT_TEMPLATE: "SHIFT_TEMPLATE",
+    TECHNICIAN_AVAILABILITY: "TECHNICIAN_AVAILABILITY",
+
 
 };

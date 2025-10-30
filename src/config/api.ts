@@ -30,7 +30,11 @@ import type {
     ICreateDeviceRequest,
     IUpdateDeviceRequest,
     IResUploadFileDTO,
-    IDevicePart
+    // IDevicePart,
+    IShiftTemplate,
+    IDeviceList,
+    ITechnicianAvailability,
+    IReqTechnicianAvailability
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 
@@ -770,28 +774,110 @@ export const callDeleteInventoryItem = (id: string | number) => {
 //     });
 // };
 
-
 /** ======================== Module Devices ======================== **/
-export const callFetchDevice = (query: string) => {
-    return axios.get<IBackendRes<IModelPaginate<IDevice>>>(`/api/v1/devices?${query}`);
-};
 
+export const callFetchDevice = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IDeviceList>>>(`/api/v1/devices?${query}`);
+};
 export const callFetchDeviceById = (id: string) => {
     return axios.get<IBackendRes<IDevice>>(`/api/v1/devices/${id}`);
 };
-
 export const callCreateDevice = (data: ICreateDeviceRequest) => {
     return axios.post<IBackendRes<IDevice>>(`/api/v1/devices`, data, {
         headers: { "Content-Type": "application/json" },
     });
 };
-
 export const callUpdateDevice = (id: string, data: IUpdateDeviceRequest) => {
     return axios.put<IBackendRes<IDevice>>(`/api/v1/devices/${id}`, data, {
         headers: { "Content-Type": "application/json" },
     });
 };
-
 export const callDeleteDevice = (id: string) => {
     return axios.delete<IBackendRes<null>>(`/api/v1/devices/${id}`);
+};
+
+
+
+
+/** ======================== Module ShiftTemplate ======================== **/
+
+export const callFetchShiftTemplate = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IShiftTemplate>>>(`/api/v1/shift-templates?${query}`);
+};
+
+export const callFetchShiftTemplateById = (id: string) => {
+    return axios.get<IBackendRes<IShiftTemplate>>(`/api/v1/shift-templates/${id}`);
+};
+
+export const callCreateShiftTemplate = (data: IShiftTemplate) => {
+    const payload = {
+        name: data.name,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        note: data.note,
+        active: data.active ?? true,
+    };
+
+    return axios.post<IBackendRes<IShiftTemplate>>(`/api/v1/shift-templates`, payload, {
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+export const callUpdateShiftTemplate = (data: IShiftTemplate) => {
+    const payload = {
+        id: data.id,
+        name: data.name,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        note: data.note,
+        active: data.active,
+    };
+
+    return axios.put<IBackendRes<IShiftTemplate>>(`/api/v1/shift-templates`, payload, {
+        headers: { 'Content-Type': 'application/json' },
+    });
+};
+
+
+export const callDeleteShiftTemplate = (id: string) => {
+    return axios.delete<IBackendRes<null>>(`/api/v1/shift-templates/${id}`);
+};
+
+/** ======================== Module Technician Availability ======================== **/
+
+export const callFetchTechnicianAvailability = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ITechnicianAvailability>>>(
+        `/api/v1/technician-availabilities?${query}`
+    );
+};
+
+export const callFetchTechnicianAvailabilityById = (id: string) => {
+    return axios.get<IBackendRes<ITechnicianAvailability>>(
+        `/api/v1/technician-availabilities/${id}`
+    );
+};
+
+export const callCreateTechnicianAvailability = (data: IReqTechnicianAvailability) => {
+    return axios.post<IBackendRes<ITechnicianAvailability[]>>(
+        `/api/v1/technician-availabilities`,
+        data,
+        { headers: { 'Content-Type': 'application/json' } }
+    );
+};
+
+export const callUpdateTechnicianAvailability = (id: string, data: IReqTechnicianAvailability) => {
+    return axios.put<IBackendRes<ITechnicianAvailability>>(
+        `/api/v1/technician-availabilities/${id}`,
+        data,
+        { headers: { 'Content-Type': 'application/json' } }
+    );
+};
+
+export const callDeleteTechnicianAvailability = (id: string) => {
+    return axios.delete<IBackendRes<null>>(`/api/v1/technician-availabilities/${id}`);
+};
+
+export const callFetchMyTechnicianAvailability = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ITechnicianAvailability>>>(
+        `/api/v1/technician-availabilities/my?${query}`
+    );
 };

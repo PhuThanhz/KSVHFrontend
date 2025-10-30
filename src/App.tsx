@@ -35,6 +35,9 @@ import MaterialSupplierPage from "@/pages/admin/material-supplier";
 import TechnicianPage from "./pages/admin/technician";
 import InventoryItemPage from "./pages/admin/inventory-item";
 import DevicePage from "pages/admin/device";
+import ShiftTemplatePage from "@/pages/admin/shift-template";
+import TechnicianAvailabilityPage from "@/pages/admin/technician-availability";
+
 export default function App() {
   const dispatch = useAppDispatch();
 
@@ -242,6 +245,22 @@ export default function App() {
           element: (
             <ProtectedRoute>
               <DevicePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.SHIFT_TEMPLATE,
+          element: (
+            <ProtectedRoute>
+              <ShiftTemplatePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.TECHNICIAN_AVAILABILITY,
+          element: (
+            <ProtectedRoute>
+              <TechnicianAvailabilityPage />
             </ProtectedRoute>
           ),
         },

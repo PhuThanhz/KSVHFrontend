@@ -14,7 +14,7 @@ import {
     ToolOutlined,
     StopOutlined,
     ShopOutlined,
-    LaptopOutlined
+    LaptopOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
@@ -298,7 +298,25 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
+                ...(checkPermission(ALL_PERMISSIONS.SHIFT_TEMPLATE?.GET_PAGINATE ?? {})
+                    ? [
+                        {
+                            label: <Link to="/admin/shift-template">Quản lý ca làm việc mẫu</Link>,
+                            key: "/admin/shift-template",
+                            icon: <AppstoreOutlined />,
+                        },
+                    ]
+                    : []),
 
+                ...(checkPermission(ALL_PERMISSIONS.TECHNICIAN_AVAILABILITY?.GET_PAGINATE ?? {})
+                    ? [
+                        {
+                            label: <Link to="/admin/technician-availability">Ca làm việc kỹ thuật viên</Link>,
+                            key: "/admin/technician-availability",
+                            icon: <ToolOutlined />,
+                        },
+                    ]
+                    : []),
             ];
 
             setMenuItems(full);

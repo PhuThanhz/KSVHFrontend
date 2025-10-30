@@ -102,12 +102,9 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                         <Descriptions.Item label="Chi tiết bảo dưỡng">
                             {data.maintenanceDayOfMonth
                                 ? `Ngày ${data.maintenanceDayOfMonth}`
-                                : data.maintenanceDayOfWeek
-                                    ? `Thứ ${data.maintenanceDayOfWeek}${data.maintenanceWeekOrder ? ` - tuần ${data.maintenanceWeekOrder}` : ""
-                                    }`
-                                    : data.maintenanceMonth
-                                        ? `Tháng ${data.maintenanceMonth}`
-                                        : "-"}
+                                : data.maintenanceMonth
+                                    ? `Tháng ${data.maintenanceMonth}`
+                                    : "-"}
                         </Descriptions.Item>
                     </Descriptions>
 

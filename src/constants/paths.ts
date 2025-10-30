@@ -28,6 +28,8 @@ export const PATHS = {
         INVENTORY_ITEM: "/admin/inventory-items",
         DEVICE_PART: "/admin/device-part",
         DEVICE: "/admin/device",
+        SHIFT_TEMPLATE: "/admin/shift-template",
+        TECHNICIAN_AVAILABILITY: "/admin/technician-availability",
 
     },
 

@@ -290,7 +290,6 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                         freqUnit={freqUnit}
                         setFreqUnit={setFreqUnit}
                     />
-                    ➡ V
                 </Col>
             </Row>
         </ModalForm>
