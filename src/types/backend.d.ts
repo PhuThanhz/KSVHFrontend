@@ -206,6 +206,49 @@ export interface ICustomer {
     createdAt?: string | null;
     updatedAt?: string | null;
 }
+
+/** ==============================
+ *   MODULE CUSTOMER PURCHASE HISTORY
+ *  ============================== */
+export interface IDeviceSummary {
+    id?: string;
+    deviceCode?: string;
+    deviceName?: string;
+    brand?: string | null;
+    modelDesc?: string | null;
+    supplierName?: string | null;
+    companyName?: string | null;
+    departmentName?: string | null;
+    deviceTypeName?: string | null;
+    warrantyExpiryDate?: string | null;
+    warrantyMonths?: number | null;
+    image1?: string | null;
+    image2?: string | null;
+    image3?: string | null;
+}
+export interface ICustomerSummary {
+    id?: string;
+    customerCode?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+}
+export interface ICustomerPurchaseHistoryAdmin {
+    id?: string;
+    purchaseDate?: string;
+    customer?: ICustomerSummary;
+    device?: IDeviceSummary;
+}
+export interface ICustomerPurchaseHistoryClient {
+    id?: string;
+    purchaseDate?: string;
+    device?: IDeviceSummary;
+}
+
+
+
+
 /** ==============================
  *   DEVICE TYPE MODULE
  *  ============================== */
@@ -628,17 +671,11 @@ export interface IReqTechnicianAvailability {
 /** ==============================
  *   ENUM TYPES TỪ BACKEND
  *  ============================== */
-
-/** Mức độ hư hỏng */
 export type DamageLevel = "NHE" | "TRUNG_BINH" | "NANG" | "RAT_NANG";
-
-/** Loại bảo trì */
 export type MaintenanceType = "DOT_XUAT" | "DINH_KY" | "SUA_CHUA";
-
-/** Mức độ ưu tiên */
 export type PriorityLevel = "KHAN_CAP" | "CAO" | "TRUNG_BINH" | "THAP";
+export type CreatorType = "EMPLOYEE" | "CUSTOMER";
 
-/** Trạng thái phiếu yêu cầu bảo trì */
 export type MaintenanceRequestStatus =
     | "CHO_PHAN_CONG"
     | "DANG_PHAN_CONG"
@@ -656,8 +693,6 @@ export type MaintenanceRequestStatus =
 /** ==============================
  *   COMMON RESPONSE DTOs
  *  ============================== */
-
-/** Thông tin chung của phiếu bảo trì */
 export interface IResRequestCommonDTO {
     requestId?: string;
     requestCode?: string;
@@ -668,6 +703,7 @@ export interface IResRequestCommonDTO {
     companyName?: string;
     departmentName?: string;
     locationDetail?: string;
+    creatorType?: CreatorType;
     deviceCode?: string;
     deviceName?: string;
     issueName?: string;
@@ -677,6 +713,7 @@ export interface IResRequestCommonDTO {
     attachment1?: string;
     attachment2?: string;
     attachment3?: string;
+    note?: string | null;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -737,9 +774,6 @@ export interface IResMaintenanceRequestDTO {
     rejectInfo?: IResMaintenanceRejectDTO;
 }
 
-/** ==============================
- *   DETAIL DTO (ResMaintenanceRequestDetailDTO)
- *  ============================== */
 export interface IResMaintenanceRequestDetailDTO {
     requestInfo: IResRequestCommonDTO;
     assignmentInfo?: IResMaintenanceAssignmentDTO;
@@ -748,48 +782,31 @@ export interface IResMaintenanceRequestDetailDTO {
 }
 
 /** ==============================
- *   REQUEST DTOs
+ *   REQUEST DTOs (Create Request)
  *  ============================== */
 
-/** Yêu cầu tạo phiếu bảo trì nội bộ */
-export interface IReqMaintenanceRequestDTO {
-    deviceId: string;
+/** Nhân viên nội bộ tạo phiếu bảo trì */
+export interface IReqMaintenanceRequestInternalDTO {
+    deviceCode: string;
     issueId: string;
     priorityLevel: PriorityLevel;
     maintenanceType: MaintenanceType;
+    locationDetail?: string | null;
     attachment1?: string | null;
     attachment2?: string | null;
     attachment3?: string | null;
+    note?: string | null;
 }
 
-/** Yêu cầu tạo phiếu bảo trì cho khách hàng */
+/** Khách hàng tạo phiếu bảo trì */
 export interface IReqMaintenanceRequestCustomerDTO {
-    deviceName: string;
-    issueDescription?: string | null;
+    deviceCode: string;
+    issueId: string;
     priorityLevel: PriorityLevel;
     maintenanceType: MaintenanceType;
+    locationDetail?: string | null;
     attachment1?: string | null;
     attachment2?: string | null;
     attachment3?: string | null;
+    note?: string | null;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

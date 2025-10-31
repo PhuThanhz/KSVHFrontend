@@ -116,6 +116,10 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
             company: toSelect(detail.company?.name, detail.company?.id),
             department: toSelect(detail.department?.name, detail.department?.id),
             manager: toSelect(detail.manager?.name, detail.manager?.id),
+            startDate: detail.startDate || null,
+            warrantyExpiryDate: detail.warrantyExpiryDate || null,
+            depreciationPeriodValue: detail.depreciationPeriodValue ?? "",
+            depreciationPeriodUnit: detail.depreciationPeriodUnit || "",
         });
         if (detail.ownershipType === "CUSTOMER" && detail.customer) {
             form.setFieldValue(
@@ -368,8 +372,6 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                                 : null
                         }
                     />
-
-
                 </Col>
                 <Col span={24}>
                     <Form.Item name="parts" label={false}>

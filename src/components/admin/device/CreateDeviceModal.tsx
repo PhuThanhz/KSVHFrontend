@@ -264,7 +264,6 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                         fetchUnitList={fetchUnitList}
                         fetchCustomerList={fetchCustomerList}
                     />
-
                 </Col>
 
                 <Col span={24}><DevicePartsSection /></Col>

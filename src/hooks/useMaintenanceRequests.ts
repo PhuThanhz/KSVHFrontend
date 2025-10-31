@@ -7,16 +7,14 @@ import {
     callAutoAssignAllMaintenanceRequests,
     callAssignTechnicianManual,
 } from "@/config/api";
-
 import type {
     IModelPaginate,
     IResMaintenanceRequestDTO,
     IResMaintenanceRequestDetailDTO,
-    IReqMaintenanceRequestDTO,
+    IReqMaintenanceRequestInternalDTO,
     IReqMaintenanceRequestCustomerDTO,
     IResMaintenanceAssignmentDTO,
 } from "@/types/backend";
-
 import { notify } from "@/components/common/notify";
 
 /** ========================= Lấy danh sách phiếu bảo trì ========================= */
@@ -51,7 +49,7 @@ export const useMaintenanceRequestByIdQuery = (id?: string) => {
 export const useCreateInternalMaintenanceRequestMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (payload: IReqMaintenanceRequestDTO) => {
+        mutationFn: async (payload: IReqMaintenanceRequestInternalDTO) => {
             const res = await callCreateInternalMaintenanceRequest(payload);
             if (!res?.data)
                 throw new Error(res?.message || "Không thể tạo phiếu bảo trì nội bộ");
@@ -74,9 +72,7 @@ export const useCreateCustomerMaintenanceRequestMutation = () => {
         mutationFn: async (payload: IReqMaintenanceRequestCustomerDTO) => {
             const res = await callCreateCustomerMaintenanceRequest(payload);
             if (!res?.data)
-                throw new Error(
-                    res?.message || "Không thể tạo phiếu bảo trì cho khách hàng"
-                );
+                throw new Error(res?.message || "Không thể tạo phiếu bảo trì cho khách hàng");
             return res;
         },
         onSuccess: (res) => {
@@ -125,7 +121,7 @@ export const useAssignTechnicianManualMutation = () => {
                 throw new Error(res?.message || "Không thể gán kỹ thuật viên");
             return res.data as IResMaintenanceAssignmentDTO;
         },
-        onSuccess: (res) => {
+        onSuccess: () => {
             notify.updated("Gán kỹ thuật viên thành công");
             queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
             queryClient.invalidateQueries({ queryKey: ["maintenance-request"] });

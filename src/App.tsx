@@ -39,9 +39,18 @@ import ShiftTemplatePage from "@/pages/admin/shift-template";
 import TechnicianAvailabilityPage from "@/pages/admin/technician-availability";
 import HomeTechnicianPage from "pages/technician/home-technician";
 import CreateMaintenanceRequestClientPage from "@/pages/client/maintenance-request/create-request-client";
+import CustomerPurchaseHistoryPage from "./pages/admin/customer-purchase-history";
+import PurchaseHistoryPage from "@/pages/client/purchase-history";
+import MyMaintenanceRequestsPage from "@/pages/client/maintenance-request/my-maintenance-requests";
+import Loading from "./components/share/loading";
+import NotPermitted from "@/components/share/protected-route.ts";
+import ProtectedPage from "@/pages/client/ProtectedPage";
 
 export default function App() {
   const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
+  const userRole = useAppSelector(state => state.account.user?.role?.name);
+  const isLoading = useAppSelector(state => state.account.isLoading);
 
   useEffect(() => {
     if (
@@ -54,7 +63,7 @@ export default function App() {
   const router = createBrowserRouter([
     // =================== CUSTOMER =======================//
     {
-      path: PATHS.CLIENT.ROOT,
+      path: PATHS.CLIENT.HOME,
       element: (
         <LayoutApp>
           <LayoutClient />
@@ -63,12 +72,41 @@ export default function App() {
       errorElement: <NotFound />,
       children: [
         { index: true, element: <HomeClientPage /> },
+        // =================== CREATE MAINTENANCE =======================//
         {
           path: PATHS.CLIENT.CREATE_MAINTENANCE_REQUEST,
           element: <CreateMaintenanceRequestClientPage />,
         },
+        // =================== PURCHASE HISTORY =======================//
+        {
+          path: PATHS.CLIENT.PURCHASE_HISTORY,
+          element: (
+            <ProtectedPage
+              isAuthenticated={isAuthenticated}
+              redirectPath={PATHS.LOGIN}
+              path="purchase-history"
+            >
+              <PurchaseHistoryPage />
+            </ProtectedPage>
+          ),
+        },
+
+        // =================== MY MAINTENANCE REQUESTS =======================//
+        {
+          path: PATHS.CLIENT.MY_MAINTENANCE_REQUESTS,
+          element: (
+            <ProtectedPage
+              isAuthenticated={isAuthenticated}
+              redirectPath={PATHS.LOGIN}
+              path="maintenance-requests"
+            >
+              <MyMaintenanceRequestsPage />
+            </ProtectedPage>
+          ),
+        },
       ],
     },
+
     // ==================== TECHNICIAN =====================//
     {
       path: PATHS.TECHNICIAN.ROOT,
@@ -83,10 +121,12 @@ export default function App() {
     // ==========================  ADMIN =======================//
     {
       path: PATHS.ADMIN.ROOT,
-      element: (
-        <LayoutApp>
-          <LayoutAdmin />
-        </LayoutApp>
+      element: isAuthenticated && (userRole === 'SUPER_ADMIN' || userRole === 'EMPLOYEE') ? (
+        <LayoutAdmin />
+      ) : isLoading ? (
+        <Loading />
+      ) : (
+        <NotPermitted />
       ),
       errorElement: <NotFound />,
       children: [
@@ -167,6 +207,14 @@ export default function App() {
           element: (
             <ProtectedRoute>
               <CustomerPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.CUSTOMER_PURCHASE_HISTORY,
+          element: (
+            <ProtectedRoute>
+              <CustomerPurchaseHistoryPage />
             </ProtectedRoute>
           ),
         },

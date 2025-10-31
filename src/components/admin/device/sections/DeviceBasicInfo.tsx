@@ -27,7 +27,7 @@ const OWNERSHIP_OPTIONS: { label: string; value: DeviceOwnershipType }[] = [
 
 const DeviceBasicInfo = ({
     isEdit,
-    form, // 👈 thêm dòng này
+    form,
     selectedDeviceType,
     setSelectedDeviceType,
     selectedUnit,
@@ -86,6 +86,7 @@ const DeviceBasicInfo = ({
                             optionType="button"
                             buttonStyle="solid"
                             value={ownershipType}
+                            // disabled={isEdit}
                             onChange={(e) => {
                                 setOwnershipType(e.target.value);
                                 if (e.target.value === "INTERNAL") {
@@ -119,6 +120,7 @@ const DeviceBasicInfo = ({
                                 value={selectedCustomer}
                                 onChange={(v: any) => setSelectedCustomer(v as ISelectItem)}
                                 style={{ width: "100%" }}
+                            // disabled={isEdit}
                             />
                         </ProForm.Item>
                     </Col>
@@ -172,5 +174,4 @@ const DeviceBasicInfo = ({
         </Card>
     );
 };
-
 export default DeviceBasicInfo;

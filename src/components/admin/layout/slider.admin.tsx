@@ -15,6 +15,7 @@ import {
     StopOutlined,
     ShopOutlined,
     LaptopOutlined,
+    HistoryOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
@@ -55,21 +56,22 @@ const SliderAdmin: React.FC<IProps> = ({
                     icon: <AppstoreOutlined />,
                 },
                 // --- Quản lý người dùng ---
-                ...((checkPermission(ALL_PERMISSIONS.USERS.GET_PAGINATE) ||
+                ...(checkPermission(ALL_PERMISSIONS.USERS.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.EMPLOYEE.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {}) ||
-                    checkPermission(ALL_PERMISSIONS.TECHNICIAN.GET_PAGINATE))
+                    checkPermission(ALL_PERMISSIONS.CUSTOMER_PURCHASE_HISTORY?.GET_PAGINATE ?? {}) ||
+                    checkPermission(ALL_PERMISSIONS.TECHNICIAN.GET_PAGINATE)
                     ? [
                         {
                             label: "Quản lý người dùng",
-                            key: "/admin/user",
+                            key: "/admin/user-group",
                             icon: <UserOutlined />,
                             children: [
                                 ...(checkPermission(ALL_PERMISSIONS.USERS.GET_PAGINATE)
                                     ? [
                                         {
                                             label: <Link to="/admin/user">Tất cả người dùng</Link>,
-                                            key: "/admin/user/all",
+                                            key: "/admin/user",
                                             icon: <UserOutlined />,
                                         },
                                     ]
@@ -83,12 +85,34 @@ const SliderAdmin: React.FC<IProps> = ({
                                         },
                                     ]
                                     : []),
-                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {})
+                                // --- Quản lý khách hàng ---
+                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {}) ||
+                                    checkPermission(ALL_PERMISSIONS.CUSTOMER_PURCHASE_HISTORY?.GET_PAGINATE ?? {})
                                     ? [
                                         {
-                                            label: <Link to="/admin/customer">Khách hàng</Link>,
-                                            key: "/admin/customer",
+                                            label: "Quản lý khách hàng",
+                                            key: "/admin/customer-group",
                                             icon: <TeamOutlined />,
+                                            children: [
+                                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {})
+                                                    ? [
+                                                        {
+                                                            label: <Link to="/admin/customer">Danh sách khách hàng</Link>,
+                                                            key: "/admin/customer",
+                                                            icon: <UserOutlined />,
+                                                        },
+                                                    ]
+                                                    : []),
+                                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER_PURCHASE_HISTORY?.GET_PAGINATE ?? {})
+                                                    ? [
+                                                        {
+                                                            label: <Link to="/admin/customer-purchase-history">Lịch sử mua hàng</Link>,
+                                                            key: "/admin/customer-purchase-history",
+                                                            icon: <HistoryOutlined />,
+                                                        },
+                                                    ]
+                                                    : []),
+                                            ],
                                         },
                                     ]
                                     : []),
@@ -105,6 +129,7 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
+
 
                 ...((checkPermission(ALL_PERMISSIONS.ROLES.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE))

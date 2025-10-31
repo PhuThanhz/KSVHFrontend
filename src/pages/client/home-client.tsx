@@ -35,7 +35,7 @@ const HomeClientPage = () => {
                 width={700}
                 destroyOnClose
             >
-                <CreateMaintenanceRequestClientPage />
+                <CreateMaintenanceRequestClientPage onSuccess={handleCloseModal} />
             </Modal>
         </div>
     );

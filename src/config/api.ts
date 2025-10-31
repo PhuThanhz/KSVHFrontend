@@ -34,15 +34,17 @@ import type {
     IShiftTemplate,
     IDeviceList,
     ITechnicianAvailability,
-    IReqTechnicianAvailability
+    IReqTechnicianAvailability,
+    ICustomerPurchaseHistoryAdmin,
+    ICustomerPurchaseHistoryClient,
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type {
     IResMaintenanceRequestDTO,
     IResMaintenanceRequestDetailDTO,
-    IReqMaintenanceRequestDTO,
-    IReqMaintenanceRequestCustomerDTO,
     IResMaintenanceAssignmentDTO,
+    IReqMaintenanceRequestInternalDTO,
+    IReqMaintenanceRequestCustomerDTO,
 } from '@/types/backend';
 //================================ Module Auth ================================//
 
@@ -419,6 +421,27 @@ export const callUpdateDeviceType = (payload: IDeviceType) => {
 
 export const callDeleteDeviceType = (id: number | string) => {
     return axios.delete<IBackendRes<IDeviceType>>(`/api/v1/device-types/${id}`);
+};
+/** ======================== Module Customer Purchase History ======================== **/
+export const callFetchCustomerPurchaseHistory = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<ICustomerPurchaseHistoryAdmin>>>(
+        `/api/v1/customer-purchases?${query}`
+    );
+};
+export const callFetchCustomerPurchaseHistoryById = (id: string) => {
+    return axios.get<IBackendRes<ICustomerPurchaseHistoryAdmin>>(
+        `/api/v1/customer-purchases/${id}`
+    );
+};
+export const callFetchCustomerPurchaseHistoryByCustomer = (customerId: string) => {
+    return axios.get<IBackendRes<ICustomerPurchaseHistoryAdmin[]>>(
+        `/api/v1/customer-purchases/by-customer/${customerId}`
+    );
+};
+export const callFetchMyPurchaseHistory = () => {
+    return axios.get<IBackendRes<IModelPaginate<ICustomerPurchaseHistoryClient>>>(
+        `/api/v1/customer-purchases/my-history`
+    );
 };
 
 
@@ -891,44 +914,55 @@ export const callFetchMyTechnicianAvailability = (query: string) => {
 
 
 /** ======================== Module Maintenance Request ======================== **/
-
-// Lấy danh sách phiếu bảo trì 
+// Lấy danh sách phiếu bảo trì
 export const callFetchMaintenanceRequest = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResMaintenanceRequestDTO>>>(
         `/api/v1/maintenance-requests?${query}`
     );
 };
+
 // Lấy chi tiết 1 phiếu bảo trì theo ID
 export const callFetchMaintenanceRequestById = (id: string) => {
     return axios.get<IBackendRes<IResMaintenanceRequestDetailDTO>>(
         `/api/v1/maintenance-requests/${id}`
     );
 };
+
+// ======================= TẠO PHIẾU BẢO TRÌ ======================= //
+
 // Tạo phiếu bảo trì nội bộ (nhân viên)
-export const callCreateInternalMaintenanceRequest = (data: IReqMaintenanceRequestDTO) => {
+export const callCreateInternalMaintenanceRequest = (data: IReqMaintenanceRequestInternalDTO) => {
     return axios.post<IBackendRes<IResMaintenanceRequestDTO>>(
         `/api/v1/maintenance-requests/internal`,
         data,
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } }
     );
 };
+
 // Tạo phiếu bảo trì cho khách hàng
 export const callCreateCustomerMaintenanceRequest = (data: IReqMaintenanceRequestCustomerDTO) => {
     return axios.post<IBackendRes<IResMaintenanceRequestDTO>>(
         `/api/v1/maintenance-requests/customer`,
         data,
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } }
     );
 };
-// Phân công kỹ thuật viên tự động cho tất cả phiếu chờ
+
+// ======================= PHÂN CÔNG KỸ THUẬT VIÊN ======================= //
 export const callAutoAssignAllMaintenanceRequests = () => {
     return axios.post<IBackendRes<Record<string, any>>>(
         `/api/v1/maintenance-requests/auto-assign-all`
     );
 };
-// Gán kỹ thuật viên thủ công cho phiếu
 export const callAssignTechnicianManual = (requestId: string, technicianId: string) => {
     return axios.post<IBackendRes<IResMaintenanceAssignmentDTO>>(
         `/api/v1/maintenance-requests/${requestId}/assign-technician/${technicianId}`
+    );
+};
+
+// ======================= DANH SÁCH PHIẾU BẢO TRÌ CỦA CHÍNH KHÁCH HÀNG ======================= //
+export const callFetchMyMaintenanceRequests = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceRequestDTO>>>(
+        `/api/v1/customers/maintenance-requests?${query}`
     );
 };

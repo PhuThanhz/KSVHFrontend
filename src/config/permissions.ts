@@ -178,12 +178,17 @@ export const ALL_PERMISSIONS = {
     MAINTENANCE_REQUESTS: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-requests", module: "MAINTENANCE_REQUESTS" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/maintenance-requests/{id}", module: "MAINTENANCE_REQUESTS" },
-
         CREATE_INTERNAL: { method: "POST", apiPath: "/api/v1/maintenance-requests/internal", module: "MAINTENANCE_REQUESTS" },
         CREATE_CUSTOMER: { method: "POST", apiPath: "/api/v1/maintenance-requests/customer", module: "MAINTENANCE_REQUESTS" },
-
         AUTO_ASSIGN_ALL: { method: "POST", apiPath: "/api/v1/maintenance-requests/auto-assign-all", module: "MAINTENANCE_REQUESTS" },
         ASSIGN_TECHNICIAN: { method: "POST", apiPath: "/api/v1/maintenance-requests/{id}/assign-technician/{technicianId}", module: "MAINTENANCE_REQUESTS" },
+    },
+
+    CUSTOMER_PURCHASE_HISTORY: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/customer-purchases", module: "CUSTOMER_PURCHASE_HISTORY" },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/customer-purchases/{id}", module: "CUSTOMER_PURCHASE_HISTORY" },
+        GET_BY_CUSTOMER: { method: "GET", apiPath: "/api/v1/customer-purchases/by-customer/{customerId}", module: "CUSTOMER_PURCHASE_HISTORY" },
+        GET_MY_HISTORY: { method: "GET", apiPath: "/api/v1/customer-purchases/my-history", module: "CUSTOMER_PURCHASE_HISTORY" },
     },
 
 };
@@ -214,7 +219,7 @@ export const ALL_MODULES = {
     SHIFT_TEMPLATE: "SHIFT_TEMPLATE",
     TECHNICIAN_AVAILABILITY: "TECHNICIAN_AVAILABILITY",
     MAINTENANCE_REQUESTS: "MAINTENANCE_REQUESTS",
-
+    CUSTOMER_PURCHASE_HISTORY: "CUSTOMER_PURCHASE_HISTORY",
 
 
 };
