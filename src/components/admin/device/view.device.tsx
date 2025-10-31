@@ -59,11 +59,10 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                         </Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">{renderTag(data.status)}</Descriptions.Item>
 
-                        {/* ✅ HIỂN THỊ KHÁCH HÀNG (NẾU CÓ) */}
                         {data.ownershipType === "CUSTOMER" && data.customer && (
                             <>
                                 <Descriptions.Item label="Khách hàng">{data.customer.name || "-"}</Descriptions.Item>
-                                <Descriptions.Item label="Mã khách hàng">{data.customer.id || "-"}</Descriptions.Item>
+                                <Descriptions.Item label="Mã khách hàng">{data.customer.customerCode || "-"}</Descriptions.Item>
                             </>
                         )}
                     </Descriptions>

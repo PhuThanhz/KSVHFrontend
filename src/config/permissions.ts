@@ -5,10 +5,17 @@ export const ALL_PERMISSIONS = {
         CREATE: { method: "POST", apiPath: "/api/v1/users", module: "USERS" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/users", module: "USERS" },
         FORGOT_PASSWORD: { method: "POST", apiPath: "/api/v1/users/forgot-password", module: "USERS" },
-        CONFIRM_RESET_PASSWORD: { method: "POST", apiPath: "/api/v1/users/confirm-reset-password", module: "USERS" },
-        SEND_ACCOUNT_INFO: { method: "POST", apiPath: "/api/v1/users/send-account-info", module: "USERS" },
+        REQUEST_PASSWORD_CODE: {
+            method: "POST",
+            apiPath: "/api/v1/users/request-password-code",
+            module: "USERS",
+        },
+        CONFIRM_RESET_PASSWORD: {
+            method: "POST",
+            apiPath: "/api/v1/users/confirm-reset-password",
+            module: "USERS",
+        },
     },
-
     PERMISSIONS: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/permissions", module: "PERMISSIONS" },
         CREATE: { method: "POST", apiPath: "/api/v1/permissions", module: "PERMISSIONS" },

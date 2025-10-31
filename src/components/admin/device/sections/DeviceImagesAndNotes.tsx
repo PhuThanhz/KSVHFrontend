@@ -50,9 +50,9 @@ const DeviceImagesAndNotes = ({
                             fieldProps={{
                                 precision: 0,
                                 formatter: (value?: number) =>
-                                    value ? `${Number(value).toLocaleString("vi-VN")} ₫` : "",
+                                    value ? `${Number(value).toLocaleString("vi-VN")} VNĐ` : "",
                                 parser: (value?: string) =>
-                                    value ? Number(value.replace(/\s?₫|(,*)/g, "")) : 0,
+                                    value ? Number(value.replace(/\s?VNĐ|(,*)/g, "")) : 0,
                             }}
                             rules={[{ required: true, message: "Vui lòng nhập đơn giá" }]}
                         />

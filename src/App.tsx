@@ -44,7 +44,9 @@ import PurchaseHistoryPage from "@/pages/client/purchase-history";
 import MyMaintenanceRequestsPage from "@/pages/client/maintenance-request/my-maintenance-requests";
 import Loading from "./components/share/loading";
 import NotPermitted from "@/components/share/protected-route.ts";
-import ProtectedPage from "@/pages/client/ProtectedPage";
+import ProtectedPage from "@/pages/client/protectedpage";
+import ForgotPasswordPage from "@/pages/auth/forgot-password";
+import ResetPasswordPage from "@/pages/auth/reset-password";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -54,8 +56,7 @@ export default function App() {
 
   useEffect(() => {
     if (
-      window.location.pathname === PATHS.LOGIN ||
-      window.location.pathname === PATHS.REGISTER
+      window.location.pathname === PATHS.LOGIN
     ) return;
     dispatch(fetchAccount());
   }, []);
@@ -338,6 +339,8 @@ export default function App() {
       ],
     },
     { path: PATHS.LOGIN, element: <LoginPage /> },
+    { path: PATHS.FORGOT_PASSWORD, element: <ForgotPasswordPage /> },
+    { path: PATHS.RESET_PASSWORD, element: <ResetPasswordPage /> },
   ]);
 
   return <RouterProvider router={router} />;

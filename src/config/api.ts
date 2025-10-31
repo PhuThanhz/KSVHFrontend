@@ -4,12 +4,11 @@ import type {
     IUser,
     IModelPaginate,
     IGetAccount,
+    IRequestPasswordCode,
     IPermission,
     IRole,
     IEmployee,
-    IForgotPasswordRequest,
     IConfirmResetPasswordRequest,
-    ISendAccountInfoRequest,
     ICompany,
     IAssetType,
     IDepartment,
@@ -129,18 +128,18 @@ export const callFetchUserById = (id: string | number) => {
     return axios.get<IBackendRes<IUser>>(`/api/v1/users/${id}`);
 };
 
-export const callForgotPassword = (data: IForgotPasswordRequest) => {
-    return axios.post<IBackendRes<string>>('/api/v1/users/forgot-password', data);
+interface IResponsePasswordCode {
+    success: boolean;
+    message: string;
+}
+
+export const callRequestPasswordCode = (data: IRequestPasswordCode) => {
+    return axios.post<IBackendRes<IResponsePasswordCode>>('/api/v1/users/request-password-code', data);
 };
 
 export const callConfirmResetPassword = (data: IConfirmResetPasswordRequest) => {
-    return axios.post<IBackendRes<string>>('/api/v1/users/confirm-reset-password', data);
+    return axios.post<IBackendRes<IResponsePasswordCode>>('/api/v1/users/confirm-reset-password', data);
 };
-
-export const callSendAccountInfo = (data: ISendAccountInfoRequest) => {
-    return axios.post<IBackendRes<string>>('/api/v1/users/send-account-info', data);
-};
-
 //================================Module Permission ================================//
 
 export const callCreatePermission = (permission: IPermission) => {

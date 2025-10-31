@@ -42,18 +42,13 @@ export interface IAccount {
 
 export interface IGetAccount extends Omit<IAccount, "access_token"> { }
 
-export interface IForgotPasswordRequest {
+export interface IRequestPasswordCode {
     email: string;
 }
-
 export interface IConfirmResetPasswordRequest {
     email: string;
     code: string;
     newPassword: string;
-}
-
-export interface ISendAccountInfoRequest {
-    email: string;
 }
 
 export interface IUser {
@@ -451,6 +446,8 @@ export interface IInventoryItem {
     createdBy?: string | null;
     updatedBy?: string | null;
 }
+
+
 /** ========================== ENUM TYPES ========================== */
 export type TimeUnitType = "DAY" | "WEEK" | "MONTH" | "QUARTER" | "YEAR";
 export type DeviceStatus = "NEW" | "IN_USE" | "IN_STORAGE" | "NOT_IN_USE" | "LIQUIDATED";
@@ -494,7 +491,7 @@ export interface IDevice {
     manager?: { id?: string; name?: string; email?: string };
     unit?: { id?: number | string; name?: string };
 
-    customer?: { id?: string; name?: string };
+    customer?: { id?: string; name?: string; customerCode?: string };
 
     brand?: string;
     modelDesc?: string;
@@ -668,6 +665,8 @@ export interface IReqTechnicianAvailability {
     isSpecial?: boolean;
     note?: string | null;
 }
+
+
 /** ==============================
  *   ENUM TYPES TỪ BACKEND
  *  ============================== */
