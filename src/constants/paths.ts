@@ -32,7 +32,7 @@ export const PATHS = {
         SHIFT_TEMPLATE: "/admin/shift-template",
         TECHNICIAN_AVAILABILITY: "/admin/technician-availability",
         CUSTOMER_PURCHASE_HISTORY: "/admin/customer-purchase-history",
-
+        MAINTENANCE: "/admin/maintenance",
     },
 
     CLIENT: {

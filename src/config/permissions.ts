@@ -186,7 +186,6 @@ export const ALL_PERMISSIONS = {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-requests", module: "MAINTENANCE_REQUESTS" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/maintenance-requests/{id}", module: "MAINTENANCE_REQUESTS" },
         CREATE_INTERNAL: { method: "POST", apiPath: "/api/v1/maintenance-requests/internal", module: "MAINTENANCE_REQUESTS" },
-        CREATE_CUSTOMER: { method: "POST", apiPath: "/api/v1/maintenance-requests/customer", module: "MAINTENANCE_REQUESTS" },
         AUTO_ASSIGN_ALL: { method: "POST", apiPath: "/api/v1/maintenance-requests/auto-assign-all", module: "MAINTENANCE_REQUESTS" },
         ASSIGN_TECHNICIAN: { method: "POST", apiPath: "/api/v1/maintenance-requests/{id}/assign-technician/{technicianId}", module: "MAINTENANCE_REQUESTS" },
     },

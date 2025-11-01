@@ -47,6 +47,7 @@ import NotPermitted from "@/components/share/protected-route.ts";
 import ProtectedPage from "@/pages/client/protectedpage";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
+import MaintenancePage from "@/pages/admin/maintenance/maintenance";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -139,6 +140,14 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: PATHS.ADMIN.MAINTENANCE,
+          element:
+            <ProtectedRoute>
+              <MaintenancePage />
+            </ProtectedRoute>
+        },
+
         {
           path: PATHS.ADMIN.USER,
           element: (

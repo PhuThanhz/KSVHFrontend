@@ -76,6 +76,7 @@ const SliderAdmin: React.FC<IProps> = ({
                                         },
                                     ]
                                     : []),
+
                                 ...(checkPermission(ALL_PERMISSIONS.EMPLOYEE.GET_PAGINATE)
                                     ? [
                                         {
@@ -129,7 +130,16 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
-
+                // --- Yêu cầu bảo trì ---
+                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REQUESTS?.GET_PAGINATE ?? {})
+                    ? [
+                        {
+                            label: <Link to="/admin/maintenance">Yêu cầu bảo trì</Link>,
+                            key: "/admin/maintenance",
+                            icon: <ToolOutlined />,
+                        },
+                    ]
+                    : []),
 
                 ...((checkPermission(ALL_PERMISSIONS.ROLES.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE))

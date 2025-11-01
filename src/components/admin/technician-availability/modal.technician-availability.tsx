@@ -44,7 +44,16 @@ const ModalTechnicianAvailability = ({
     const isEdit = Boolean(dataInit?.id);
 
     const [isUsingTemplate, setIsUsingTemplate] = useState(false);
-    const [isMultipleDays, setIsMultipleDays] = useState(false); // ✅ thêm logic bật/tắt tạo nhiều ca liên tiếp
+    const [isMultipleDays, setIsMultipleDays] = useState(false);
+    const [workingDays, setWorkingDays] = useState<
+        ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[]
+    >([
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+    ]);
 
     const { mutate: createAvailability, isPending: isCreating } =
         useCreateTechnicianAvailabilityMutation();
@@ -86,6 +95,7 @@ const ModalTechnicianAvailability = ({
         setDataInit(null);
         setIsUsingTemplate(false);
         setIsMultipleDays(false);
+        setWorkingDays(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]);
         setOpenModal(false);
     };
 
@@ -117,9 +127,11 @@ const ModalTechnicianAvailability = ({
                     : undefined,
             startTime: start ? start.format("HH:mm:ss") : undefined,
             endTime: end ? end.format("HH:mm:ss") : undefined,
-            status: isEdit ? valuesForm.status : "OFFLINE",
+            status: isEdit ? valuesForm.status : "AVAILABLE",
             isSpecial: valuesForm.isSpecial ?? false,
             note: valuesForm.note ?? null,
+            ...(isMultipleDays ? { workingDays } : {}),
+
         };
 
         if (isEdit && dataInit?.id) {
@@ -267,6 +279,37 @@ const ModalTechnicianAvailability = ({
                                 />
                             </Col>
                         )}
+                        {!isEdit && isMultipleDays && (
+                            <Col span={24}>
+                                <Form.Item label="Chọn ngày trong tuần">
+                                    <Space wrap>
+                                        {[
+                                            { label: "Thứ 2", value: "MONDAY" },
+                                            { label: "Thứ 3", value: "TUESDAY" },
+                                            { label: "Thứ 4", value: "WEDNESDAY" },
+                                            { label: "Thứ 5", value: "THURSDAY" },
+                                            { label: "Thứ 6", value: "FRIDAY" },
+                                            { label: "Thứ 7", value: "SATURDAY" },
+                                            { label: "Chủ nhật", value: "SUNDAY" },
+                                        ].map((day) => (
+                                            <Switch
+                                                key={day.value}
+                                                size="small"
+                                                checked={workingDays.includes(day.value as typeof workingDays[number])}
+                                                onChange={(checked) => {
+                                                    const value = day.value as typeof workingDays[number];
+                                                    if (checked) setWorkingDays([...workingDays, value]);
+                                                    else setWorkingDays(workingDays.filter((v) => v !== value));
+                                                }}
+                                                checkedChildren={day.label}
+                                                unCheckedChildren={day.label}
+                                            />
+                                        ))}
+                                    </Space>
+                                </Form.Item>
+                            </Col>
+                        )}
+
                     </>
                 ) : (
                     <Col lg={12} md={12} sm={24} xs={24}>

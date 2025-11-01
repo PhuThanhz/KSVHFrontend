@@ -948,11 +948,21 @@ export const callCreateCustomerMaintenanceRequest = (data: IReqMaintenanceReques
 };
 
 // ======================= PHÂN CÔNG KỸ THUẬT VIÊN ======================= //
+export interface IResAutoAssignAllData {
+    totalRequests: number;
+    autoAssigned: number;
+    pendingForAdmin: number;
+}
+export interface IResAutoAssignAllDTO {
+    message: string;
+    data: IResAutoAssignAllData;
+}
 export const callAutoAssignAllMaintenanceRequests = () => {
-    return axios.post<IBackendRes<Record<string, any>>>(
+    return axios.post<IBackendRes<IResAutoAssignAllDTO>>(
         `/api/v1/maintenance-requests/auto-assign-all`
     );
 };
+
 export const callAssignTechnicianManual = (requestId: string, technicianId: string) => {
     return axios.post<IBackendRes<IResMaintenanceAssignmentDTO>>(
         `/api/v1/maintenance-requests/${requestId}/assign-technician/${technicianId}`
