@@ -12,6 +12,7 @@ import {
     callFetchPosition,
 } from "@/config/api";
 import { DebounceSelect } from "../debouce.select";
+import { useState } from "react";
 
 interface IProps {
     openModal: boolean;
@@ -30,13 +31,18 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
     const [form] = Form.useForm();
     const isEdit = Boolean(dataInit?.id);
 
+    // Nếu có dữ liệu sẵn thì dùng id công ty đó, nếu không thì null
+    const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
+        dataInit?.company?.id ? Number(dataInit.company.id) : null
+    );
+
     const { mutate: createEmployee, isPending: isCreating } = useCreateEmployeeMutation();
     const { mutate: updateEmployee, isPending: isUpdating } = useUpdateEmployeeMutation();
 
     /** ==================== Submit form ==================== */
     const submitEmployee = async (values: any) => {
         const payload = {
-            id: dataInit?.id, // chỉ cần khi update
+            id: dataInit?.id,
             employeeCode: values.employeeCode,
             fullName: values.fullName,
             phone: values.phone,
@@ -62,6 +68,7 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
         setDataInit(null);
         setOpenModal(false);
         form.resetFields();
+        setSelectedCompanyId(null);
     };
 
     /** ==================== Fetch danh sách chọn ==================== */
@@ -76,13 +83,16 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
     }
 
     async function fetchDepartmentList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchDepartment(`page=1&size=100&name=/${name}/i`);
-        return (
+        if (!selectedCompanyId) return [];
+        const res = await callFetchDepartment(
+            `page=1&size=100&name=/${name}/i&companyId=${selectedCompanyId}`
+        );
+        const list =
             res?.data?.result?.map((item: any) => ({
                 label: item.name,
                 value: item.id,
-            })) || []
-        );
+            })) || [];
+        return list.length ? list : [];
     }
 
     async function fetchPositionList(name: string): Promise<ISelectItem[]> {
@@ -95,7 +105,15 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
         );
     }
 
-    /** ==================== Tạo dữ liệu initialValues ==================== */
+    /** ==================== Khi chọn công ty ==================== */
+    const handleCompanyChange = (value: any) => {
+        const companyId = value?.value ? Number(value.value) : null;
+        setSelectedCompanyId(companyId);
+        // reset phòng ban khi đổi công ty
+        form.setFieldsValue({ department: undefined });
+    };
+
+    /** ==================== Dữ liệu khởi tạo ==================== */
     const initialValues = isEdit
         ? {
             employeeCode: dataInit?.employeeCode,
@@ -156,13 +174,24 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                 </Col>
 
                 <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProFormText label="Số điện thoại" name="phone" placeholder="Nhập số điện thoại" />
+                    <ProFormText
+                        label="Số điện thoại"
+                        name="phone"
+                        placeholder="Nhập số điện thoại"
+                        rules={[{ required: true, message: "Vui lòng nhập số điện thoại" }]}
+                    />
                 </Col>
 
                 <Col lg={12} md={12} sm={24} xs={24}>
-                    <ProFormText label="Email" name="email" placeholder="Nhập email" />
+                    <ProFormText
+                        label="Email"
+                        name="email"
+                        placeholder="Nhập email"
+                        rules={[{ required: true, message: "Vui lòng nhập email" }]}
+                    />
                 </Col>
 
+                {/* Chọn công ty */}
                 <Col lg={24} md={24} sm={24} xs={24}>
                     <ProForm.Item
                         name="company"
@@ -175,10 +204,12 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                             placeholder="Chọn công ty"
                             fetchOptions={fetchCompanyList}
                             style={{ width: "100%" }}
+                            onChange={handleCompanyChange}
                         />
                     </ProForm.Item>
                 </Col>
 
+                {/* Chọn phòng ban (lọc theo công ty) */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="department"
@@ -186,15 +217,22 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                         rules={[{ required: true, message: "Vui lòng chọn phòng ban" }]}
                     >
                         <DebounceSelect
+                            key={selectedCompanyId ?? "no-company"}
                             allowClear
                             showSearch
-                            placeholder="Chọn phòng ban"
+                            placeholder={
+                                selectedCompanyId
+                                    ? "Chọn phòng ban"
+                                    : "Chọn công ty trước"
+                            }
                             fetchOptions={fetchDepartmentList}
                             style={{ width: "100%" }}
+                            disabled={!selectedCompanyId}
                         />
                     </ProForm.Item>
                 </Col>
 
+                {/* Chức vụ */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="position"

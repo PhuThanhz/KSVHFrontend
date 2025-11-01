@@ -367,19 +367,8 @@ const SliderAdmin: React.FC<IProps> = ({
             collapsible
             collapsed={collapsed}
             onCollapse={setCollapsed}
-            width={260}
+            width={250}
             collapsedWidth={80}
-            style={{
-                overflow: 'auto',
-                height: '100vh',
-                position: 'fixed',
-                left: 0,
-                top: 0,
-                bottom: 0,
-                boxShadow: "2px 0 8px rgba(0,0,0,0.05)",
-                background: "#ffffff",
-                zIndex: 999,
-            }}
         >
             <div
                 style={{

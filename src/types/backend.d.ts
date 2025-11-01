@@ -20,12 +20,14 @@ export interface IResUploadFileDTO {
     fileName: string;
     uploadedAt: string;
 }
+
 export interface IAccount {
-    access_token: string;
+    access_token?: string;
     user: {
         id: string;
         email: string;
         name: string;
+        avatar?: string;
         role: {
             id: string;
             name: string;
@@ -35,10 +37,19 @@ export interface IAccount {
                 apiPath: string;
                 method: string;
                 module: string;
-            }[]
-        }
-    }
+            }[];
+        };
+    };
+    employee?: {
+        id: string;
+        employeeCode: string;
+        fullName: string;
+        phone?: string;
+        email?: string;
+        positionName?: string;
+    };
 }
+
 
 export interface IGetAccount extends Omit<IAccount, "access_token"> { }
 
@@ -775,20 +786,21 @@ export interface IResMaintenanceRequestDetailDTO {
     rejectInfo?: IResMaintenanceRejectDTO;
     surveyInfo?: IResMaintenanceSurveyDTO;
 }
+
+
 /*  ================== Nhân viên nội bộ tạo phiếu bảo trì ===================== */
 export interface IReqMaintenanceRequestInternalDTO {
     deviceCode: string;
     issueId: string;
     priorityLevel: PriorityLevel;
     maintenanceType: MaintenanceType;
-    companyId: number;
-    departmentId: number;
     locationDetail?: string | null;
     attachment1?: string | null;
     attachment2?: string | null;
     attachment3?: string | null;
     note?: string | null;
 }
+
 
 /*  ================== Khách hàng tạo phiếu bảo trì ===================== */
 export interface IReqMaintenanceRequestCustomerDTO {

@@ -69,6 +69,11 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
     const [selectedSupplier, setSelectedSupplier] = useState<ISelectItem | null>(null);
     const [selectedCompany, setSelectedCompany] = useState<ISelectItem | null>(null);
     const [selectedDepartment, setSelectedDepartment] = useState<ISelectItem | null>(null);
+    const handleCompanyChange = (value: ISelectItem | null) => {
+        setSelectedCompany(value);
+        setSelectedDepartment(null);
+        form.setFieldsValue({ department: undefined });
+    };
     const [selectedManager, setSelectedManager] = useState<ISelectItem | null>(null);
 
     const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -186,13 +191,25 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
     }
     async function fetchDepartmentList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchDepartment(`page=1&size=100&name=/${name}/i`);
+        if (!selectedCompany?.value) return [];
+        const res = await callFetchDepartment(
+            `page=1&size=100&name=/${name}/i&companyId=${selectedCompany.value}`
+        );
         return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
     }
+
     async function fetchManagerList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchUser(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
+        const res = await callFetchUser(
+            `page=1&size=100&name=/${name}/i&filter=role.name='EMPLOYEE'`
+        );
+        return (
+            res?.data?.result?.map((e: any) => ({
+                label: e.name,
+                value: e.id,
+            })) || []
+        );
     }
+
 
     // === upload handlers ===
     const handlePreview = async (file: any) => {
@@ -384,7 +401,7 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                         selectedSupplier={selectedSupplier}
                         setSelectedSupplier={setSelectedSupplier}
                         selectedCompany={selectedCompany}
-                        setSelectedCompany={setSelectedCompany}
+                        setSelectedCompany={handleCompanyChange}
                         selectedDepartment={selectedDepartment}
                         setSelectedDepartment={setSelectedDepartment}
                         selectedManager={selectedManager}
@@ -393,7 +410,9 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                         fetchCompanyList={fetchCompanyList}
                         fetchDepartmentList={fetchDepartmentList}
                         fetchManagerList={fetchManagerList}
+                        departmentKey={selectedCompany?.value ?? "no-company"}
                     />
+
                 </Col>
 
                 <Col span={24}>

@@ -65,14 +65,10 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
         const res = await callFetchDeviceType(`page=1&size=100&typeName=/${name}/i`);
         return res?.data?.result?.map((e: any) => ({ label: e.typeName, value: e.id })) || [];
     }
+
     async function fetchCustomerList(name: string): Promise<ISelectItem[]> {
         const res = await callFetchCustomer(`page=1&size=100&name=/${name}/i`);
-        return (
-            res?.data?.result?.map((e: any) => ({
-                label: e.name,
-                value: e.id,
-            })) || []
-        );
+        return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
     }
 
     async function fetchUnitList(name: string): Promise<ISelectItem[]> {
@@ -91,14 +87,27 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
     }
 
     async function fetchDepartmentList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchDepartment(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
+        if (!selectedCompany?.value) return [];
+        const res = await callFetchDepartment(
+            `page=1&size=100&name=/${name}/i&companyId=${selectedCompany.value}`
+        );
+        const list =
+            res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
+        return list.length ? list : [];
     }
 
     async function fetchManagerList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchUser(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
+        const res = await callFetchUser(
+            `page=1&size=100&name=/${name}/i&filter=role.name='EMPLOYEE'`
+        );
+        return (
+            res?.data?.result?.map((e: any) => ({
+                label: e.name,
+                value: e.id,
+            })) || []
+        );
     }
+
 
     /** ==================== Upload Image Handlers ==================== */
     const handlePreview = async (file: any) => {
@@ -161,6 +170,12 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
         setFileList([]);
         setFreqUnit("MONTH");
         setFreqModeYear("anyday");
+    };
+
+    const handleCompanyChange = (value: ISelectItem | null) => {
+        setSelectedCompany(value);
+        setSelectedDepartment(null);
+        form.setFieldsValue({ department: undefined });
     };
 
     const buildPayload = (values: any): ICreateDeviceRequest => {
@@ -273,7 +288,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                         selectedSupplier={selectedSupplier}
                         setSelectedSupplier={setSelectedSupplier}
                         selectedCompany={selectedCompany}
-                        setSelectedCompany={setSelectedCompany}
+                        setSelectedCompany={handleCompanyChange}
                         selectedDepartment={selectedDepartment}
                         setSelectedDepartment={setSelectedDepartment}
                         selectedManager={selectedManager}
@@ -282,6 +297,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                         fetchCompanyList={fetchCompanyList}
                         fetchDepartmentList={fetchDepartmentList}
                         fetchManagerList={fetchManagerList}
+                        departmentKey={selectedCompany?.value ?? "no-company"}
                     />
                 </Col>
 

@@ -16,6 +16,7 @@ interface DeviceSpecsAndManagementProps {
     fetchCompanyList: (name: string) => Promise<ISelectItem[]>;
     fetchDepartmentList: (name: string) => Promise<ISelectItem[]>;
     fetchManagerList: (name: string) => Promise<ISelectItem[]>;
+    departmentKey?: string | number;
 }
 
 const DeviceSpecsAndManagement = ({
@@ -31,27 +32,43 @@ const DeviceSpecsAndManagement = ({
     fetchCompanyList,
     fetchDepartmentList,
     fetchManagerList,
+    departmentKey,
 }: DeviceSpecsAndManagementProps) => {
     return (
         <>
-            {/* Thông số kỹ thuật */}
-            <Card size="small" title=" Thông số kỹ thuật" bordered={false} style={{ background: '#fafafa' }}>
+            <Card
+                size="small"
+                title="Thông số kỹ thuật"
+                bordered={false}
+                style={{ background: "#fafafa" }}
+            >
                 <Row gutter={[16, 8]}>
                     <Col lg={8} md={12} sm={24} xs={24}>
-                        <ProFormText label="Nhãn hiệu" name="brand" placeholder="Nhập tên nhãn hiệu" />
+                        <ProFormText
+                            label="Nhãn hiệu"
+                            name="brand"
+                            placeholder="Nhập tên nhãn hiệu"
+                        />
                     </Col>
                     <Col lg={8} md={12} sm={24} xs={24}>
-                        <ProFormText label="Model" name="modelDesc" placeholder="Nhập số Model" />
+                        <ProFormText
+                            label="Model"
+                            name="modelDesc"
+                            placeholder="Nhập số Model"
+                        />
                     </Col>
                     <Col lg={8} md={12} sm={24} xs={24}>
-                        <ProFormText label="Công suất" name="powerCapacity" placeholder="Nhập công suất" />
+                        <ProFormText
+                            label="Công suất"
+                            name="powerCapacity"
+                            placeholder="Nhập công suất"
+                        />
                     </Col>
                     <Col lg={8} md={8} sm={24} xs={24}>
                         <ProFormDigit
                             label="Chiều dài (cm)"
                             name="length"
                             min={0}
-
                             placeholder="Dài"
                         />
                     </Col>
@@ -61,7 +78,6 @@ const DeviceSpecsAndManagement = ({
                             label="Chiều rộng (cm)"
                             name="width"
                             min={0}
-
                             placeholder="Rộng"
                         />
                     </Col>
@@ -71,22 +87,26 @@ const DeviceSpecsAndManagement = ({
                             label="Chiều cao (cm)"
                             name="height"
                             min={0}
-
                             placeholder="Cao"
                         />
                     </Col>
-
                 </Row>
             </Card>
 
-            {/* Đơn vị quản lý */}
-            <Card size="small" title="Đơn vị quản lý" bordered={false} style={{ background: '#fafafa' }}>
+            <Card
+                size="small"
+                title="Đơn vị quản lý"
+                bordered={false}
+                style={{ background: "#fafafa" }}
+            >
                 <Row gutter={[16, 8]}>
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProForm.Item
                             name="supplier"
                             label="Nhà cung cấp"
-                            rules={[{ required: true, message: "Vui lòng chọn nhà cung cấp" }]}
+                            rules={[
+                                { required: true, message: "Vui lòng chọn nhà cung cấp" },
+                            ]}
                         >
                             <DebounceSelect
                                 allowClear
@@ -104,7 +124,9 @@ const DeviceSpecsAndManagement = ({
                         <ProForm.Item
                             name="company"
                             label="Công ty"
-                            rules={[{ required: true, message: "Vui lòng chọn công ty" }]}
+                            rules={[
+                                { required: true, message: "Vui lòng chọn công ty" },
+                            ]}
                         >
                             <DebounceSelect
                                 allowClear
@@ -121,17 +143,27 @@ const DeviceSpecsAndManagement = ({
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProForm.Item
                             name="department"
-                            label="Phòng ban/Nhà hàng"
-                            rules={[{ required: true, message: "Vui lòng chọn phòng ban" }]}
+                            label="Phòng ban / Nhà hàng"
+                            rules={[
+                                { required: true, message: "Vui lòng chọn phòng ban" },
+                            ]}
                         >
                             <DebounceSelect
+                                key={departmentKey ?? "no-company"}
                                 allowClear
                                 showSearch
-                                placeholder="Chọn phòng ban/nhà hàng"
+                                placeholder={
+                                    selectedCompany
+                                        ? "Chọn phòng ban / nhà hàng"
+                                        : "Chọn công ty trước"
+                                }
                                 fetchOptions={fetchDepartmentList}
                                 value={selectedDepartment}
-                                onChange={(v: any) => setSelectedDepartment(v as ISelectItem)}
+                                onChange={(v: any) =>
+                                    setSelectedDepartment(v as ISelectItem)
+                                }
                                 style={{ width: "100%" }}
+                                disabled={!selectedCompany}
                             />
                         </ProForm.Item>
                     </Col>
@@ -140,7 +172,9 @@ const DeviceSpecsAndManagement = ({
                         <ProForm.Item
                             name="manager"
                             label="Nhân viên quản lý"
-                            rules={[{ required: true, message: "Vui lòng chọn nhân viên quản lý" }]}
+                            rules={[
+                                { required: true, message: "Vui lòng chọn nhân viên quản lý" },
+                            ]}
                         >
                             <DebounceSelect
                                 allowClear

@@ -269,7 +269,6 @@ const UserPage = () => {
                 />
             </Access>
 
-            {/* Modal Tạo / Sửa */}
             <ModalUser
                 openModal={openModal}
                 setOpenModal={setOpenModal}
@@ -277,7 +276,6 @@ const UserPage = () => {
                 setDataInit={setDataInit}
             />
 
-            {/* Drawer Xem chi tiết */}
             <ViewDetailUser
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
