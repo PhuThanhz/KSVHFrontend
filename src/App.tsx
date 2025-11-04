@@ -44,11 +44,13 @@ import PurchaseHistoryPage from "@/pages/client/purchase-history";
 import MyMaintenanceRequestsPage from "@/pages/client/maintenance-request/my-maintenance-requests";
 import Loading from "./components/share/loading";
 import NotPermitted from "@/components/share/protected-route.ts";
-import ProtectedPage from "@/pages/client/protectedpage";
+import ProtectedCustomerPage from "@/pages/client/protected-customer";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
 import MaintenancePage from "@/pages/admin/maintenance/maintenance";
 import IssueSkillMappingPage from "@/pages/admin/issue-skill-mapping";
+import TechnicianAssignmentPage from "@/pages/technician/assignment/home-assignment";
+import ProtectedTechnicianPage from "@/pages//technician/protected-technician";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -84,29 +86,29 @@ export default function App() {
         {
           path: PATHS.CLIENT.PURCHASE_HISTORY,
           element: (
-            <ProtectedPage
+            <ProtectedCustomerPage
               isAuthenticated={isAuthenticated}
               redirectPath={PATHS.LOGIN}
               path="purchase-history"
             >
               <PurchaseHistoryPage />
-            </ProtectedPage>
+            </ProtectedCustomerPage>
           ),
         },
-
         // =================== MY MAINTENANCE REQUESTS =======================//
         {
           path: PATHS.CLIENT.MY_MAINTENANCE_REQUESTS,
           element: (
-            <ProtectedPage
+            <ProtectedCustomerPage
               isAuthenticated={isAuthenticated}
               redirectPath={PATHS.LOGIN}
               path="maintenance-requests"
             >
               <MyMaintenanceRequestsPage />
-            </ProtectedPage>
+            </ProtectedCustomerPage>
           ),
         },
+
       ],
     },
 
@@ -119,7 +121,21 @@ export default function App() {
         </LayoutApp>
       ),
       errorElement: <NotFound />,
-      children: [{ index: true, element: <HomeTechnicianPage /> }],
+      children: [
+        { index: true, element: <HomeTechnicianPage /> },
+        {
+          path: PATHS.TECHNICIAN.ASSIGNMENT,
+          element: (
+            <ProtectedTechnicianPage
+              isAuthenticated={isAuthenticated}
+              redirectPath={PATHS.LOGIN}
+              path="technician-assignment"
+            >
+              <TechnicianAssignmentPage />
+            </ProtectedTechnicianPage>
+          ),
+        },
+      ],
     },
     // ==========================  ADMIN =======================//
     {

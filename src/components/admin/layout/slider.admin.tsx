@@ -149,7 +149,8 @@ const SliderAdmin: React.FC<IProps> = ({
                         {
                             label: (
                                 <Link to="/admin/issue-skill-mapping">
-                                    Cấu hình kỹ năng cho sự cố
+                                    Cấu hình phân
+                                    công tự động
                                 </Link>
                             ),
                             key: "/admin/issue-skill-mapping",

@@ -46,5 +46,6 @@ export const PATHS = {
 
     TECHNICIAN: {
         ROOT: "/technician",
+        ASSIGNMENT: "/technician/assignment",
     },
 };

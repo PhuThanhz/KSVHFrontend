@@ -855,6 +855,22 @@ export interface IReqMaintenanceRequestCustomerDTO {
     note?: string | null;
 }
 
+// ====================== Xác Nhận Phân Công ======================= //
+export interface IReqRejectAssignmentDTO {
+    reasonId: string | number;
+    note?: string | null;
+}
+
+export interface IResTechnicianAssignmentDTO {
+    id: string;
+    requestInfo: IResRequestCommonDTO;
+    assignedAt: string;
+    assignedBy: string;
+}
+
+
+
+
 /** ================== Phiếu khảo sát ===================== */
 export interface IResMaintenanceSurveyDTO {
     id?: string;
@@ -863,3 +879,6 @@ export interface IResMaintenanceSurveyDTO {
     issueName?: string;
     surveyInfo?: IResSurveyCommonDTO;
 }
+
+
+

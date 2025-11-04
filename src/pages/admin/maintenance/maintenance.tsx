@@ -161,18 +161,12 @@ const MaintenancePage = () => {
                             const info = item.requestInfo;
                             const device = info.device;
 
-                            const attachments = [
-                                info.attachment1,
-                                info.attachment2,
-                                info.attachment3,
-                            ].filter(Boolean);
+                            // Lấy ảnh thiết bị (ưu tiên ảnh thiết bị, không dùng ảnh phiếu)
+                            const deviceImages = [device?.image1, device?.image2, device?.image3].filter(Boolean);
 
-                            const mainImage =
-                                attachments[0] ||
-                                device?.image1 ||
-                                device?.image2 ||
-                                device?.image3 ||
-                                null;
+                            // Nếu không có ảnh nào thì để null
+                            const hasImages = deviceImages.length > 0;
+
 
                             const createdAt = info.createdAt
                                 ? dayjs(info.createdAt).format("DD/MM/YYYY HH:mm")
@@ -205,28 +199,57 @@ const MaintenancePage = () => {
                                     }}
                                 >
                                     <Row gutter={[12, 12]} align="middle">
-                                        {/* Hình ảnh */}
+                                        {/* Hình ảnh thiết bị */}
                                         <Col xs={24} sm={6} md={5}>
-                                            {mainImage ? (
-                                                <Image
-                                                    src={
-                                                        mainImage.startsWith("http")
-                                                            ? mainImage
-                                                            : `${import.meta.env.VITE_BACKEND_URL
-                                                            }/storage/${attachments[0]
-                                                                ? "MAINTENANCE_REQUEST"
-                                                                : "DEVICE"
-                                                            }/${mainImage}`
-                                                    }
-                                                    alt={device?.deviceName}
-                                                    width="100%"
-                                                    height={120}
+                                            {hasImages ? (
+                                                <div
                                                     style={{
-                                                        objectFit: "cover",
-                                                        borderRadius: 6,
-                                                        border: "1px solid #e8e8e8",
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        alignItems: "center",
+                                                        gap: 8,
                                                     }}
-                                                />
+                                                >
+                                                    {/* Hàng 1: 1 ảnh lớn */}
+                                                    <Image
+                                                        src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${deviceImages[0]}`}
+                                                        alt={device?.deviceName}
+                                                        width="100%"
+                                                        height={120}
+                                                        style={{
+                                                            objectFit: "cover",
+                                                            borderRadius: 6,
+                                                            border: "1px solid #e8e8e8",
+                                                        }}
+                                                    />
+
+                                                    {/* Hàng 2: 2 ảnh nhỏ (nếu có) */}
+                                                    {deviceImages.length > 1 && (
+                                                        <div
+                                                            style={{
+                                                                display: "flex",
+                                                                justifyContent: "center",
+                                                                gap: 8,
+                                                                width: "100%",
+                                                            }}
+                                                        >
+                                                            {deviceImages.slice(1).map((img, idx) => (
+                                                                <Image
+                                                                    key={idx}
+                                                                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${img}`}
+                                                                    alt={`device-thumb-${idx}`}
+                                                                    width="48%"
+                                                                    height={80}
+                                                                    style={{
+                                                                        objectFit: "cover",
+                                                                        borderRadius: 6,
+                                                                        border: "1px solid #e8e8e8",
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <div
                                                     style={{
@@ -241,7 +264,7 @@ const MaintenancePage = () => {
                                                         border: "1px solid #ddd",
                                                     }}
                                                 >
-                                                    Không có ảnh
+                                                    Không có hình ảnh thiết bị
                                                 </div>
                                             )}
                                         </Col>

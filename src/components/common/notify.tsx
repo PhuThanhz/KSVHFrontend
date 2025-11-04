@@ -83,4 +83,17 @@ export const notify = {
             },
             iconTheme: { primary: "#fff", secondary: "#dc2626" },
         }),
+    warning: (msg: string) =>
+        toast(msg, {
+            duration: 3500,
+            style: {
+                background: "#f59e0b",
+                color: "#fff",
+                fontWeight: 500,
+                borderRadius: "10px",
+                padding: "10px 16px",
+                boxShadow: "0 4px 12px rgba(245, 158, 11, 0.4)",
+            },
+            iconTheme: { primary: "#fff", secondary: "#f59e0b" },
+        }),
 };

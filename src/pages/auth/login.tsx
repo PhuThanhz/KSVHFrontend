@@ -1,44 +1,70 @@
-import { Button, Divider, Form, Input } from 'antd';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { callLogin } from 'config/api';
-import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { setUserLoginInfo } from '@/redux/slice/accountSlide';
-import styles from 'styles/auth.module.scss';
-import { useAppSelector } from '@/redux/hooks';
-import { notify } from '@/components/common/notify';
+import { Button, Divider, Form, Input } from "antd";
+import { Link, useLocation } from "react-router-dom";
+import { callLogin } from "@/config/api";
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { setUserLoginInfo } from "@/redux/slice/accountSlide";
+import styles from "@/styles/auth.module.scss";
+import { useAppSelector } from "@/redux/hooks";
+import { notify } from "@/components/common/notify";
 
 const LoginPage = () => {
-    const navigate = useNavigate();
     const [isSubmit, setIsSubmit] = useState(false);
     const dispatch = useDispatch();
-    const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
+    const isAuthenticated = useAppSelector((state) => state.account.isAuthenticated);
 
     const location = useLocation();
     const params = new URLSearchParams(location.search);
-    const callback = params?.get("callback");
+    const callback = params.get("callback");
 
     useEffect(() => {
         if (isAuthenticated) {
-            window.location.href = '/';
+            window.location.href = "/";
         }
     }, [isAuthenticated]);
 
-    const onFinish = async (values: any) => {
+    const onFinish = async (values: { username: string; password: string }) => {
         const { username, password } = values;
         setIsSubmit(true);
-        const res = await callLogin(username, password);
-        setIsSubmit(false);
 
-        if (res?.data) {
-            localStorage.setItem('access_token', res.data.access_token);
-            dispatch(setUserLoginInfo(res.data.user));
-            notify.success("Đăng nhập tài khoản thành công!");
-            window.location.href = callback ? callback : '/';
-        } else {
-            notify.error(
-                res.message && Array.isArray(res.message) ? res.message[0] : res.message || "Đăng nhập thất bại!"
-            );
+        try {
+            const res = await callLogin(username, password);
+            setIsSubmit(false);
+
+            if (res?.data) {
+                const { access_token, user } = res.data;
+
+                if (access_token) {
+                    localStorage.setItem("access_token", access_token);
+                } else {
+                    notify.error("Không nhận được access_token từ server.");
+                    return;
+                }
+
+                // Kiểm tra user
+                if (user) {
+                    dispatch(setUserLoginInfo(user));
+                } else {
+                    notify.error("Không nhận được thông tin người dùng.");
+                    return;
+                }
+
+                notify.success("Đăng nhập tài khoản thành công!");
+                window.location.href = callback || "/";
+            } else {
+                const message =
+                    Array.isArray(res?.message)
+                        ? res.message[0]
+                        : res?.message || "Đăng nhập thất bại!";
+                notify.error(message);
+            }
+        } catch (error: any) {
+            setIsSubmit(false);
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Lỗi kết nối đến máy chủ. Vui lòng thử lại.";
+            notify.error(message);
         }
     };
 
@@ -52,36 +78,39 @@ const LoginPage = () => {
                             <Divider />
                         </div>
 
-                        <Form name="basic" onFinish={onFinish} autoComplete="off">
+                        <Form name="login-form" onFinish={onFinish} autoComplete="off">
                             <Form.Item
                                 labelCol={{ span: 24 }}
                                 label="Email"
                                 name="username"
-                                rules={[{ required: true, message: 'Email không được để trống!' }]}
+                                rules={[{ required: true, message: "Email không được để trống!" }]}
                             >
-                                <Input />
+                                <Input placeholder="Nhập email của bạn" />
                             </Form.Item>
 
                             <Form.Item
                                 labelCol={{ span: 24 }}
                                 label="Mật khẩu"
                                 name="password"
-                                rules={[{ required: true, message: 'Mật khẩu không được để trống!' }]}
+                                rules={[{ required: true, message: "Mật khẩu không được để trống!" }]}
                             >
-                                <Input.Password />
+                                <Input.Password placeholder="Nhập mật khẩu" />
                             </Form.Item>
 
                             <Form.Item>
-                                <Button type="primary" htmlType="submit" loading={isSubmit}>
+                                <Button type="primary" htmlType="submit" loading={isSubmit} block>
                                     Đăng nhập
                                 </Button>
                             </Form.Item>
 
                             <Divider />
-                            <div style={{ textAlign: 'center' }}>
+                            <div style={{ textAlign: "center" }}>
                                 <p className="text text-normal">
-                                    <span>Bạn quên mật khẩu hoặc chưa kích hoạt tài khoản?</span><br />
-                                    <Link to="/forgot-password">Nhận mã xác nhận qua email</Link>
+                                    <span>Bạn quên mật khẩu hoặc chưa kích hoạt tài khoản?</span>
+                                    <br />
+                                    <Link to="/forgot-password">
+                                        Nhận mã xác nhận qua email
+                                    </Link>
                                 </p>
                             </div>
                         </Form>

@@ -39,6 +39,8 @@ import type {
     IResMaintenanceRejectDTO,
     IIssueSkillMappingRequest,
     IIssueSkillMappingResponse,
+    IReqRejectAssignmentDTO,
+    IResTechnicianAssignmentDTO,
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type {
@@ -1008,5 +1010,32 @@ export const callUpdateIssueSkillMapping = (
 export const callDeleteIssueSkillMapping = (id: string | number) => {
     return axios.delete<IBackendRes<void>>(
         `/api/v1/issue-skill-mappings/${id}`
+    );
+};
+
+
+// ======================= Xác Nhận Phân Công ======================= //
+export const callFetchTechnicianAssignments = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResTechnicianAssignmentDTO>>>(
+        `/api/v1/technician/assignments?${query}`
+    );
+};
+export const callFetchTechnicianAssignmentById = (id: string | number) => {
+    return axios.get<IBackendRes<IResTechnicianAssignmentDTO>>(
+        `/api/v1/technician/assignments/${id}`
+    );
+};
+export const callAcceptTechnicianAssignment = (id: string | number) => {
+    return axios.post<IBackendRes<IResTechnicianAssignmentDTO>>(
+        `/api/v1/technician/assignments/${id}/accept`
+    );
+};
+export const callRejectTechnicianAssignment = (
+    id: string | number,
+    data: IReqRejectAssignmentDTO
+) => {
+    return axios.post<IBackendRes<IResTechnicianAssignmentDTO>>(
+        `/api/v1/technician/assignments/${id}/reject`,
+        data
     );
 };

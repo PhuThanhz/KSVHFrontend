@@ -212,6 +212,28 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/issue-skill-mappings", module: "ISSUE_SKILL_MAPPING" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/issue-skill-mappings/{id}", module: "ISSUE_SKILL_MAPPING" },
     },
+    TECHNICIAN_ASSIGNMENT: {
+        GET_PAGINATE: {
+            method: "GET",
+            apiPath: "/api/v1/technician/assignments",
+            module: "TECHNICIAN_ASSIGNMENT",
+        },
+        GET_BY_ID: {
+            method: "GET",
+            apiPath: "/api/v1/technician/assignments/{id}",
+            module: "TECHNICIAN_ASSIGNMENT",
+        },
+        ACCEPT: {
+            method: "POST",
+            apiPath: "/api/v1/technician/assignments/{id}/accept",
+            module: "TECHNICIAN_ASSIGNMENT",
+        },
+        REJECT: {
+            method: "POST",
+            apiPath: "/api/v1/technician/assignments/{id}/reject",
+            module: "TECHNICIAN_ASSIGNMENT",
+        },
+    },
 };
 
 export const ALL_MODULES = {
@@ -242,5 +264,5 @@ export const ALL_MODULES = {
     MAINTENANCE_REQUESTS: "MAINTENANCE_REQUESTS",
     CUSTOMER_PURCHASE_HISTORY: "CUSTOMER_PURCHASE_HISTORY",
     ISSUE_SKILL_MAPPING: "ISSUE_SKILL_MAPPING",
-
+    TECHNICIAN_ASSIGNMENT: "TECHNICIAN_ASSIGNMENT",
 };
