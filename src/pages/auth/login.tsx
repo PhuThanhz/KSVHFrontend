@@ -34,6 +34,7 @@ const LoginPage = () => {
             if (res?.data) {
                 const { access_token, user } = res.data;
 
+                // Kiểm tra token hợp lệ trước khi lưu
                 if (access_token) {
                     localStorage.setItem("access_token", access_token);
                 } else {
