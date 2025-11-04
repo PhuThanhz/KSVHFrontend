@@ -63,7 +63,6 @@ const ModalCreateMaintenance = ({
     const { mutateAsync: createRequest, isPending } =
         useCreateInternalMaintenanceRequestMutation();
 
-    // ===== FETCH DATA =====
     const { data: devices } = useQuery({
         queryKey: ["devices"],
         queryFn: async () => {
@@ -80,19 +79,27 @@ const ModalCreateMaintenance = ({
         },
     });
 
-    // ===== Khi mở modal → tự fill thông tin nhân viên =====
     useEffect(() => {
-        if (open && employee) {
-            form.setFieldsValue({
-                fullName: employee.fullName,
-                employeeCode: employee.employeeCode,
-                phone: employee.phone,
-                positionName: employee.positionName,
-            });
+        if (open) {
+            if (employee) {
+                form.setFieldsValue({
+                    fullName: employee.fullName,
+                    employeeCode: employee.employeeCode,
+                    phone: employee.phone,
+                    positionName: employee.positionName,
+                });
+            } else if (account.user) {
+                form.setFieldsValue({
+                    fullName: account.user.name,
+                    employeeCode: "Không áp dụng",
+                    phone: "Chưa cập nhật",
+                    positionName: "Khách hàng",
+                });
+            }
         }
-    }, [open, employee, form]);
+    }, [open, employee, account.user, form]);
 
-    // ===== Khi chọn thiết bị → tự fill công ty & phòng ban =====
+
     const handleDeviceChange = (deviceCode: string) => {
         const device = devices?.find(
             (d: any) => d.deviceCode === deviceCode
@@ -113,7 +120,6 @@ const ModalCreateMaintenance = ({
         }
     };
 
-    // ===== Upload ảnh =====
     const handlePreview = async (file: UploadFile) => {
         if (!file.url && !file.preview) {
             const reader = new FileReader();
@@ -165,7 +171,6 @@ const ModalCreateMaintenance = ({
         onPreview: handlePreview,
     };
 
-    // ===== Submit form =====
     const handleSubmit = async (values: IReqMaintenanceRequestInternalDTO) => {
         const images = fileList.map((f) => f.name || "").slice(0, 3);
         const [attachment1, attachment2, attachment3] = images;
@@ -192,7 +197,7 @@ const ModalCreateMaintenance = ({
             title="Tạo Phiếu Bảo Trì (Nội bộ)"
             onCancel={onClose}
             footer={null}
-            width={650}
+            width={950} // rộng hơn 50% màn hình
             destroyOnClose
         >
             <Card bordered={false}>
@@ -205,29 +210,29 @@ const ModalCreateMaintenance = ({
                         maintenanceType: "DOT_XUAT" as MaintenanceType,
                     }}
                 >
-                    {/* ===== Thông tin cá nhân ===== */}
+                    {/* ===== Thông tin nhân viên ===== */}
                     <Title level={5}>Thông tin nhân viên</Title>
-                    <Row gutter={12}>
-                        <Col span={12}>
+                    <Row gutter={16}>
+                        <Col span={8}>
                             <Form.Item label="Họ và tên" name="fullName">
                                 <Input disabled placeholder="Tự động điền" />
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
+                        <Col span={8}>
                             <Form.Item label="Mã nhân viên" name="employeeCode">
+                                <Input disabled placeholder="Tự động điền" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                            <Form.Item label="Chức vụ" name="positionName">
                                 <Input disabled placeholder="Tự động điền" />
                             </Form.Item>
                         </Col>
                     </Row>
 
-                    <Row gutter={12}>
-                        <Col span={12}>
+                    <Row gutter={16}>
+                        <Col span={8}>
                             <Form.Item label="Số điện thoại" name="phone">
-                                <Input disabled placeholder="Tự động điền" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="Chức vụ" name="positionName">
                                 <Input disabled placeholder="Tự động điền" />
                             </Form.Item>
                         </Col>
@@ -238,63 +243,56 @@ const ModalCreateMaintenance = ({
                         Thông tin phiếu bảo trì
                     </Title>
 
-                    <Form.Item
-                        label="Thiết bị"
-                        name="deviceCode"
-                        rules={[{ required: true, message: "Vui lòng chọn thiết bị" }]}
-                    >
-                        <Select
-                            placeholder="Chọn thiết bị"
-                            onChange={handleDeviceChange}
-                            showSearch
-                            optionFilterProp="children"
-                        >
-                            {devices?.map((item: any) => (
-                                <Option key={item.deviceCode} value={item.deviceCode}>
-                                    {item.deviceName} ({item.deviceCode})
-                                </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-
-                    {/* Hiển thị tự động công ty và phòng ban */}
-                    <Row gutter={12}>
-                        <Col span={12}>
+                    <Row gutter={16}>
+                        <Col span={8}>
+                            <Form.Item
+                                label="Thiết bị"
+                                name="deviceCode"
+                                rules={[{ required: true, message: "Vui lòng chọn thiết bị" }]}
+                            >
+                                <Select
+                                    placeholder="Chọn thiết bị"
+                                    onChange={handleDeviceChange}
+                                    showSearch
+                                    optionFilterProp="children"
+                                >
+                                    {devices?.map((item: any) => (
+                                        <Option key={item.deviceCode} value={item.deviceCode}>
+                                            {item.deviceName} ({item.deviceCode})
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={8}>
                             <Form.Item label="Công ty" name="companyName">
                                 <Input disabled placeholder="Tự động điền" />
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
+                        <Col span={8}>
                             <Form.Item label="Phòng ban" name="departmentName">
                                 <Input disabled placeholder="Tự động điền" />
                             </Form.Item>
                         </Col>
                     </Row>
 
-                    <Form.Item
-                        label="Sự cố"
-                        name="issueId"
-                        rules={[{ required: true, message: "Vui lòng chọn sự cố" }]}
-                    >
-                        <Select placeholder="Chọn sự cố">
-                            {issues?.map((item: any) => (
-                                <Option key={item.id} value={item.id}>
-                                    {item.issueName}
-                                </Option>
-                            ))}
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item label="Địa điểm cụ thể" name="locationDetail">
-                        <TextArea rows={2} placeholder="Nhập địa điểm cụ thể của thiết bị" />
-                    </Form.Item>
-
-                    <Form.Item label="Ghi chú" name="note">
-                        <TextArea rows={3} placeholder="Nhập ghi chú (nếu có)" />
-                    </Form.Item>
-
-                    <Row gutter={12}>
-                        <Col span={12}>
+                    <Row gutter={16}>
+                        <Col span={8}>
+                            <Form.Item
+                                label="Sự cố"
+                                name="issueId"
+                                rules={[{ required: true, message: "Vui lòng chọn sự cố" }]}
+                            >
+                                <Select placeholder="Chọn sự cố">
+                                    {issues?.map((item: any) => (
+                                        <Option key={item.id} value={item.id}>
+                                            {item.issueName}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={8}>
                             <Form.Item
                                 label="Mức độ ưu tiên"
                                 name="priorityLevel"
@@ -308,7 +306,7 @@ const ModalCreateMaintenance = ({
                                 </Select>
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
+                        <Col span={8}>
                             <Form.Item
                                 label="Loại bảo trì"
                                 name="maintenanceType"
@@ -319,6 +317,19 @@ const ModalCreateMaintenance = ({
                                     <Option value="DINH_KY">Định kỳ</Option>
                                     <Option value="SUA_CHUA">Sửa chữa</Option>
                                 </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item label="Địa điểm cụ thể" name="locationDetail">
+                                <TextArea rows={2} placeholder="Nhập địa điểm cụ thể của thiết bị" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item label="Ghi chú" name="note">
+                                <TextArea rows={2} placeholder="Nhập ghi chú (nếu có)" />
                             </Form.Item>
                         </Col>
                     </Row>

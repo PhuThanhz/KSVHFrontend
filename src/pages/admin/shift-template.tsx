@@ -4,6 +4,8 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined
 import { ProTable } from "@ant-design/pro-components";
 import type { ProColumns } from "@ant-design/pro-components";
 import dayjs from "dayjs";
+import Access from "@/components/share/access";
+import { ALL_PERMISSIONS } from "@/config/permissions";
 
 import { useShiftTemplatesQuery, useDeleteShiftTemplateMutation } from "@/hooks/useShiftTemplate";
 import type { IShiftTemplate } from "@/types/backend";
@@ -99,32 +101,39 @@ const PageShiftTemplate = () => {
             width: 180,
             render: (_, record) => (
                 <Space>
-                    <Button
-                        type="link"
-                        size="small"
-                        icon={<EyeOutlined />}
-                        onClick={() => handleViewDetail(record)}
-                    />
-                    <Button
-                        type="link"
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={() => handleOpenEdit(record)}
-                    />
-                    <Popconfirm
-                        title="Bạn có chắc muốn xóa ca làm việc này không?"
-                        okText="Xóa"
-                        cancelText="Hủy"
-                        onConfirm={() => handleDelete(record.id)}
-                    >
+
+                    <Access permission={ALL_PERMISSIONS.SHIFT_TEMPLATE.GET_BY_ID} hideChildren>
                         <Button
-                            danger
                             type="link"
                             size="small"
-                            icon={<DeleteOutlined />}
-                            loading={isDeleting}
+                            icon={<EyeOutlined />}
+                            onClick={() => handleViewDetail(record)}
                         />
-                    </Popconfirm>
+                    </Access>
+                    <Access permission={ALL_PERMISSIONS.SHIFT_TEMPLATE.UPDATE} hideChildren>
+                        <Button
+                            type="link"
+                            size="small"
+                            icon={<EditOutlined />}
+                            onClick={() => handleOpenEdit(record)}
+                        />
+                    </Access>
+                    <Access permission={ALL_PERMISSIONS.SHIFT_TEMPLATE.DELETE} hideChildren>
+                        <Popconfirm
+                            title="Bạn có chắc muốn xóa ca làm việc này không?"
+                            okText="Xóa"
+                            cancelText="Hủy"
+                            onConfirm={() => handleDelete(record.id)}
+                        >
+                            <Button
+                                danger
+                                type="link"
+                                size="small"
+                                icon={<DeleteOutlined />}
+                                loading={isDeleting}
+                            />
+                        </Popconfirm>
+                    </Access>
                 </Space>
             ),
         },
@@ -150,14 +159,16 @@ const PageShiftTemplate = () => {
                     <Button key="refresh" icon={<ReloadOutlined />} onClick={() => refetch()}>
                         Làm mới
                     </Button>,
-                    <Button
-                        key="create"
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={handleOpenCreate}
-                    >
-                        Thêm mới
-                    </Button>,
+                    <Access permission={ALL_PERMISSIONS.SHIFT_TEMPLATE.CREATE} hideChildren>
+                        <Button
+                            key="create"
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={handleOpenCreate}
+                        >
+                            Thêm mới
+                        </Button>,
+                    </Access>
                 ]}
             />
 

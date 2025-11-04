@@ -2,8 +2,12 @@ import { Col, Row, Card } from "antd";
 import { ProFormText, ProFormDigit, ProForm } from "@ant-design/pro-components";
 import { DebounceSelect } from "@/components/admin/debouce.select";
 import type { ISelectItem } from "./types";
+import ManagerPickerModal from "./ManagerPickerModal";
+import { Button, Input } from "antd";
+import { useState } from "react";
 
 interface DeviceSpecsAndManagementProps {
+    form: any;
     selectedSupplier: ISelectItem | null;
     setSelectedSupplier: (v: ISelectItem | null) => void;
     selectedCompany: ISelectItem | null;
@@ -20,6 +24,7 @@ interface DeviceSpecsAndManagementProps {
 }
 
 const DeviceSpecsAndManagement = ({
+    form,
     selectedSupplier,
     setSelectedSupplier,
     selectedCompany,
@@ -31,9 +36,9 @@ const DeviceSpecsAndManagement = ({
     fetchSupplierList,
     fetchCompanyList,
     fetchDepartmentList,
-    fetchManagerList,
     departmentKey,
 }: DeviceSpecsAndManagementProps) => {
+    const [openManagerPicker, setOpenManagerPicker] = useState(false);
     return (
         <>
             <Card
@@ -167,25 +172,34 @@ const DeviceSpecsAndManagement = ({
                             />
                         </ProForm.Item>
                     </Col>
-
+                    {/* Nhân viên quản lý */}
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProForm.Item
                             name="manager"
                             label="Nhân viên quản lý"
-                            rules={[
-                                { required: true, message: "Vui lòng chọn nhân viên quản lý" },
-                            ]}
+                            rules={[{ required: true, message: "Vui lòng chọn nhân viên quản lý" }]}
                         >
-                            <DebounceSelect
-                                allowClear
-                                showSearch
+                            <Input
+                                readOnly
                                 placeholder="Chọn nhân viên quản lý"
-                                fetchOptions={fetchManagerList}
-                                value={selectedManager}
-                                onChange={(v: any) => setSelectedManager(v as ISelectItem)}
-                                style={{ width: "100%" }}
+                                value={selectedManager?.label ?? ""}
+                                onClick={() => setOpenManagerPicker(true)}
+                                addonAfter={
+                                    <Button type="link" onClick={() => setOpenManagerPicker(true)}>
+                                        Chọn
+                                    </Button>
+                                }
                             />
                         </ProForm.Item>
+
+                        <ManagerPickerModal
+                            open={openManagerPicker}
+                            onClose={() => setOpenManagerPicker(false)}
+                            onSelect={(v) => {
+                                setSelectedManager(v);
+                                form.setFieldsValue({ manager: v });
+                            }}
+                        />
                     </Col>
                 </Row>
             </Card>

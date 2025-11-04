@@ -1,5 +1,5 @@
 export interface ISelectItem {
     key?: string | number;
-    label: React.ReactNode;
+    label: string;
     value: string | number;
 }

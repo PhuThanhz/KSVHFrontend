@@ -13,31 +13,44 @@ import {
     Spin,
     Empty,
     Modal,
+    Pagination,
 } from "antd";
 import dayjs from "dayjs";
 import { useMaintenanceRequestsQuery } from "@/hooks/useMaintenanceRequests";
 import ViewMaintenanceDetail from "@/components/admin/maintenance/view/view.maintenance-detail";
-import ModalAssignTechnician from "@/components/admin/maintenance/modal/modal.maintenance-assign";
 import ModalCreateMaintenance from "@/components/admin/maintenance/modal/modal.maintenance-create";
+import ButtonAutoAssign from "@/components/admin/maintenance/button/button.auto-assign";
+import ButtonAssignTechnician from "@/components/admin/maintenance/button/button.assign-technician";
+import RejectLogsModal from "@/components/admin/maintenance/modal/modal.reject-logs";
+import Access from "@/components/share/access";
+import { ALL_PERMISSIONS } from "@/config/permissions";
 
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 
 const MaintenancePage = () => {
-    const [query, setQuery] = useState("page=1&pageSize=20");
     const [activeTab, setActiveTab] = useState("ALL");
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [showAssignModal, setShowAssignModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+
+    const [page, setPage] = useState(1);
+    const [query, setQuery] = useState("page=1&pageSize=10");
+    const [pageSize, setPageSize] = useState(10);
 
     const { data, isLoading } = useMaintenanceRequestsQuery(query);
     const requests = data?.result || [];
 
-    // Lọc theo tab
     const filtered =
         activeTab === "ALL"
             ? requests
             : requests.filter((r) => r.requestInfo.status === "CHO_PHAN_CONG");
+
+    const handlePageChange = (newPage: number, newSize?: number) => {
+        setPage(newPage);
+        setPageSize(newSize || pageSize);
+        setQuery(`page=${newPage}&pageSize=${newSize || pageSize}`);
+    };
 
     return (
         <div style={{ padding: 24 }}>
@@ -53,9 +66,13 @@ const MaintenancePage = () => {
                 <Title level={3} style={{ margin: 0 }}>
                     Yêu cầu bảo trì
                 </Title>
-                <Button type="primary" onClick={() => setShowCreateModal(true)}>
-                    + Tạo phiếu bảo trì
-                </Button>
+
+                <div style={{ display: "flex", gap: 8 }}>
+                    <ButtonAutoAssign />
+                    <Button type="primary" onClick={() => setShowCreateModal(true)}>
+                        + Tạo phiếu bảo trì
+                    </Button>
+                </div>
             </div>
 
             {/* Tabs */}
@@ -68,8 +85,7 @@ const MaintenancePage = () => {
                         key: "ALL",
                         label: (
                             <>
-                                Danh sách yêu cầu{" "}
-                                <Tag color="blue">{requests.length || 0}</Tag>
+                                Danh sách yêu cầu <Tag color="blue">{requests.length || 0}</Tag>
                             </>
                         ),
                     },
@@ -80,9 +96,7 @@ const MaintenancePage = () => {
                                 Yêu cầu chờ phân công{" "}
                                 <Tag color="red">
                                     {requests.filter(
-                                        (r) =>
-                                            r.requestInfo.status ===
-                                            "CHO_PHAN_CONG"
+                                        (r) => r.requestInfo.status === "CHO_PHAN_CONG"
                                     ).length || 0}
                                 </Tag>
                             </>
@@ -91,7 +105,7 @@ const MaintenancePage = () => {
                 ]}
             />
 
-            {/* Bộ lọc tìm kiếm */}
+            {/* Bộ lọc */}
             <div
                 style={{
                     display: "flex",
@@ -105,9 +119,7 @@ const MaintenancePage = () => {
                     placeholder="Mã phiếu hoặc tên thiết bị"
                     onSearch={(value) =>
                         setQuery(
-                            `page=1&pageSize=20&search=${encodeURIComponent(
-                                value
-                            )}`
+                            `page=1&pageSize=${pageSize}&search=${encodeURIComponent(value)}`
                         )
                     }
                     style={{ width: 260 }}
@@ -118,9 +130,8 @@ const MaintenancePage = () => {
                         if (dates && dates[0] && dates[1]) {
                             const start = dates[0].format("YYYY-MM-DD");
                             const end = dates[1].format("YYYY-MM-DD");
-                            setQuery(
-                                `page=1&pageSize=20&start=${start}&end=${end}`
-                            );
+                            setQuery(`page=1&pageSize=${pageSize}&start=${start}&end=${end}`);
+                            setPage(1);
                         }
                     }}
                 />
@@ -134,265 +145,323 @@ const MaintenancePage = () => {
             ) : filtered.length === 0 ? (
                 <Empty description="Không có phiếu bảo trì nào" />
             ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {filtered.map((item) => {
-                        const info = item.requestInfo;
-                        const reject = item.rejectInfo;
-                        const attachments = [
-                            info.attachment1,
-                            info.attachment2,
-                            info.attachment3,
-                        ].filter(Boolean);
+                <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        {filtered.map((item) => {
+                            const info = item.requestInfo;
+                            const device = info.device;
 
-                        const createdAt = info.createdAt
-                            ? dayjs(info.createdAt).format("DD/MM/YYYY HH:mm")
-                            : "-";
+                            const attachments = [
+                                info.attachment1,
+                                info.attachment2,
+                                info.attachment3,
+                            ].filter(Boolean);
 
-                        const priorityColor =
-                            info.priorityLevel === "KHAN_CAP"
-                                ? "red"
-                                : info.priorityLevel === "CAO"
-                                    ? "orange"
-                                    : info.priorityLevel === "TRUNG_BINH"
-                                        ? "blue"
-                                        : "green";
+                            const mainImage =
+                                attachments[0] ||
+                                device?.image1 ||
+                                device?.image2 ||
+                                device?.image3 ||
+                                null;
 
-                        const isCustomer = info.creatorType === "CUSTOMER";
+                            const createdAt = info.createdAt
+                                ? dayjs(info.createdAt).format("DD/MM/YYYY HH:mm")
+                                : "-";
 
-                        return (
-                            <Card
-                                key={info.requestId}
-                                bordered
-                                hoverable
-                                bodyStyle={{ padding: 16 }}
-                                style={{
-                                    borderRadius: 8,
-                                    border: "1px solid #e8e8e8",
-                                }}
-                            >
-                                <Row gutter={[12, 12]} align="middle">
-                                    {/* Hình ảnh */}
-                                    <Col xs={24} sm={6} md={5}>
-                                        {attachments.length > 0 ? (
-                                            <Image
-                                                src={`${import.meta.env.VITE_BACKEND_URL}/storage/MAINTENANCE_REQUEST/${attachments[0]}`}
-                                                alt={info.deviceName}
-                                                width="100%"
-                                                height={120}
-                                                style={{
-                                                    objectFit: "cover",
-                                                    borderRadius: 6,
-                                                    border: "1px solid #e8e8e8",
-                                                }}
-                                            />
-                                        ) : (
+                            const priorityColor =
+                                info.priorityLevel === "KHAN_CAP"
+                                    ? "red"
+                                    : info.priorityLevel === "CAO"
+                                        ? "orange"
+                                        : info.priorityLevel === "TRUNG_BINH"
+                                            ? "blue"
+                                            : "green";
+
+                            const isCustomer = info.creatorType === "CUSTOMER";
+
+                            // Flag giả định backend trả về: item.latestRejectReason / item.latestRejectedAt
+                            const latestRejectReason = (item as any).latestRejectReason;
+                            const latestRejectedAt = (item as any).latestRejectedAt;
+
+                            return (
+                                <Card
+                                    key={info.requestId}
+                                    bordered
+                                    hoverable
+                                    bodyStyle={{ padding: 16 }}
+                                    style={{
+                                        borderRadius: 8,
+                                        border: "1px solid #e8e8e8",
+                                    }}
+                                >
+                                    <Row gutter={[12, 12]} align="middle">
+                                        {/* Hình ảnh */}
+                                        <Col xs={24} sm={6} md={5}>
+                                            {mainImage ? (
+                                                <Image
+                                                    src={
+                                                        mainImage.startsWith("http")
+                                                            ? mainImage
+                                                            : `${import.meta.env.VITE_BACKEND_URL
+                                                            }/storage/${attachments[0]
+                                                                ? "MAINTENANCE_REQUEST"
+                                                                : "DEVICE"
+                                                            }/${mainImage}`
+                                                    }
+                                                    alt={device?.deviceName}
+                                                    width="100%"
+                                                    height={120}
+                                                    style={{
+                                                        objectFit: "cover",
+                                                        borderRadius: 6,
+                                                        border: "1px solid #e8e8e8",
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div
+                                                    style={{
+                                                        width: "100%",
+                                                        height: 120,
+                                                        background: "#f5f5f5",
+                                                        borderRadius: 6,
+                                                        display: "flex",
+                                                        justifyContent: "center",
+                                                        alignItems: "center",
+                                                        color: "#aaa",
+                                                        border: "1px solid #ddd",
+                                                    }}
+                                                >
+                                                    Không có ảnh
+                                                </div>
+                                            )}
+                                        </Col>
+
+                                        {/* Thông tin phiếu */}
+                                        <Col xs={24} sm={18} md={19}>
                                             <div
                                                 style={{
-                                                    width: "100%",
-                                                    height: 120,
-                                                    background: "#f5f5f5",
-                                                    borderRadius: 6,
                                                     display: "flex",
-                                                    justifyContent: "center",
-                                                    alignItems: "center",
-                                                    color: "#aaa",
-                                                    border: "1px solid #ddd",
+                                                    justifyContent: "space-between",
+                                                    flexWrap: "wrap",
                                                 }}
                                             >
-                                                Không có ảnh
-                                            </div>
-                                        )}
-                                    </Col>
-
-                                    {/* Thông tin chính */}
-                                    <Col xs={24} sm={18} md={19}>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                flexWrap: "wrap",
-                                            }}
-                                        >
-                                            <div>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                                    <Text strong style={{ fontSize: 15 }}>
-                                                        {info.deviceName ||
-                                                            "Thiết bị không xác định"}
-                                                    </Text>
-                                                    <Tag
-                                                        color={
-                                                            isCustomer
-                                                                ? "purple"
-                                                                : "blue"
-                                                        }
+                                                <div>
+                                                    {/* Header phiếu */}
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 8,
+                                                            flexWrap: "wrap",
+                                                        }}
                                                     >
-                                                        {isCustomer
-                                                            ? "Khách hàng"
-                                                            : "Nội bộ"}
-                                                    </Tag>
-                                                </div>
-
-                                                <div
-                                                    style={{
-                                                        marginTop: 6,
-                                                        fontSize: 13,
-                                                        lineHeight: 1.6,
-                                                    }}
-                                                >
-                                                    <p style={{ margin: "2px 0" }}>
-                                                        <Text type="secondary">
-                                                            Mã phiếu:{" "}
-                                                        </Text>
-                                                        <Text strong>
-                                                            {info.requestCode}
-                                                        </Text>
-                                                    </p>
-                                                    <p style={{ margin: "2px 0" }}>
-                                                        <Text type="secondary">
-                                                            Loại bảo trì:{" "}
-                                                        </Text>
-                                                        <Tag color="blue">
-                                                            {info.maintenanceType}
-                                                        </Tag>
-                                                    </p>
-                                                    <p style={{ margin: "2px 0" }}>
-                                                        <Text type="secondary">
-                                                            Trạng thái:{" "}
-                                                        </Text>
-                                                        <Tag color="gold">
-                                                            {info.status}
-                                                        </Tag>
-                                                    </p>
-
-                                                    {/* Phân biệt hiển thị theo loại người tạo */}
-                                                    {isCustomer ? (
-                                                        <p style={{ margin: "2px 0" }}>
-                                                            <Text type="secondary">
-                                                                Địa điểm:{" "}
-                                                            </Text>
-                                                            {info.locationDetail ||
-                                                                "-"}
-                                                        </p>
-                                                    ) : (
-                                                        <>
-                                                            <p style={{ margin: "2px 0" }}>
-                                                                <Text type="secondary">
-                                                                    Công ty:{" "}
-                                                                </Text>
-                                                                {info.companyName ||
-                                                                    "-"}
-                                                            </p>
-                                                            <p style={{ margin: "2px 0" }}>
-                                                                <Text type="secondary">
-                                                                    Phòng ban:{" "}
-                                                                </Text>
-                                                                {info.departmentName ||
-                                                                    "-"}
-                                                            </p>
-                                                            <p style={{ margin: "2px 0" }}>
-                                                                <Text type="secondary">
-                                                                    Địa chỉ cụ thể:{" "}
-                                                                </Text>
-                                                                {info.locationDetail ||
-                                                                    "-"}
-                                                            </p>
-                                                        </>
-                                                    )}
-
-                                                    {/* Lý do từ chối */}
-                                                    {reject && (
-                                                        <div
-                                                            style={{
-                                                                marginTop: 6,
-                                                                background:
-                                                                    "#fff3f3",
-                                                                padding: 8,
-                                                                borderRadius: 6,
-                                                                border: "1px solid #f0caca",
-                                                            }}
-                                                        >
+                                                        <Text strong style={{ fontSize: 15 }}>
+                                                            {device?.deviceName ||
+                                                                "Thiết bị không xác định"}{" "}
                                                             <Text
-                                                                type="danger"
-                                                                strong
+                                                                type="secondary"
+                                                                style={{ fontSize: 13 }}
                                                             >
-                                                                Bị từ chối:{" "}
+                                                                ({device?.deviceCode ||
+                                                                    "Không có mã"})
                                                             </Text>
-                                                            <Text>
-                                                                {reject.reasonName}
-                                                            </Text>
-                                                            {reject.note && (
-                                                                <p
-                                                                    style={{
-                                                                        margin: 0,
-                                                                        fontSize: 12,
-                                                                        color: "#555",
-                                                                    }}
-                                                                >
-                                                                    Ghi chú:{" "}
-                                                                    {reject.note}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                                        </Text>
 
-                                            {/* Cột phải */}
-                                            <div
-                                                style={{
-                                                    textAlign: "right",
-                                                    minWidth: 180,
-                                                }}
-                                            >
-                                                <Tag
-                                                    color={priorityColor}
-                                                    style={{ marginBottom: 6 }}
-                                                >
-                                                    {info.priorityLevel}
-                                                </Tag>
-                                                <div
-                                                    style={{
-                                                        fontSize: 12,
-                                                        color: "#888",
-                                                    }}
-                                                >
-                                                    Ngày tạo: {createdAt}
-                                                </div>
-                                                <div style={{ marginTop: 8 }}>
-                                                    <Button
-                                                        size="small"
-                                                        type="primary"
-                                                        style={{ marginRight: 6 }}
-                                                        onClick={() =>
-                                                            setSelectedId(
-                                                                info.requestId!
-                                                            )
-                                                        }
-                                                    >
-                                                        Thông tin chi tiết
-                                                    </Button>
-                                                    {info.status ===
-                                                        "CHO_PHAN_CONG" && (
-                                                            <Button
-                                                                size="small"
-                                                                onClick={() =>
-                                                                    setShowAssignModal(
-                                                                        true
-                                                                    )
+                                                        <Tag
+                                                            color={
+                                                                info.creatorType === "CUSTOMER"
+                                                                    ? "purple"
+                                                                    : "blue"
+                                                            }
+                                                        >
+                                                            {info.creatorType === "CUSTOMER"
+                                                                ? "Phiếu khách hàng tạo"
+                                                                : "Phiếu nhân viên nội bộ tạo"}
+                                                        </Tag>
+
+                                                        {device?.ownershipType && (
+                                                            <Tag
+                                                                color={
+                                                                    device.ownershipType ===
+                                                                        "CUSTOMER"
+                                                                        ? "magenta"
+                                                                        : "green"
                                                                 }
                                                             >
-                                                                Phân công
-                                                            </Button>
+                                                                {device.ownershipType ===
+                                                                    "CUSTOMER"
+                                                                    ? "Thiết bị khách hàng"
+                                                                    : "Thiết bị nội bộ"}
+                                                            </Tag>
                                                         )}
+                                                    </div>
+
+                                                    {/* Thông tin cơ bản */}
+                                                    <div
+                                                        style={{
+                                                            marginTop: 6,
+                                                            fontSize: 13,
+                                                            lineHeight: 1.6,
+                                                        }}
+                                                    >
+                                                        <p>
+                                                            <Text type="secondary">Mã phiếu: </Text>
+                                                            <Text strong>{info.requestCode}</Text>
+                                                        </p>
+                                                        <p>
+                                                            <Text type="secondary">
+                                                                Loại bảo trì:{" "}
+                                                            </Text>
+                                                            <Tag color="blue">
+                                                                {info.maintenanceType}
+                                                            </Tag>
+                                                        </p>
+                                                        <p>
+                                                            <Text type="secondary">Trạng thái: </Text>
+                                                            <Tag color="gold">{info.status}</Tag>
+                                                        </p>
+
+                                                        {isCustomer ? (
+                                                            <p>
+                                                                <Text type="secondary">
+                                                                    Địa điểm:{" "}
+                                                                </Text>
+                                                                {info.locationDetail || "-"}
+                                                            </p>
+                                                        ) : (
+                                                            <>
+                                                                <p>
+                                                                    <Text type="secondary">
+                                                                        Công ty:{" "}
+                                                                    </Text>
+                                                                    {device?.companyName || "-"}
+                                                                </p>
+                                                                <p>
+                                                                    <Text type="secondary">
+                                                                        Phòng ban:{" "}
+                                                                    </Text>
+                                                                    {device?.departmentName || "-"}
+                                                                </p>
+                                                                <p>
+                                                                    <Text type="secondary">
+                                                                        Địa chỉ cụ thể:{" "}
+                                                                    </Text>
+                                                                    {info.locationDetail || "-"}
+                                                                </p>
+                                                            </>
+                                                        )}
+
+                                                        {/* Hiển thị nếu có log từ chối */}
+                                                        {latestRejectReason && (
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 8,
+                                                                    background: "#fff5f5",
+                                                                    padding: 10,
+                                                                    borderRadius: 6,
+                                                                    border: "1px solid #f0caca",
+                                                                }}
+                                                            >
+                                                                <Text type="danger" strong>
+                                                                    Bị từ chối:{" "}
+                                                                </Text>
+                                                                <Text>{latestRejectReason}</Text>
+                                                                {latestRejectedAt && (
+                                                                    <p
+                                                                        style={{
+                                                                            fontSize: 12,
+                                                                            color: "#777",
+                                                                            margin: 0,
+                                                                        }}
+                                                                    >
+                                                                        {dayjs(latestRejectedAt).format(
+                                                                            "DD/MM/YYYY HH:mm"
+                                                                        )}
+                                                                    </p>
+                                                                )}
+
+
+                                                                <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.GET_REJECT_LOGS} hideChildren>
+                                                                    <Button
+                                                                        type="link"
+                                                                        size="small"
+                                                                        onClick={() =>
+                                                                            setShowRejectModal(
+                                                                                info.requestId!
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Xem chi tiết log từ chối
+                                                                    </Button>
+                                                                </Access>
+
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Cột phải */}
+                                                <div style={{ textAlign: "right", minWidth: 180 }}>
+                                                    <Tag color={priorityColor}>
+                                                        {info.priorityLevel}
+                                                    </Tag>
+                                                    <div
+                                                        style={{
+                                                            fontSize: 12,
+                                                            color: "#888",
+                                                        }}
+                                                    >
+                                                        Ngày tạo: {createdAt}
+                                                    </div>
+                                                    <div style={{ marginTop: 8 }}>
+
+                                                        <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.GET_BY_ID} hideChildren>
+                                                            <Button
+                                                                size="small"
+                                                                type="primary"
+                                                                style={{ marginRight: 6 }}
+                                                                onClick={() =>
+                                                                    setSelectedId(info.requestId!)
+                                                                }
+                                                            >
+                                                                Thông tin chi tiết
+                                                            </Button>
+                                                        </Access>
+                                                        {info.status === "CHO_PHAN_CONG" && (
+                                                            <ButtonAssignTechnician
+                                                                requestId={info.requestId!}
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </Col>
-                                </Row>
-                            </Card>
-                        );
-                    })}
-                </div>
+                                        </Col>
+                                    </Row>
+                                </Card>
+                            );
+                        })}
+                    </div>
+
+                    {data?.meta && (
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                marginTop: 24,
+                            }}
+                        >
+                            <Pagination
+                                current={data.meta.page}
+                                total={data.meta.total}
+                                pageSize={data.meta.pageSize}
+                                showSizeChanger
+                                onChange={handlePageChange}
+                                onShowSizeChange={handlePageChange}
+                                showTotal={(total) => `Tổng cộng ${total} phiếu`}
+                            />
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Modal chi tiết phiếu */}
@@ -408,13 +477,13 @@ const MaintenancePage = () => {
                 </Modal>
             )}
 
-            {/* Modal phân công */}
-            <ModalAssignTechnician
-                open={showAssignModal}
-                requestId={selectedId}
-                onClose={() => setShowAssignModal(false)}
-                onSuccess={() => setShowAssignModal(false)}
-            />
+            {/* Modal log từ chối */}
+            {showRejectModal && (
+                <RejectLogsModal
+                    requestId={showRejectModal}
+                    onClose={() => setShowRejectModal(null)}
+                />
+            )}
 
             {/* Modal tạo phiếu */}
             <ModalCreateMaintenance

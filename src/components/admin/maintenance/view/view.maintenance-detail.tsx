@@ -16,7 +16,7 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
     const info = data?.requestInfo;
     const assign = data?.assignmentInfo;
     const survey = data?.surveyInfo;
-    const reject = data?.rejectInfo;
+    const device = info?.device;
 
     const statusColorMap: Record<string, string> = {
         CHO_PHAN_CONG: "gold",
@@ -26,13 +26,6 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
         DA_HOAN_THANH: "success",
         HUY: "red",
     };
-
-    const creatorLabel =
-        info?.creatorType === "CUSTOMER"
-            ? "Khách hàng"
-            : info?.creatorType === "EMPLOYEE"
-                ? "Nhân viên nội bộ"
-                : "Không xác định";
 
     const creatorCodeLabel =
         info?.creatorType === "CUSTOMER" ? "Mã khách hàng" : "Mã nhân viên";
@@ -44,21 +37,20 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
                 <Descriptions.Item label="Mã phiếu">
                     {info?.requestCode}
                 </Descriptions.Item>
-                <Descriptions.Item label="Người tạo">
-                    {info?.fullName}
+
+                <Descriptions.Item label="Người tạo phiếu">
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span>{info?.fullName}</span>
+                        <Tag color={info?.creatorType === "CUSTOMER" ? "purple" : "blue"}>
+                            {info?.creatorType === "CUSTOMER"
+                                ? "Khách hàng tạo"
+                                : "Nhân viên nội bộ tạo"}
+                        </Tag>
+                    </div>
                 </Descriptions.Item>
 
-                <Descriptions.Item label="Loại người tạo">
-                    {creatorLabel}
-                </Descriptions.Item>
                 <Descriptions.Item label={creatorCodeLabel}>
-                    <Tag
-                        color={
-                            info?.creatorType === "CUSTOMER"
-                                ? "purple"
-                                : "blue"
-                        }
-                    >
+                    <Tag color={info?.creatorType === "CUSTOMER" ? "purple" : "blue"}>
                         {info?.employeeOrCustomerCode}
                     </Tag>
                 </Descriptions.Item>
@@ -66,46 +58,18 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
                 <Descriptions.Item label="Số điện thoại">
                     {info?.phone || "-"}
                 </Descriptions.Item>
+
                 {info?.creatorType === "EMPLOYEE" && (
                     <>
                         <Descriptions.Item label="Chức vụ">
                             {info?.position || "-"}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Công ty">
-                            {info?.companyName || "-"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Phòng ban / Nhà hàng">
-                            {info?.departmentName || "-"}
+                        <Descriptions.Item label="Địa điểm">
+                            {info?.locationDetail || "-"}
                         </Descriptions.Item>
                     </>
                 )}
 
-                <Descriptions.Item label="Thiết bị">
-                    {info?.deviceName}
-                </Descriptions.Item>
-                <Descriptions.Item label="Mã thiết bị">
-                    <Tag color="geekblue">{info?.deviceCode}</Tag>
-                </Descriptions.Item>
-
-                <Descriptions.Item label="Sự cố">
-                    {info?.issueName || "-"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Mức ưu tiên">
-                    <Tag color="volcano">{info?.priorityLevel}</Tag>
-                </Descriptions.Item>
-
-                <Descriptions.Item label="Loại bảo trì">
-                    {info?.maintenanceType}
-                </Descriptions.Item>
-                <Descriptions.Item label="Trạng thái">
-                    <Tag color={statusColorMap[info?.status || ""] || "default"}>
-                        {info?.status}
-                    </Tag>
-                </Descriptions.Item>
-
-                <Descriptions.Item label="Địa điểm" span={2}>
-                    {info?.locationDetail || "-"}
-                </Descriptions.Item>
                 <Descriptions.Item label="Ghi chú" span={2}>
                     {info?.note || "-"}
                 </Descriptions.Item>
@@ -122,11 +86,86 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
                 </Descriptions.Item>
             </Descriptions>
 
+            {/* =================== Thông tin thiết bị =================== */}
+            {device && (
+                <>
+                    <Divider />
+                    <Title level={5}>Thông tin thiết bị</Title>
+                    <Descriptions bordered column={2} size="small">
+                        <Descriptions.Item label="Mã thiết bị">
+                            <Tag color="geekblue">{device.deviceCode}</Tag>
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Tên thiết bị">
+                            {device.deviceName}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Thuộc về">
+                            <Tag
+                                color={
+                                    device.ownershipType === "CUSTOMER"
+                                        ? "magenta"
+                                        : "green"
+                                }
+                            >
+                                {device.ownershipType === "CUSTOMER"
+                                    ? "Thiết bị khách hàng"
+                                    : "Thiết bị nội bộ"}
+                            </Tag>
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Công ty">
+                            {device.companyName || "-"}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Phòng ban / Nhà hàng">
+                            {device.departmentName || "-"}
+                        </Descriptions.Item>
+                    </Descriptions>
+
+                    {(device.image1 || device.image2 || device.image3) && (
+                        <>
+                            <Divider />
+                            <Title level={5}>Hình ảnh thiết bị</Title>
+                            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                                {[device.image1, device.image2, device.image3]
+                                    .filter(Boolean)
+                                    .map((img, index) => (
+                                        <Image
+                                            key={index}
+                                            width={120}
+                                            src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${img}`}
+                                            alt={`device-image-${index + 1}`}
+                                        />
+                                    ))}
+                            </div>
+                        </>
+                    )}
+                </>
+            )}
+
+            {/* =================== Thông tin phiếu bảo trì =================== */}
+            <Divider />
+            <Title level={5}>Thông tin phiếu bảo trì</Title>
+            <Descriptions bordered column={2} size="small">
+                <Descriptions.Item label="Sự cố">
+                    {info?.issueName || "-"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Mức ưu tiên">
+                    <Tag color="volcano">{info?.priorityLevel}</Tag>
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Loại bảo trì">
+                    {info?.maintenanceType}
+                </Descriptions.Item>
+                <Descriptions.Item label="Trạng thái">
+                    <Tag color={statusColorMap[info?.status || ""] || "default"}>
+                        {info?.status}
+                    </Tag>
+                </Descriptions.Item>
+            </Descriptions>
+
             {/* =================== Tệp đính kèm =================== */}
             {(info?.attachment1 || info?.attachment2 || info?.attachment3) && (
                 <>
                     <Divider />
-                    <Title level={5}>Tệp đính kèm</Title>
+                    <Title level={5}>Hình ảnh thông tin phiếu bảo trì</Title>
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                         {[info?.attachment1, info?.attachment2, info?.attachment3]
                             .filter(Boolean)
@@ -148,18 +187,26 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
                     <Divider />
                     <Title level={5}>Thông tin phân công</Title>
                     <Descriptions bordered column={2} size="small">
-                        <Descriptions.Item label="Kỹ thuật viên">
-                            {assign.technicianName}
+                        <Descriptions.Item label="Mã kỹ thuật viên">
+                            {assign.technicianCode || "-"}
                         </Descriptions.Item>
+
+                        <Descriptions.Item label="Tên kỹ thuật viên">
+                            {assign.technicianName || "-"}
+                        </Descriptions.Item>
+
+                        <Descriptions.Item label="Số điện thoại">
+                            {assign.technicianPhone || "-"}
+                        </Descriptions.Item>
+
                         <Descriptions.Item label="Thời gian phân công">
                             {assign.assignedAt
-                                ? dayjs(assign.assignedAt).format(
-                                    "DD/MM/YYYY HH:mm"
-                                )
+                                ? dayjs(assign.assignedAt).format("DD/MM/YYYY HH:mm")
                                 : "-"}
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Người phân công">
-                            {assign.assignedBy}
+                            {assign.assignedBy || "-"}
                         </Descriptions.Item>
                     </Descriptions>
                 </>
@@ -192,22 +239,6 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
                         </Descriptions.Item>
                         <Descriptions.Item label="Mô tả thực tế">
                             {survey.surveyInfo?.actualIssueDescription || "-"}
-                        </Descriptions.Item>
-                    </Descriptions>
-                </>
-            )}
-
-            {/* =================== Thông tin từ chối =================== */}
-            {reject && (
-                <>
-                    <Divider />
-                    <Title level={5}>Thông tin từ chối</Title>
-                    <Descriptions bordered column={1} size="small">
-                        <Descriptions.Item label="Lý do">
-                            {reject.reasonName}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Ghi chú">
-                            {reject.note}
                         </Descriptions.Item>
                     </Descriptions>
                 </>

@@ -679,7 +679,6 @@ export interface IReqTechnicianAvailability {
 }
 
 
-
 /** ==============================
  *   ENUM PHIẾU ĐẦY ĐỦ 
  *  ============================== */
@@ -687,7 +686,20 @@ export type DamageLevel = "NHE" | "TRUNG_BINH" | "NANG" | "RAT_NANG";
 export type MaintenanceType = "DOT_XUAT" | "DINH_KY" | "SUA_CHUA";
 export type PriorityLevel = "KHAN_CAP" | "CAO" | "TRUNG_BINH" | "THAP";
 export type CreatorType = "EMPLOYEE" | "CUSTOMER";
+export type DeviceOwnershipType = "INTERNAL" | "CUSTOMER";
 
+/** ==============================
+ *   KẾT QUẢ PHÂN CÔNG TỰ ĐỘNG
+ *  ============================== */
+export interface IResAutoAssignAllDTO {
+    totalRequests: number;
+    autoAssigned: number;
+    pendingForAdmin: number;
+}
+
+/** ==============================
+ *   ENUM TRẠNG THÁI PHIẾU 
+ *  ============================== */
 export type MaintenanceRequestStatus =
     | "CHO_PHAN_CONG"
     | "DANG_PHAN_CONG"
@@ -706,8 +718,19 @@ export type MaintenanceRequestStatus =
  *                COMMON CHUNG CỦA PHIẾU 
  * ==============================================================*/
 
+/** ============ Thông tin thiết bị đơn giản ============ */
+export interface IResDeviceSimpleDTO {
+    deviceCode?: string;
+    deviceName?: string;
+    image1?: string;
+    image2?: string;
+    image3?: string;
+    ownershipType?: DeviceOwnershipType;
+    companyName?: string;
+    departmentName?: string;
+}
 
-/*  ======================== Phiếu yêu cầu ====================== */
+/** ======================== Thông tin phiếu yêu cầu ====================== */
 export interface IResRequestCommonDTO {
     requestId?: string;
     requestCode?: string;
@@ -715,12 +738,9 @@ export interface IResRequestCommonDTO {
     fullName?: string;
     phone?: string;
     position?: string;
-    companyName?: string;
-    departmentName?: string;
     locationDetail?: string;
     creatorType?: CreatorType;
-    deviceCode?: string;
-    deviceName?: string;
+    device?: IResDeviceSimpleDTO;
     issueName?: string;
     priorityLevel?: PriorityLevel;
     maintenanceType?: MaintenanceType;
@@ -732,7 +752,8 @@ export interface IResRequestCommonDTO {
     createdAt?: string;
     updatedAt?: string;
 }
-/*  ==================== Phiếu cập nhật khảo sát ===================== */
+
+/** ==================== Phiếu cập nhật khảo sát ===================== */
 export interface IResSurveyCommonDTO {
     actualIssueDescription?: string;
     causeName?: string;
@@ -744,42 +765,42 @@ export interface IResSurveyCommonDTO {
     attachment2?: string;
     attachment3?: string;
 }
-/*  ================== Thông tin Cập nhật phiếu khảo sát ===================== */
+
+/** ================== Thông tin phân công kỹ thuật viên ===================== */
 export interface IResMaintenanceAssignmentDTO {
-    id?: string;
-    requestCode?: string;
+    id: string;
+    requestCode: string;
+
+    technicianCode?: string;
     technicianName?: string;
+    technicianPhone?: string;
+
     assignedAt?: string;
     assignedBy?: string;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-//========================== PHIẾU BẢO TRÌ ===========================//
-
-/*  ================== Từ chối phiếu ===================== */
+/** ================== Thông tin phiếu bị từ chối ===================== */
 export interface IResMaintenanceRejectDTO {
-    reasonName?: string;
-    note?: string;
+    logs: {
+        technicianName?: string;
+        reasonName?: string;
+        note?: string;
+        rejectedBy?: string;
+        rejectedAt?: string;
+    }[];
 }
-/*  ================== Thông tin phiếu bảo trì ===================== */
+
+/** ================== Phiếu bảo trì (Dùng cho danh sách) ===================== */
 export interface IResMaintenanceRequestDTO {
     requestInfo: IResRequestCommonDTO;
+    technicianCode?: string;
     technicianName?: string;
+    technicianPhone?: string;
     assignedAt?: string;
-    rejectInfo?: IResMaintenanceRejectDTO;
+    assignedBy?: string;
 }
-/*  ================== Chi tiết phiếu bảo trì ===================== */
+
+/** ================== Chi tiết phiếu bảo trì ===================== */
 export interface IResMaintenanceRequestDetailDTO {
     requestInfo: IResRequestCommonDTO;
     assignmentInfo?: IResMaintenanceAssignmentDTO;
@@ -787,8 +808,7 @@ export interface IResMaintenanceRequestDetailDTO {
     surveyInfo?: IResMaintenanceSurveyDTO;
 }
 
-
-/*  ================== Nhân viên nội bộ tạo phiếu bảo trì ===================== */
+/** ================== Nhân viên nội bộ tạo phiếu ===================== */
 export interface IReqMaintenanceRequestInternalDTO {
     deviceCode: string;
     issueId: string;
@@ -801,8 +821,7 @@ export interface IReqMaintenanceRequestInternalDTO {
     note?: string | null;
 }
 
-
-/*  ================== Khách hàng tạo phiếu bảo trì ===================== */
+/** ================== Khách hàng tạo phiếu ===================== */
 export interface IReqMaintenanceRequestCustomerDTO {
     deviceCode: string;
     issueId: string;
@@ -815,25 +834,11 @@ export interface IReqMaintenanceRequestCustomerDTO {
     note?: string | null;
 }
 
-
-
-
-
-
-
-
-
-
-//========================== PHIẾU KHẢO SÁT ===========================//
-
-
-
-/*  ================== Thông tin Cập nhật phiếu khảo sát ===================== */
+/** ================== Phiếu khảo sát ===================== */
 export interface IResMaintenanceSurveyDTO {
     id?: string;
     maintenanceRequestId?: string;
     requestCode?: string;
-    deviceName?: string;
     issueName?: string;
     surveyInfo?: IResSurveyCommonDTO;
 }

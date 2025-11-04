@@ -125,3 +125,32 @@ export const useMyTechnicianAvailabilitiesQuery = (query: string) => {
         retry: false,
     });
 };
+/** ========================= Lấy ca làm việc theo kỹ thuật viên ========================= */
+export const useTechnicianAvailabilityByTechnicianIdQuery = ({
+    technicianId,
+    page = 1,
+    pageSize = 5,
+}: {
+    technicianId?: string;
+    page?: number;
+    pageSize?: number;
+}) => {
+    return useQuery({
+        queryKey: ["technician-availability-by-tech", technicianId, page, pageSize],
+        enabled: !!technicianId,
+        queryFn: async () => {
+            const query = new URLSearchParams({
+                page: String(page),
+                pageSize: String(pageSize),
+                filter: `technician.id='${technicianId}'`,
+            }).toString();
+
+            const res = await callFetchTechnicianAvailability(query);
+            if (!res?.data)
+                throw new Error(res?.message || "Không thể lấy lịch làm việc của kỹ thuật viên");
+            return res.data as IModelPaginate<ITechnicianAvailability>;
+        },
+        staleTime: 1000 * 60, // 1 phút cache riêng từng kỹ thuật viên
+        retry: false,
+    });
+};

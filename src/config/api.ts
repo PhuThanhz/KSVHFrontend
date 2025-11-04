@@ -36,6 +36,8 @@ import type {
     IReqTechnicianAvailability,
     ICustomerPurchaseHistoryAdmin,
     ICustomerPurchaseHistoryClient,
+    IResAutoAssignAllDTO,
+    IResMaintenanceRejectDTO
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type {
@@ -926,7 +928,12 @@ export const callFetchMaintenanceRequestById = (id: string) => {
         `/api/v1/maintenance-requests/${id}`
     );
 };
-
+// Lấy log từ chối bảo trì
+export const callFetchRejectLogsByRequestId = (id: string) => {
+    return axios.get<IBackendRes<IResMaintenanceRejectDTO>>(
+        `/api/v1/maintenance-requests/${id}/reject-logs`
+    );
+};
 // ======================= TẠO PHIẾU BẢO TRÌ ======================= //
 
 // Tạo phiếu bảo trì nội bộ (nhân viên)
@@ -937,7 +944,6 @@ export const callCreateInternalMaintenanceRequest = (data: IReqMaintenanceReques
         { headers: { "Content-Type": "application/json" } }
     );
 };
-
 // Tạo phiếu bảo trì cho khách hàng
 export const callCreateCustomerMaintenanceRequest = (data: IReqMaintenanceRequestCustomerDTO) => {
     return axios.post<IBackendRes<IResMaintenanceRequestDTO>>(
@@ -948,24 +954,19 @@ export const callCreateCustomerMaintenanceRequest = (data: IReqMaintenanceReques
 };
 
 // ======================= PHÂN CÔNG KỸ THUẬT VIÊN ======================= //
-export interface IResAutoAssignAllData {
-    totalRequests: number;
-    autoAssigned: number;
-    pendingForAdmin: number;
-}
-export interface IResAutoAssignAllDTO {
-    message: string;
-    data: IResAutoAssignAllData;
-}
 export const callAutoAssignAllMaintenanceRequests = () => {
     return axios.post<IBackendRes<IResAutoAssignAllDTO>>(
         `/api/v1/maintenance-requests/auto-assign-all`
     );
 };
 
-export const callAssignTechnicianManual = (requestId: string, technicianId: string) => {
+export const callAssignTechnicianManual = (
+    requestId: string,
+    technicianId: string
+) => {
     return axios.post<IBackendRes<IResMaintenanceAssignmentDTO>>(
-        `/api/v1/maintenance-requests/${requestId}/assign-technician/${technicianId}`
+        `/api/v1/maintenance-requests/assign-technician`,
+        { requestId, technicianId }
     );
 };
 

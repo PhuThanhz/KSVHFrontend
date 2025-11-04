@@ -6,6 +6,7 @@ import {
     callCreateCustomerMaintenanceRequest,
     callAutoAssignAllMaintenanceRequests,
     callAssignTechnicianManual,
+    callFetchRejectLogsByRequestId,
 } from "@/config/api";
 import type {
     IModelPaginate,
@@ -13,7 +14,8 @@ import type {
     IResMaintenanceRequestDetailDTO,
     IReqMaintenanceRequestInternalDTO,
     IReqMaintenanceRequestCustomerDTO,
-    IResMaintenanceAssignmentDTO,
+    IResAutoAssignAllDTO,
+    IResMaintenanceRejectDTO,
 } from "@/types/backend";
 import { notify } from "@/components/common/notify";
 
@@ -23,8 +25,7 @@ export const useMaintenanceRequestsQuery = (query: string) => {
         queryKey: ["maintenance-requests", query],
         queryFn: async () => {
             const res = await callFetchMaintenanceRequest(query);
-            if (!res?.data)
-                throw new Error("Không thể lấy danh sách phiếu bảo trì");
+            if (!res?.data) throw new Error("Không thể lấy danh sách phiếu bảo trì");
             return res.data as IModelPaginate<IResMaintenanceRequestDTO>;
         },
     });
@@ -38,9 +39,23 @@ export const useMaintenanceRequestByIdQuery = (id?: string) => {
         queryFn: async () => {
             if (!id) throw new Error("Thiếu ID phiếu bảo trì");
             const res = await callFetchMaintenanceRequestById(id);
-            if (!res?.data)
-                throw new Error("Không thể lấy thông tin phiếu bảo trì");
+            if (!res?.data) throw new Error("Không thể lấy thông tin phiếu bảo trì");
             return res.data as IResMaintenanceRequestDetailDTO;
+        },
+    });
+};
+
+/** ========================= Lấy log từ chối phiếu bảo trì ========================= */
+export const useRejectLogsByRequestIdQuery = (id?: string) => {
+    return useQuery({
+        queryKey: ["maintenance-request-reject-logs", id],
+        enabled: !!id,
+        queryFn: async () => {
+            if (!id) throw new Error("Thiếu ID phiếu bảo trì");
+            const res = await callFetchRejectLogsByRequestId(id);
+            if (!res?.data)
+                throw new Error(res?.message || "Không thể lấy danh sách log từ chối");
+            return res.data as IResMaintenanceRejectDTO;
         },
     });
 };
@@ -88,15 +103,15 @@ export const useCreateCustomerMaintenanceRequestMutation = () => {
 /** ========================= Phân công kỹ thuật viên tự động ========================= */
 export const useAutoAssignAllMaintenanceRequestsMutation = () => {
     const queryClient = useQueryClient();
-    return useMutation({
+    return useMutation<IResAutoAssignAllDTO>({
         mutationFn: async () => {
             const res = await callAutoAssignAllMaintenanceRequests();
             if (!res?.data)
                 throw new Error(res?.message || "Không thể phân công tự động");
-            return res;
+            return res.data as IResAutoAssignAllDTO;
         },
-        onSuccess: (res) => {
-            notify.updated(res?.message || "Đã phân công kỹ thuật viên tự động");
+        onSuccess: () => {
+            notify.created("Đã phân công kỹ thuật viên tự động");
             queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
         },
         onError: (error: any) => {
@@ -117,12 +132,13 @@ export const useAssignTechnicianManualMutation = () => {
             technicianId: string;
         }) => {
             const res = await callAssignTechnicianManual(requestId, technicianId);
-            if (!res?.data)
+            if (!res?.data) {
                 throw new Error(res?.message || "Không thể gán kỹ thuật viên");
-            return res.data as IResMaintenanceAssignmentDTO;
+            }
+            return { message: res.message, data: res.data };
         },
-        onSuccess: () => {
-            notify.updated("Gán kỹ thuật viên thành công");
+        onSuccess: (res) => {
+            notify.updated(res.message || "Gán kỹ thuật viên thành công");
             queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
             queryClient.invalidateQueries({ queryKey: ["maintenance-request"] });
         },

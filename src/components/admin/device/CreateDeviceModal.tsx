@@ -4,7 +4,7 @@ import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { isMobile } from "react-device-detect";
 import { callUploadMultipleFiles } from "@/config/api";
 import { v4 as uuidv4 } from "uuid";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type {
     ICreateDeviceRequest,
     TimeUnitType,
@@ -20,8 +20,6 @@ import {
     callFetchUser,
     callFetchCustomer,
 } from "@/config/api";
-
-// Components
 import DeviceBasicInfo from "./sections/DeviceBasicInfo";
 import DevicePartsSection from "./sections/DevicePartsSection";
 import DeviceSpecsAndManagement from "./sections/DeviceSpecsAndManagement";
@@ -36,10 +34,11 @@ interface IProps {
     setOpenModal: (v: boolean) => void;
 }
 
+/** ===================== Component ===================== */
 const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
     const [form] = Form.useForm();
 
-    // Select states
+    /** ===================== State ===================== */
     const [selectedDeviceType, setSelectedDeviceType] = useState<ISelectItem | null>(null);
     const [selectedUnit, setSelectedUnit] = useState<ISelectItem | null>(null);
     const [selectedSupplier, setSelectedSupplier] = useState<ISelectItem | null>(null);
@@ -47,118 +46,108 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
     const [selectedDepartment, setSelectedDepartment] = useState<ISelectItem | null>(null);
     const [selectedManager, setSelectedManager] = useState<ISelectItem | null>(null);
 
-    // Image states
     const [fileList, setFileList] = useState<UploadFile[]>([]);
-    const [loadingUpload, setLoadingUpload] = useState<boolean>(false);
+    const [loadingUpload, setLoadingUpload] = useState(false);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState("");
     const [previewTitle, setPreviewTitle] = useState("");
-
-    // Maintenance states
     const [freqUnit, setFreqUnit] = useState<TimeUnitType>("MONTH");
-    const [freqModeYear, setFreqModeYear] = useState<"anyday" | "weekday">("anyday");
 
     const { mutate: createDevice, isPending: isCreating } = useCreateDeviceMutation();
 
-    /** ==================== Fetch option lists ==================== */
-    async function fetchDeviceTypeList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchDeviceType(`page=1&size=100&typeName=/${name}/i`);
-        return res?.data?.result?.map((e: any) => ({ label: e.typeName, value: e.id })) || [];
-    }
-
-    async function fetchCustomerList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchCustomer(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
-    }
-
-    async function fetchUnitList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchUnit(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
-    }
-
-    async function fetchSupplierList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchMaterialSupplier(`page=1&size=100&supplierName=/${name}/i`);
-        return res?.data?.result?.map((e: any) => ({ label: e.supplierName, value: e.id })) || [];
-    }
-
-    async function fetchCompanyList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchCompany(`page=1&size=100&name=/${name}/i`);
-        return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
-    }
-
-    async function fetchDepartmentList(name: string): Promise<ISelectItem[]> {
-        if (!selectedCompany?.value) return [];
-        const res = await callFetchDepartment(
-            `page=1&size=100&name=/${name}/i&companyId=${selectedCompany.value}`
-        );
-        const list =
-            res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
-        return list.length ? list : [];
-    }
-
-    async function fetchManagerList(name: string): Promise<ISelectItem[]> {
-        const res = await callFetchUser(
-            `page=1&size=100&name=/${name}/i&filter=role.name='EMPLOYEE'`
-        );
+    /** ===================== Fetch options ===================== */
+    const fetchList = useCallback(async (api: any, key: string, name: string, extra?: string) => {
+        const res = await api(`page=1&size=50&${key}=/${name}/i${extra ? `&${extra}` : ""}`);
         return (
             res?.data?.result?.map((e: any) => ({
-                label: e.name,
+                label: e.name || e.typeName || e.supplierName,
                 value: e.id,
             })) || []
         );
-    }
+    }, []);
 
+    const fetchDeviceTypeList = useCallback((n: string) => fetchList(callFetchDeviceType, "typeName", n), []);
+    const fetchCustomerList = useCallback((n: string) => fetchList(callFetchCustomer, "name", n), []);
+    const fetchUnitList = useCallback((n: string) => fetchList(callFetchUnit, "name", n), []);
+    const fetchSupplierList = useCallback((n: string) => fetchList(callFetchMaterialSupplier, "supplierName", n), []);
+    const fetchCompanyList = useCallback((n: string) => fetchList(callFetchCompany, "name", n), []);
 
-    /** ==================== Upload Image Handlers ==================== */
-    const handlePreview = async (file: any) => {
-        if (!file.url && !file.preview) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file.originFileObj as File);
-            reader.onload = () => {
-                setPreviewImage(reader.result as string);
-                setPreviewOpen(true);
-                setPreviewTitle(file.name);
-            };
-        } else {
-            setPreviewImage(file.url || file.preview);
+    const fetchDepartmentList = useCallback(
+        async (name: string): Promise<ISelectItem[]> => {
+            if (!selectedCompany?.value) return [];
+            const res = await callFetchDepartment(
+                `page=1&size=50&name=/${name}/i&companyId=${selectedCompany.value}`
+            );
+            return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
+        },
+        [selectedCompany]
+    );
+
+    const fetchManagerList = useCallback(async (name: string): Promise<ISelectItem[]> => {
+        const res = await callFetchUser(
+            `page=1&size=50&name=/${name}/i&filter=role.name='EMPLOYEE'`
+        );
+        return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
+    }, []);
+
+    /** ===================== Upload handler ===================== */
+    const handlePreview = useCallback((file: any) => {
+        const show = (src: string) => {
+            setPreviewImage(src);
             setPreviewOpen(true);
             setPreviewTitle(file.name);
+        };
+
+        if (!file.url && !file.preview) {
+            const reader = new FileReader();
+            reader.onload = () => show(reader.result as string);
+            reader.readAsDataURL(file.originFileObj as File);
+        } else {
+            show(file.url || file.preview);
         }
-    };
+    }, []);
 
-    const uploadProps: UploadProps = {
-        listType: "picture-card",
-        multiple: true,
-        fileList,
-        maxCount: 3,
-        accept: ".jpg,.jpeg,.png,.webp",
-        customRequest: async ({ file, onSuccess, onError }) => {
-            try {
-                setLoadingUpload(true);
-                const res = await callUploadMultipleFiles([file as File], "device");
-                if (res?.data && Array.isArray(res.data)) {
-                    const newFiles: UploadFile[] = res.data.map((f) => ({
-                        uid: uuidv4(),
-                        name: f.fileName,
-                        status: "done" as const,
-                        url: `${import.meta.env.VITE_BACKEND_URL}/storage/device/${f.fileName}`,
-                    }));
-                    setFileList((prev) => [...prev, ...newFiles].slice(0, 3));
-                    onSuccess?.("ok");
-                } else throw new Error("Upload thất bại");
-            } catch (err: any) {
-                message.error(err?.message || "Không thể upload ảnh");
-                onError?.(err);
-            } finally {
-                setLoadingUpload(false);
-            }
-        },
-        onRemove: (file) => setFileList((prev) => prev.filter((f) => f.uid !== file.uid)),
-        onPreview: handlePreview,
-    };
+    const uploadProps = useMemo<UploadProps>(
+        () => ({
+            listType: "picture-card",
+            multiple: true,
+            fileList,
+            maxCount: 3,
+            accept: ".jpg,.jpeg,.png,.webp",
+            customRequest: async ({ file, onSuccess, onError }) => {
+                try {
+                    if ((file as File).size > 2 * 1024 * 1024) {
+                        message.error("Ảnh vượt quá 2MB");
+                        onError?.(new Error("File quá lớn"));
+                        return;
+                    }
+                    setLoadingUpload(true);
+                    const res = await callUploadMultipleFiles([file as File], "device");
+                    if (Array.isArray(res?.data)) {
+                        const newFiles: UploadFile[] = res.data.map((f) => ({
+                            uid: uuidv4(),
+                            name: f.fileName,
+                            status: "done",
+                            url: `${import.meta.env.VITE_BACKEND_URL}/storage/device/${f.fileName}`,
+                        }));
+                        setFileList((prev) => [...prev, ...newFiles].slice(0, 3));
+                        onSuccess?.("ok");
+                    } else throw new Error("Upload thất bại");
+                } catch (err: any) {
+                    message.error(err?.message || "Không thể upload ảnh");
+                    onError?.(err);
+                } finally {
+                    setLoadingUpload(false);
+                }
+            },
+            onRemove: (file) => setFileList((prev) => prev.filter((f) => f.uid !== file.uid)),
+            onPreview: handlePreview,
+        }),
+        [fileList, handlePreview]
+    );
 
-    /** ==================== Helpers ==================== */
-    const handleReset = () => {
+    /** ===================== Helpers ===================== */
+    const handleReset = useCallback(() => {
         form.resetFields();
         setOpenModal(false);
         setSelectedDeviceType(null);
@@ -169,75 +158,85 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
         setSelectedManager(null);
         setFileList([]);
         setFreqUnit("MONTH");
-        setFreqModeYear("anyday");
-    };
+    }, []);
 
-    const handleCompanyChange = (value: ISelectItem | null) => {
-        setSelectedCompany(value);
-        setSelectedDepartment(null);
-        form.setFieldsValue({ department: undefined });
-    };
+    const handleCompanyChange = useCallback(
+        (value: ISelectItem | null) => {
+            setSelectedCompany(value);
+            setSelectedDepartment(null);
+            form.setFieldsValue({ department: undefined });
+        },
+        [form]
+    );
 
-    const buildPayload = (values: any): ICreateDeviceRequest => {
-        const images = fileList.map((f) => f.name || "").slice(0, 3);
-        const [image1, image2, image3] = images;
+    /** ===================== Submit ===================== */
+    const buildPayload = useCallback(
+        (values: any): ICreateDeviceRequest => {
+            const [image1, image2, image3] = fileList.map((f) => f.name).slice(0, 3);
 
-        return {
-            deviceCode: values.deviceCode,
-            accountingCode: values.accountingCode,
-            deviceName: values.deviceName,
-            companyId: values.company?.value,
-            departmentId: values.department?.value,
-            deviceTypeId: values.deviceType?.value,
-            supplierId: values.supplier?.value,
-            managerUserId: values.manager?.value,
-            unitId: values.unit?.value,
-            customerId: values.customer?.value,
-            brand: values.brand,
-            modelDesc: values.modelDesc,
-            powerCapacity: values.powerCapacity,
-            length: values.length ? Number(values.length) : undefined,
-            width: values.width ? Number(values.width) : undefined,
-            height: values.height ? Number(values.height) : undefined,
-            unitPrice: values.unitPrice ? Number(values.unitPrice) : undefined,
-            image1,
-            image2,
-            image3,
-            startDate: values.startDate,
-            warrantyExpiryDate: values.warrantyExpiryDate,
-            depreciationPeriodValue: values.depreciationPeriodValue
-                ? Number(values.depreciationPeriodValue)
-                : undefined,
-            depreciationPeriodUnit: values.depreciationPeriodUnit,
-            maintenanceFrequencyValue: values.maintenanceFrequencyValue
-                ? Number(values.maintenanceFrequencyValue)
-                : undefined,
-            maintenanceFrequencyUnit: values.maintenanceFrequencyUnit,
-            maintenanceDayOfMonth: values.maintenanceDayOfMonth
-                ? Number(values.maintenanceDayOfMonth)
-                : undefined,
-            maintenanceMonth: values.maintenanceMonth
-                ? Number(values.maintenanceMonth)
-                : undefined,
-            ownershipType: (values.ownershipType as DeviceOwnershipType) || "INTERNAL",
-            status: "NEW",
-            note: values.note,
-            parts: (values.parts || [])
-                .filter((p: any) => p && (p.partCode || p.partName))
-                .map((p: any) => ({
-                    partCode: String(p.partCode || "").trim(),
-                    partName: String(p.partName || "").trim(),
-                    quantity: Number(p.quantity || 1),
-                })),
-        };
-    };
+            return {
+                deviceCode: values.deviceCode,
+                accountingCode: values.accountingCode,
+                deviceName: values.deviceName,
+                companyId: values.company?.value,
+                departmentId: values.department?.value,
+                deviceTypeId: values.deviceType?.value,
+                supplierId: values.supplier?.value,
+                managerUserId: values.manager?.value,
+                unitId: values.unit?.value,
+                customerId: values.customer?.value,
+                brand: values.brand,
+                modelDesc: values.modelDesc,
+                powerCapacity: values.powerCapacity,
+                length: Number(values.length) || undefined,
+                width: Number(values.width) || undefined,
+                height: Number(values.height) || undefined,
+                unitPrice: Number(values.unitPrice) || undefined,
+                image1,
+                image2,
+                image3,
+                startDate: values.startDate,
+                warrantyExpiryDate: values.warrantyExpiryDate,
+                depreciationPeriodValue: Number(values.depreciationPeriodValue) || undefined,
+                depreciationPeriodUnit: values.depreciationPeriodUnit,
+                maintenanceFrequencyValue: Number(values.maintenanceFrequencyValue) || undefined,
+                maintenanceFrequencyUnit: values.maintenanceFrequencyUnit,
+                maintenanceDayOfMonth: Number(values.maintenanceDayOfMonth) || undefined,
+                maintenanceMonth: Number(values.maintenanceMonth) || undefined,
+                ownershipType: (values.ownershipType as DeviceOwnershipType) || "INTERNAL",
+                status: "NEW",
+                note: values.note,
+                parts: (values.parts || [])
+                    .filter((p: any) => p && (p.partCode || p.partName))
+                    .map((p: any) => ({
+                        partCode: String(p.partCode || "").trim(),
+                        partName: String(p.partName || "").trim(),
+                        quantity: Number(p.quantity || 1),
+                    })),
+            };
+        },
+        [fileList]
+    );
 
-    const submitDevice = async (values: any) => {
-        const payload = buildPayload(values);
-        createDevice(payload, { onSuccess: () => handleReset() });
-    };
+    const submitDevice = useCallback(
+        async (values: any) => {
+            if (loadingUpload) {
+                message.warning("Vui lòng chờ upload ảnh hoàn tất");
+                return;
+            }
+            const payload = buildPayload(values);
+            createDevice(payload, {
+                onSuccess: () => {
+                    message.success("Tạo thiết bị thành công");
+                    handleReset();
+                },
+                onError: () => message.error("Không thể tạo thiết bị"),
+            });
+        },
+        [loadingUpload, buildPayload, createDevice, handleReset]
+    );
 
-    /** ==================== Render ==================== */
+    /** ===================== Render ===================== */
     return (
         <ModalForm
             title={<Text strong style={{ fontSize: 18 }}>Thêm mới thiết bị / công cụ dụng cụ</Text>}
@@ -285,6 +284,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
 
                 <Col span={24}>
                     <DeviceSpecsAndManagement
+                        form={form}
                         selectedSupplier={selectedSupplier}
                         setSelectedSupplier={setSelectedSupplier}
                         selectedCompany={selectedCompany}

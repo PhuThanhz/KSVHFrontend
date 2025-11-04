@@ -27,6 +27,8 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import Access from "@/components/share/access";
+import { ALL_PERMISSIONS } from "@/config/permissions";
 
 import ModalTechnicianAvailability from "@/components/admin/technician-availability/modal.technician-availability";
 import ViewDetailTechnicianAvailability from "@/components/admin/technician-availability/view.technician-availability";
@@ -127,33 +129,23 @@ const PageTechnicianAvailability = () => {
         return Array.from(stats.values()).sort((a, b) => b.count - a.count);
     }, [events]);
 
-    /** ==============================
-     *  Khi click vào event → mở Drawer xem chi tiết
-     * ============================== */
+
     const handleEventClick = (info: any) => {
         setSelectedId(info.event.id);
         setOpenView(true);
     };
 
-    /** ==============================
-     *  Khi click vào ô trống → mở Modal tạo mới
-     * ============================== */
+
     const handleDateClick = (arg: any) => {
         setSelectedDate(arg.dateStr);
         setOpenDayModal(true);
     };
 
-    /** ==============================
-     *  Lấy danh sách ca làm việc trong ngày được chọn
-     * ============================== */
     const eventsOfSelectedDate = useMemo(() => {
         if (!selectedDate) return [];
         return events.filter((ev) => ev.extendedProps.workDate === selectedDate);
     }, [events, selectedDate]);
 
-    /** ==============================
-     *  Render event content tùy chỉnh
-     * ============================== */
     const renderEventContent = (eventInfo: any) => {
         const { techName, shiftName, status } = eventInfo.event.extendedProps;
         return (
@@ -194,14 +186,17 @@ const PageTechnicianAvailability = () => {
                                     <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
                                         Làm mới
                                     </Button>
-                                    <Button
-                                        type="primary"
-                                        icon={<PlusOutlined />}
-                                        onClick={() => setOpenModal(true)}
-                                        size="large"
-                                    >
-                                        Thêm ca mới
-                                    </Button>
+                                    <Access permission={ALL_PERMISSIONS.TECHNICIAN_AVAILABILITY.CREATE} hideChildren>
+                                        <Button
+                                            type="primary"
+                                            icon={<PlusOutlined />}
+                                            onClick={() => setOpenModal(true)}
+                                            size="large"
+                                        >
+                                            Thêm ca mới
+                                        </Button>
+                                    </Access>
+
                                 </Space>
                             </Col>
                         </Row>
@@ -388,6 +383,7 @@ const PageTechnicianAvailability = () => {
                 </Col>
             </Row>
 
+
             {/* ==================== Modal tạo/sửa ==================== */}
             {openModal && (
                 <ModalTechnicianAvailability
@@ -411,6 +407,7 @@ const PageTechnicianAvailability = () => {
                     }}
                 />
             )}
+
 
 
             {/* ==================== Modal xem danh sách trong ngày ==================== */}

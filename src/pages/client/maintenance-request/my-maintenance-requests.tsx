@@ -45,11 +45,22 @@ const MyMaintenanceRequestsPage = () => {
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                         {requests.map((item) => {
                             const info = item.requestInfo;
+                            const device = info.device;
+
                             const attachments = [
                                 info.attachment1,
                                 info.attachment2,
                                 info.attachment3,
                             ].filter(Boolean);
+
+                            // Ảnh hiển thị ưu tiên: ảnh phiếu -> ảnh thiết bị
+                            const mainImage =
+                                attachments[0] ||
+                                device?.image1 ||
+                                device?.image2 ||
+                                device?.image3 ||
+                                null;
+
                             const createdAt = dayjs(info.createdAt).format("DD/MM/YYYY HH:mm");
 
                             return (
@@ -67,14 +78,18 @@ const MyMaintenanceRequestsPage = () => {
                                 >
                                     <Row gutter={[12, 12]} align="middle">
                                         <Col xs={24} sm={6} md={5}>
-                                            {attachments.length > 0 ? (
+                                            {mainImage ? (
                                                 <Image
                                                     src={
-                                                        attachments[0]?.startsWith("http")
-                                                            ? attachments[0]
-                                                            : `${import.meta.env.VITE_BACKEND_URL}/storage/maintenance/${attachments[0]}`
+                                                        mainImage.startsWith("http")
+                                                            ? mainImage
+                                                            : `${import.meta.env.VITE_BACKEND_URL
+                                                            }/storage/${attachments[0]
+                                                                ? "MAINTENANCE_REQUEST"
+                                                                : "DEVICE"
+                                                            }/${mainImage}`
                                                     }
-                                                    alt={info.deviceName || "Ảnh minh họa"}
+                                                    alt={device?.deviceName || "Ảnh minh họa"}
                                                     width="100%"
                                                     height={120}
                                                     style={{
@@ -119,7 +134,8 @@ const MyMaintenanceRequestsPage = () => {
                                             >
                                                 <div style={{ flex: 1 }}>
                                                     <Text strong style={{ fontSize: 15 }}>
-                                                        {info.deviceName || "Thiết bị không xác định"}
+                                                        {device?.deviceName ||
+                                                            "Thiết bị không xác định"}
                                                     </Text>
 
                                                     <div
@@ -134,8 +150,20 @@ const MyMaintenanceRequestsPage = () => {
                                                             <Text strong>{info.requestCode}</Text>
                                                         </p>
                                                         <p style={{ margin: "4px 0" }}>
-                                                            <Text type="secondary">Thiết bị: </Text>
-                                                            {info.deviceCode || "-"}
+                                                            <Text type="secondary">Mã thiết bị: </Text>
+                                                            <Tag color="geekblue">
+                                                                {device?.deviceCode || "-"}
+                                                            </Tag>
+                                                        </p>
+                                                        <p style={{ margin: "4px 0" }}>
+                                                            <Text type="secondary">Công ty: </Text>
+                                                            {device?.companyName || "-"}
+                                                        </p>
+                                                        <p style={{ margin: "4px 0" }}>
+                                                            <Text type="secondary">
+                                                                Phòng ban / Nhà hàng:{" "}
+                                                            </Text>
+                                                            {device?.departmentName || "-"}
                                                         </p>
                                                         <p style={{ margin: "4px 0" }}>
                                                             <Text type="secondary">Mức độ ưu tiên: </Text>
