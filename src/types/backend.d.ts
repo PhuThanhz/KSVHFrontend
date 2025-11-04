@@ -689,13 +689,32 @@ export type CreatorType = "EMPLOYEE" | "CUSTOMER";
 export type DeviceOwnershipType = "INTERNAL" | "CUSTOMER";
 
 /** ==============================
- *   KẾT QUẢ PHÂN CÔNG TỰ ĐỘNG
+ *   PHÂN CÔNG TỰ ĐỘNG
  *  ============================== */
-export interface IResAutoAssignAllDTO {
-    totalRequests: number;
-    autoAssigned: number;
-    pendingForAdmin: number;
+export interface IIssueSkillMappingRequest {
+    issueId: string;
+    skillId: number;
+    weight: number;
 }
+
+export interface IIssueSkillMappingResponse {
+    id: number;
+    issueId: string;
+    issueName: string;
+    skillId: number;
+    skillName: string;
+    weight: number;
+}
+export interface IAutoAssignmentResponse {
+    id: string;
+    requestCode: string;
+    technicianCode: string;
+    technicianName: string;
+    technicianPhone: string;
+    assignedAt: string;
+    assignedBy: string;
+}
+
 
 /** ==============================
  *   ENUM TRẠNG THÁI PHIẾU 
@@ -770,13 +789,13 @@ export interface IResSurveyCommonDTO {
 export interface IResMaintenanceAssignmentDTO {
     id: string;
     requestCode: string;
-
     technicianCode?: string;
     technicianName?: string;
     technicianPhone?: string;
-
     assignedAt?: string;
     assignedBy?: string;
+    acceptedAt?: string;
+    status?: "ASSIGNED" | "ACCEPTED" | "REJECTED";
 }
 
 /** ================== Thông tin phiếu bị từ chối ===================== */
@@ -798,6 +817,8 @@ export interface IResMaintenanceRequestDTO {
     technicianPhone?: string;
     assignedAt?: string;
     assignedBy?: string;
+    latestRejectReason?: string;
+    latestRejectedAt?: string;
 }
 
 /** ================== Chi tiết phiếu bảo trì ===================== */

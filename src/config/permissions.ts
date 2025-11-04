@@ -189,17 +189,29 @@ export const ALL_PERMISSIONS = {
             method: "GET", apiPath: "/api/v1/maintenance-requests/{id}/reject-logs", module: "MAINTENANCE_REQUESTS",
         },
         CREATE_INTERNAL: { method: "POST", apiPath: "/api/v1/maintenance-requests/internal", module: "MAINTENANCE_REQUESTS" },
-        AUTO_ASSIGN_ALL: { method: "POST", apiPath: "/api/v1/maintenance-requests/auto-assign-all", module: "MAINTENANCE_REQUESTS" },
-        ASSIGN_TECHNICIAN: { method: "POST", apiPath: "/api/v1/maintenance-requests/{id}/assign-technician/{technicianId}", module: "MAINTENANCE_REQUESTS" },
+        ASSIGN_TECHNICIAN: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-requests/assign-technician",
+            module: "MAINTENANCE_REQUESTS",
+        },
+        AUTO_ASSIGN_ALL: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-requests/auto-assign",
+            module: "MAINTENANCE_REQUESTS",
+        },
     },
-
     CUSTOMER_PURCHASE_HISTORY: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/customer-purchases", module: "CUSTOMER_PURCHASE_HISTORY" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/customer-purchases/{id}", module: "CUSTOMER_PURCHASE_HISTORY" },
         GET_BY_CUSTOMER: { method: "GET", apiPath: "/api/v1/customer-purchases/by-customer/{customerId}", module: "CUSTOMER_PURCHASE_HISTORY" },
         GET_MY_HISTORY: { method: "GET", apiPath: "/api/v1/customer-purchases/my-history", module: "CUSTOMER_PURCHASE_HISTORY" },
     },
-
+    ISSUE_SKILL_MAPPING: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/issue-skill-mappings", module: "ISSUE_SKILL_MAPPING" },
+        CREATE: { method: "POST", apiPath: "/api/v1/issue-skill-mappings", module: "ISSUE_SKILL_MAPPING" },
+        UPDATE: { method: "PUT", apiPath: "/api/v1/issue-skill-mappings", module: "ISSUE_SKILL_MAPPING" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/issue-skill-mappings/{id}", module: "ISSUE_SKILL_MAPPING" },
+    },
 };
 
 export const ALL_MODULES = {
@@ -229,6 +241,6 @@ export const ALL_MODULES = {
     TECHNICIAN_AVAILABILITY: "TECHNICIAN_AVAILABILITY",
     MAINTENANCE_REQUESTS: "MAINTENANCE_REQUESTS",
     CUSTOMER_PURCHASE_HISTORY: "CUSTOMER_PURCHASE_HISTORY",
-
+    ISSUE_SKILL_MAPPING: "ISSUE_SKILL_MAPPING",
 
 };

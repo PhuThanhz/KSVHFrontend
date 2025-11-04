@@ -48,6 +48,7 @@ import ProtectedPage from "@/pages/client/protectedpage";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
 import MaintenancePage from "@/pages/admin/maintenance/maintenance";
+import IssueSkillMappingPage from "@/pages/admin/issue-skill-mapping";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -147,7 +148,14 @@ export default function App() {
               <MaintenancePage />
             </ProtectedRoute>
         },
-
+        {
+          path: PATHS.ADMIN.ISSUE_SKILL_MAPPING,
+          element: (
+            <ProtectedRoute>
+              <IssueSkillMappingPage />
+            </ProtectedRoute>
+          ),
+        },
         {
           path: PATHS.ADMIN.USER,
           element: (

@@ -36,8 +36,9 @@ import type {
     IReqTechnicianAvailability,
     ICustomerPurchaseHistoryAdmin,
     ICustomerPurchaseHistoryClient,
-    IResAutoAssignAllDTO,
-    IResMaintenanceRejectDTO
+    IResMaintenanceRejectDTO,
+    IIssueSkillMappingRequest,
+    IIssueSkillMappingResponse,
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type {
@@ -953,13 +954,18 @@ export const callCreateCustomerMaintenanceRequest = (data: IReqMaintenanceReques
     );
 };
 
-// ======================= PHÂN CÔNG KỸ THUẬT VIÊN ======================= //
-export const callAutoAssignAllMaintenanceRequests = () => {
-    return axios.post<IBackendRes<IResAutoAssignAllDTO>>(
-        `/api/v1/maintenance-requests/auto-assign-all`
+
+// ======================= DANH SÁCH PHIẾU BẢO TRÌ CỦA CHÍNH KHÁCH HÀNG ======================= //
+export const callFetchMyMaintenanceRequests = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceRequestDTO>>>(
+        `/api/v1/customers/maintenance-requests?${query}`
     );
 };
 
+
+
+
+// ======================= PHÂN CÔNG KỸ THUẬT VIÊN ======================= //
 export const callAssignTechnicianManual = (
     requestId: string,
     technicianId: string
@@ -970,9 +976,37 @@ export const callAssignTechnicianManual = (
     );
 };
 
-// ======================= DANH SÁCH PHIẾU BẢO TRÌ CỦA CHÍNH KHÁCH HÀNG ======================= //
-export const callFetchMyMaintenanceRequests = (query: string) => {
-    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceRequestDTO>>>(
-        `/api/v1/customers/maintenance-requests?${query}`
+// ======================= PHÂN CÔNG TỰ ĐỘNG ======================= //
+export const callAutoAssignAll = () => {
+    return axios.post<IBackendRes<IResMaintenanceAssignmentDTO[]>>(
+        `/api/v1/maintenance-requests/auto-assign`
+    );
+};
+// ======================= ISSUE – SKILL MAPPING ======================= //
+export const callFetchIssueSkillMappings = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IIssueSkillMappingResponse>>>(
+        `/api/v1/issue-skill-mappings?${query}`
+    );
+};
+
+export const callCreateIssueSkillMapping = (data: IIssueSkillMappingRequest) => {
+    return axios.post<IBackendRes<IIssueSkillMappingResponse>>(
+        `/api/v1/issue-skill-mappings`,
+        data
+    );
+};
+
+export const callUpdateIssueSkillMapping = (
+    data: IIssueSkillMappingResponse
+) => {
+    return axios.put<IBackendRes<IIssueSkillMappingResponse>>(
+        `/api/v1/issue-skill-mappings`,
+        data
+    );
+};
+
+export const callDeleteIssueSkillMapping = (id: string | number) => {
+    return axios.delete<IBackendRes<void>>(
+        `/api/v1/issue-skill-mappings/${id}`
     );
 };

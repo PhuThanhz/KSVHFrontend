@@ -4,7 +4,7 @@ import {
     callFetchMaintenanceRequestById,
     callCreateInternalMaintenanceRequest,
     callCreateCustomerMaintenanceRequest,
-    callAutoAssignAllMaintenanceRequests,
+    callAutoAssignAll,
     callAssignTechnicianManual,
     callFetchRejectLogsByRequestId,
 } from "@/config/api";
@@ -14,7 +14,6 @@ import type {
     IResMaintenanceRequestDetailDTO,
     IReqMaintenanceRequestInternalDTO,
     IReqMaintenanceRequestCustomerDTO,
-    IResAutoAssignAllDTO,
     IResMaintenanceRejectDTO,
 } from "@/types/backend";
 import { notify } from "@/components/common/notify";
@@ -100,26 +99,6 @@ export const useCreateCustomerMaintenanceRequestMutation = () => {
     });
 };
 
-/** ========================= Phân công kỹ thuật viên tự động ========================= */
-export const useAutoAssignAllMaintenanceRequestsMutation = () => {
-    const queryClient = useQueryClient();
-    return useMutation<IResAutoAssignAllDTO>({
-        mutationFn: async () => {
-            const res = await callAutoAssignAllMaintenanceRequests();
-            if (!res?.data)
-                throw new Error(res?.message || "Không thể phân công tự động");
-            return res.data as IResAutoAssignAllDTO;
-        },
-        onSuccess: () => {
-            notify.created("Đã phân công kỹ thuật viên tự động");
-            queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
-        },
-        onError: (error: any) => {
-            notify.error(error.message || "Lỗi khi phân công tự động");
-        },
-    });
-};
-
 /** ========================= Phân công kỹ thuật viên thủ công ========================= */
 export const useAssignTechnicianManualMutation = () => {
     const queryClient = useQueryClient();
@@ -144,6 +123,26 @@ export const useAssignTechnicianManualMutation = () => {
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi gán kỹ thuật viên");
+        },
+    });
+};
+/** ========================= Phân công tự động ========================= */
+export const useAutoAssignAllMutation = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async () => {
+            const res = await callAutoAssignAll();
+            if (!res?.data) {
+                throw new Error(res?.message || "Không thể phân công tự động");
+            }
+            return { message: res.message, data: res.data };
+        },
+        onSuccess: (res) => {
+            notify.success(res.message || "Phân công tự động thành công");
+            queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
+        },
+        onError: (error: any) => {
+            notify.error(error.message || "Lỗi khi phân công tự động");
         },
     });
 };

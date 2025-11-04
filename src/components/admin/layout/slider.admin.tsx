@@ -16,6 +16,7 @@ import {
     ShopOutlined,
     LaptopOutlined,
     HistoryOutlined,
+    NodeIndexOutlined
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
@@ -137,6 +138,22 @@ const SliderAdmin: React.FC<IProps> = ({
                             label: <Link to="/admin/maintenance">Yêu cầu bảo trì</Link>,
                             key: "/admin/maintenance",
                             icon: <ToolOutlined />,
+                        },
+                    ]
+                    : []),
+                // --- Issue Skill Mapping ---
+                ...(checkPermission(
+                    ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE
+                )
+                    ? [
+                        {
+                            label: (
+                                <Link to="/admin/issue-skill-mapping">
+                                    Cấu hình kỹ năng cho sự cố
+                                </Link>
+                            ),
+                            key: "/admin/issue-skill-mapping",
+                            icon: <NodeIndexOutlined />,
                         },
                     ]
                     : []),

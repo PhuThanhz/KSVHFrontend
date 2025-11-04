@@ -19,9 +19,10 @@ import dayjs from "dayjs";
 import { useMaintenanceRequestsQuery } from "@/hooks/useMaintenanceRequests";
 import ViewMaintenanceDetail from "@/components/admin/maintenance/view/view.maintenance-detail";
 import ModalCreateMaintenance from "@/components/admin/maintenance/modal/modal.maintenance-create";
-import ButtonAutoAssign from "@/components/admin/maintenance/button/button.auto-assign";
 import ButtonAssignTechnician from "@/components/admin/maintenance/button/button.assign-technician";
 import RejectLogsModal from "@/components/admin/maintenance/modal/modal.reject-logs";
+import ModalAutoAssignMaintenance from "@/components/admin/maintenance/modal/modal.maintenance-auto-assign";
+
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 
@@ -33,6 +34,7 @@ const MaintenancePage = () => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+    const [showAutoAssignModal, setShowAutoAssignModal] = useState(false);
 
     const [page, setPage] = useState(1);
     const [query, setQuery] = useState("page=1&pageSize=10");
@@ -68,11 +70,19 @@ const MaintenancePage = () => {
                 </Title>
 
                 <div style={{ display: "flex", gap: 8 }}>
-                    <ButtonAutoAssign />
-                    <Button type="primary" onClick={() => setShowCreateModal(true)}>
-                        + Tạo phiếu bảo trì
-                    </Button>
+
+                    <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.CREATE_INTERNAL} hideChildren>
+                        <Button type="primary" onClick={() => setShowCreateModal(true)}>
+                            + Tạo phiếu bảo trì
+                        </Button>
+                    </Access>
+                    <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.AUTO_ASSIGN_ALL} hideChildren>
+                        <Button type="default" onClick={() => setShowAutoAssignModal(true)}>
+                            Phân công tự động
+                        </Button>
+                    </Access>
                 </div>
+
             </div>
 
             {/* Tabs */}
@@ -484,6 +494,10 @@ const MaintenancePage = () => {
                     onClose={() => setShowRejectModal(null)}
                 />
             )}
+            <ModalAutoAssignMaintenance
+                open={showAutoAssignModal}
+                onClose={() => setShowAutoAssignModal(false)}
+            />
 
             {/* Modal tạo phiếu */}
             <ModalCreateMaintenance

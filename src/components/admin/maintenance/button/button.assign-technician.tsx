@@ -4,6 +4,8 @@ import { CheckCircleOutlined, CalendarOutlined } from "@ant-design/icons";
 import { useAssignTechnicianManualMutation } from "@/hooks/useMaintenanceRequests";
 import { useTechniciansQuery } from "@/hooks/useTechnicians";
 import ScheduleDrawer from "@/components/admin/maintenance/button/schedule-drawer";
+import Access from "@/components/share/access";
+import { ALL_PERMISSIONS } from "@/config/permissions";
 
 const { Text } = Typography;
 
@@ -140,14 +142,16 @@ const ButtonAssignTechnician = ({ requestId }: ButtonAssignTechnicianProps) => {
 
     return (
         <>
-            <Button
-                onClick={() => setOpen(true)}
-                disabled={assignMutation.isPending}
-                loading={assignMutation.isPending}
-            >
-                Phân công
-            </Button>
 
+            <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.ASSIGN_TECHNICIAN} hideChildren>
+                <Button
+                    onClick={() => setOpen(true)}
+                    disabled={assignMutation.isPending}
+                    loading={assignMutation.isPending}
+                >
+                    Phân công
+                </Button>
+            </Access>
             <Modal
                 open={open}
                 title="Phân công kỹ thuật viên"
