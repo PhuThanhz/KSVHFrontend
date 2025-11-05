@@ -1,5 +1,5 @@
 import { Button, Divider, Form, Input } from "antd";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { callLogin } from "@/config/api";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -12,6 +12,7 @@ const LoginPage = () => {
     const [isSubmit, setIsSubmit] = useState(false);
     const dispatch = useDispatch();
     const isAuthenticated = useAppSelector((state) => state.account.isAuthenticated);
+    const navigate = useNavigate();
 
     const location = useLocation();
     const params = new URLSearchParams(location.search);
@@ -19,9 +20,9 @@ const LoginPage = () => {
 
     useEffect(() => {
         if (isAuthenticated) {
-            window.location.href = "/";
+            navigate("/", { replace: true });
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, navigate]);
 
     const onFinish = async (values: { username: string; password: string }) => {
         const { username, password } = values;
@@ -34,37 +35,34 @@ const LoginPage = () => {
             if (res?.data) {
                 const { access_token, user } = res.data;
 
-                // Kiểm tra token hợp lệ trước khi lưu
-                if (access_token) {
-                    localStorage.setItem("access_token", access_token);
-                } else {
+                if (!access_token) {
                     notify.error("Không nhận được access_token từ server.");
                     return;
                 }
+                localStorage.setItem("access_token", access_token);
 
-                // Kiểm tra user
-                if (user) {
-                    dispatch(setUserLoginInfo(user));
-                } else {
+                if (!user) {
                     notify.error("Không nhận được thông tin người dùng.");
                     return;
                 }
+                dispatch(setUserLoginInfo(user));
 
                 notify.success("Đăng nhập tài khoản thành công!");
-                window.location.href = callback || "/";
-            } else {
-                const message =
-                    Array.isArray(res?.message)
-                        ? res.message[0]
-                        : res?.message || "Đăng nhập thất bại!";
-                notify.error(message);
+                // Ưu tiên callback an toàn (chỉ cho phép các path nội bộ), nếu không thì /redirect
+                if (callback && callback.startsWith("/")) {
+                    navigate(callback, { replace: true });
+                } else {
+                    navigate("/redirect", { replace: true });
+                }
+                return;
             }
+
+            const message = Array.isArray(res?.message) ? res.message[0] : res?.message || "Đăng nhập thất bại!";
+            notify.error(message);
         } catch (error: any) {
             setIsSubmit(false);
             const message =
-                error?.response?.data?.message ||
-                error?.message ||
-                "Lỗi kết nối đến máy chủ. Vui lòng thử lại.";
+                error?.response?.data?.message || error?.message || "Lỗi kết nối đến máy chủ. Vui lòng thử lại.";
             notify.error(message);
         }
     };
@@ -109,9 +107,7 @@ const LoginPage = () => {
                                 <p className="text text-normal">
                                     <span>Bạn quên mật khẩu hoặc chưa kích hoạt tài khoản?</span>
                                     <br />
-                                    <Link to="/forgot-password">
-                                        Nhận mã xác nhận qua email
-                                    </Link>
+                                    <Link to="/forgot-password">Nhận mã xác nhận qua email</Link>
                                 </p>
                             </div>
                         </Form>

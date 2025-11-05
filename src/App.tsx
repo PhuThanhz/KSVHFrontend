@@ -43,14 +43,15 @@ import CustomerPurchaseHistoryPage from "./pages/admin/customer-purchase-history
 import PurchaseHistoryPage from "@/pages/client/purchase-history";
 import MyMaintenanceRequestsPage from "@/pages/client/maintenance-request/my-maintenance-requests";
 import Loading from "./components/share/loading";
-import NotPermitted from "@/components/share/protected-route.ts";
-import ProtectedCustomerPage from "@/pages/client/protected-customer";
+import NotPermitted from "@/components/share/not-permitted";
+import ProtectedCustomerPage from "./routes/protected-customer";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
 import MaintenancePage from "@/pages/admin/maintenance/maintenance";
 import IssueSkillMappingPage from "@/pages/admin/issue-skill-mapping";
 import TechnicianAssignmentPage from "@/pages/technician/assignment/home-assignment";
-import ProtectedTechnicianPage from "@/pages//technician/protected-technician";
+import ProtectedTechnicianPage from "./routes/protected-technician";
+import RoleBasedRedirect from "./routes/RoleBasedRedirect";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -66,6 +67,8 @@ export default function App() {
   }, []);
 
   const router = createBrowserRouter([
+    { path: "/redirect", element: <RoleBasedRedirect /> },
+
     // =================== CUSTOMER =======================//
     {
       path: PATHS.CLIENT.HOME,
@@ -87,7 +90,6 @@ export default function App() {
           path: PATHS.CLIENT.PURCHASE_HISTORY,
           element: (
             <ProtectedCustomerPage
-              isAuthenticated={isAuthenticated}
               redirectPath={PATHS.LOGIN}
               path="purchase-history"
             >
@@ -100,7 +102,6 @@ export default function App() {
           path: PATHS.CLIENT.MY_MAINTENANCE_REQUESTS,
           element: (
             <ProtectedCustomerPage
-              isAuthenticated={isAuthenticated}
               redirectPath={PATHS.LOGIN}
               path="maintenance-requests"
             >
@@ -115,11 +116,17 @@ export default function App() {
     // ==================== TECHNICIAN =====================//
     {
       path: PATHS.TECHNICIAN.ROOT,
-      element: (
-        <LayoutApp>
-          <LayoutClient />
-        </LayoutApp>
-      ),
+      element:
+        isAuthenticated && userRole === "TECHNICIAN" ? (
+          <LayoutApp>
+            <LayoutClient />
+          </LayoutApp>
+        ) : isLoading ? (
+          <Loading />
+        ) : (
+          <NotPermitted message="Trang bạn yêu cầu hiện không khả dụng. Vui lòng kiểm tra lại hoặc quay về trang chính." />
+
+        ),
       errorElement: <NotFound />,
       children: [
         { index: true, element: <HomeTechnicianPage /> },
@@ -127,9 +134,7 @@ export default function App() {
           path: PATHS.TECHNICIAN.ASSIGNMENT,
           element: (
             <ProtectedTechnicianPage
-              isAuthenticated={isAuthenticated}
               redirectPath={PATHS.LOGIN}
-              path="technician-assignment"
             >
               <TechnicianAssignmentPage />
             </ProtectedTechnicianPage>
@@ -145,7 +150,8 @@ export default function App() {
       ) : isLoading ? (
         <Loading />
       ) : (
-        <NotPermitted />
+        <NotPermitted message="Trang bạn yêu cầu hiện không khả dụng. Vui lòng kiểm tra lại hoặc quay về trang chính." />
+
       ),
       errorElement: <NotFound />,
       children: [
@@ -367,8 +373,6 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
-
-
       ],
     },
     { path: PATHS.LOGIN, element: <LoginPage /> },
