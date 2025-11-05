@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { callLogout } from '@/config/api';
 import { setLogoutAction } from '@/redux/slice/accountSlide';
+import { PATHS } from '@/constants/paths';
 
 interface IProps {
     collapsed: boolean;
@@ -17,14 +18,17 @@ const HeaderAdmin: React.FC<IProps> = ({ collapsed, setCollapsed }) => {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
-        const res = await callLogout();
-        if (res && +res.statusCode === 200) {
-            dispatch(setLogoutAction({}));
-            message.success('Đăng xuất thành công');
-            navigate('/');
+        try {
+            await callLogout();
+        } catch {
+        } finally {
+            localStorage.removeItem("access_token");
+            sessionStorage.clear();
+            dispatch(setLogoutAction());
+            navigate(PATHS.HOME, { replace: true });
+            message.success("Đăng xuất thành công");
         }
-    };
-
+    }
     const itemsDropdown = [
         {
             label: <Link to={'/'}>Trang chủ</Link>,

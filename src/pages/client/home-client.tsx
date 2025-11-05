@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Button, Modal, Typography } from "antd";
 import CreateMaintenanceRequestClientPage from "./maintenance-request/create-request-client";
+import { useMyPurchaseHistoryQuery } from "@/hooks/useCustomerPurchaseHistory";
 import {
     ToolOutlined,
     SafetyOutlined,
     ClockCircleOutlined,
-    CustomerServiceOutlined,
-    CheckCircleOutlined,
     FileProtectOutlined,
     RocketOutlined,
     TeamOutlined,
@@ -18,6 +17,8 @@ const { Title, Paragraph } = Typography;
 
 const HomeClientPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { data, isLoading } = useMyPurchaseHistoryQuery();
+    const purchaseHistory = data?.result ?? [];
 
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
@@ -97,15 +98,17 @@ const HomeClientPage = () => {
                             Chúng tôi cung cấp dịch vụ bảo trì chuyên nghiệp,
                             nhanh chóng và đáng tin cậy cho mọi thiết bị của bạn.
                         </Paragraph>
-                        <Button
-                            type="primary"
-                            size="large"
-                            onClick={handleOpenModal}
-                            icon={<RocketOutlined />}
-                            className="h-12 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 border-none hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                            Tạo Phiếu Bảo Trì Ngay
-                        </Button>
+                        {purchaseHistory.length > 0 && (
+                            <Button
+                                type="primary"
+                                size="large"
+                                onClick={handleOpenModal}
+                                icon={<RocketOutlined />}
+                                className="h-12 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 border-none hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                                Tạo Phiếu Bảo Trì Ngay
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -175,29 +178,6 @@ const HomeClientPage = () => {
                     </div>
                 </div>
             </div>
-
-            {/* CTA Section */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-center text-white shadow-2xl">
-                    <CheckCircleOutlined className="text-6xl mb-6" />
-                    <Title level={2} className="text-white mb-4">
-                        Sẵn Sàng Bắt Đầu?
-                    </Title>
-                    <Paragraph className="text-white text-lg mb-8 max-w-2xl mx-auto opacity-90">
-                        Hãy để chúng tôi giúp bạn giải quyết mọi vấn đề về thiết bị.
-                        Tạo phiếu bảo trì ngay hôm nay!
-                    </Paragraph>
-                    <Button
-                        size="large"
-                        onClick={handleOpenModal}
-                        icon={<RocketOutlined />}
-                        className="h-12 px-8 text-lg font-semibold bg-white text-blue-600 border-none hover:bg-gray-100 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-                    >
-                        Tạo Phiếu Bảo Trì
-                    </Button>
-                </div>
-            </div>
-
             {/* Modal */}
             <Modal
                 title={

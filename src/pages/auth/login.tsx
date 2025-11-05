@@ -48,7 +48,6 @@ const LoginPage = () => {
                 dispatch(setUserLoginInfo(user));
 
                 notify.success("Đăng nhập tài khoản thành công!");
-                // Ưu tiên callback an toàn (chỉ cho phép các path nội bộ), nếu không thì /redirect
                 if (callback && callback.startsWith("/")) {
                     navigate(callback, { replace: true });
                 } else {

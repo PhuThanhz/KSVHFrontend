@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { callFetchAccount } from '@/config/api';
 
-// First, create the thunk
 export const fetchAccount = createAsyncThunk(
     'account/fetchAccount',
     async () => {
@@ -73,13 +72,11 @@ export const accountSlide = createSlice({
         setUserLoginInfo: (state, action) => {
             state.isAuthenticated = true;
             state.isLoading = false;
-            state.user.id = action?.payload?.id;
-            state.user.email = action.payload.email;
-            state.user.name = action.payload.name;
-            state.user.avatar = action.payload.avatar;
-            state.user.role = action?.payload?.role;
-
-            if (!action?.payload?.user?.role) state.user.role = {};
+            state.user.id = action?.payload?.id ?? '';
+            state.user.email = action.payload.email ?? '';
+            state.user.name = action.payload.name ?? '';
+            state.user.avatar = action.payload.avatar ?? '';
+            state.user.role = action?.payload?.role ?? { id: '', name: '', permissions: [] };
             state.user.role.permissions = action?.payload?.role?.permissions ?? [];
             state.employee = action.payload?.employee ?? undefined;
         },
@@ -91,11 +88,7 @@ export const accountSlide = createSlice({
                 email: '',
                 name: '',
                 avatar: '',
-                role: {
-                    id: '',
-                    name: '',
-                    permissions: [],
-                },
+                role: { id: '', name: '', permissions: [] },
             };
             state.employee = undefined;
         },
@@ -114,13 +107,12 @@ export const accountSlide = createSlice({
             if (action.payload) {
                 state.isAuthenticated = true;
                 state.isLoading = false;
-                state.user.id = action?.payload?.user?.id;
-                state.user.email = action.payload.user?.email;
-                state.user.name = action.payload.user?.name;
-                state.user.avatar = action.payload.user?.avatar;
-                state.user.role = action?.payload?.user?.role;
-                if (!action?.payload?.user?.role) state.user.role = {};
-                state.user.role.permissions = action?.payload?.user?.role?.permissions ?? [];
+                state.user.id = action.payload.user?.id ?? '';
+                state.user.email = action.payload.user?.email ?? '';
+                state.user.name = action.payload.user?.name ?? '';
+                state.user.avatar = action.payload.user?.avatar ?? '';
+                state.user.role = action.payload.user?.role ?? { id: '', name: '', permissions: [] };
+                state.user.role.permissions = action.payload.user?.role?.permissions ?? [];
                 state.employee = action.payload?.employee ?? undefined;
             }
         });
