@@ -125,6 +125,7 @@ export const useMyTechnicianAvailabilitiesQuery = (query: string) => {
         retry: false,
     });
 };
+
 /** ========================= Lấy ca làm việc theo kỹ thuật viên ========================= */
 export const useTechnicianAvailabilityByTechnicianIdQuery = ({
     technicianId,
@@ -150,7 +151,7 @@ export const useTechnicianAvailabilityByTechnicianIdQuery = ({
                 throw new Error(res?.message || "Không thể lấy lịch làm việc của kỹ thuật viên");
             return res.data as IModelPaginate<ITechnicianAvailability>;
         },
-        staleTime: 1000 * 60, // 1 phút cache riêng từng kỹ thuật viên
+        staleTime: 1000 * 60,
         retry: false,
     });
 };

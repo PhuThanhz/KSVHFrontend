@@ -179,7 +179,6 @@ export const ALL_PERMISSIONS = {
         CREATE: { method: "POST", apiPath: "/api/v1/technician-availabilities", module: "TECHNICIAN_AVAILABILITY" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/technician-availabilities/{id}", module: "TECHNICIAN_AVAILABILITY" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/technician-availabilities/{id}", module: "TECHNICIAN_AVAILABILITY" },
-        GET_MY_AVAILABILITIES: { method: "GET", apiPath: "/api/v1/technician-availabilities/my", module: "TECHNICIAN_AVAILABILITY" },
     },
 
     MAINTENANCE_REQUESTS: {
@@ -234,6 +233,28 @@ export const ALL_PERMISSIONS = {
             module: "TECHNICIAN_ASSIGNMENT",
         },
     },
+    MAINTENANCE_CAUSE: {
+        GET_PAGINATE: {
+            method: "GET",
+            apiPath: "/api/v1/causes",
+            module: "MAINTENANCE_CAUSE",
+        },
+        GET_BY_ID: {
+            method: "GET",
+            apiPath: "/api/v1/causes/{id}",
+            module: "MAINTENANCE_CAUSE",
+        },
+        CREATE: {
+            method: "POST",
+            apiPath: "/api/v1/causes",
+            module: "MAINTENANCE_CAUSE",
+        },
+        UPDATE: {
+            method: "PUT",
+            apiPath: "/api/v1/causes",
+            module: "MAINTENANCE_CAUSE",
+        },
+    },
 };
 
 export const ALL_MODULES = {
@@ -265,4 +286,6 @@ export const ALL_MODULES = {
     CUSTOMER_PURCHASE_HISTORY: "CUSTOMER_PURCHASE_HISTORY",
     ISSUE_SKILL_MAPPING: "ISSUE_SKILL_MAPPING",
     TECHNICIAN_ASSIGNMENT: "TECHNICIAN_ASSIGNMENT",
+    MAINTENANCE_CAUSE: "MAINTENANCE_CAUSE",
+
 };

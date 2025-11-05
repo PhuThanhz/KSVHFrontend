@@ -49,13 +49,18 @@ const Header = () => {
     const onClick: MenuProps['onClick'] = (e) => setCurrent(e.key);
 
     const handleLogout = async () => {
-        const res = await callLogout();
-        if (res && +res.statusCode === 200) {
-            dispatch(setLogoutAction({}));
-            message.success('Đăng xuất thành công');
-            navigate(PATHS.HOME);
+        try {
+            await callLogout();
+        } catch {
+            // Bỏ qua lỗi server — vẫn tiếp tục logout local
+        } finally {
+            localStorage.removeItem("access_token");
+            sessionStorage.clear();
+            dispatch(setLogoutAction());
+            navigate(PATHS.HOME, { replace: true });
+            message.success("Đăng xuất thành công");
         }
-    };
+    }
 
     /** ========================= MENU CHÍNH ========================= */
     const items: MenuProps['items'] = [];

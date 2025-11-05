@@ -1,18 +1,53 @@
-import React from "react";
-import TechnicianAssignmentPage from "@/pages/technician/assignment/home-assignment";
+// src/pages/technician/home-technician.tsx
+import React, { useEffect, useState } from "react";
+import { Tabs } from "antd";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { PATHS } from "@/constants/paths";
 
-/**
- * HomeTechnicianPage
- * Trang chủ của kỹ thuật viên, nơi hiển thị danh sách công việc được giao.
- */
-const HomeTechnicianPage = () => {
+const HomeTechnicianLayout = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [activeKey, setActiveKey] = useState("assignment");
+    useEffect(() => {
+        if (location.pathname.includes("schedule")) {
+            setActiveKey("schedule");
+        } else if (location.pathname.includes("survey")) {
+            setActiveKey("survey");
+        } else {
+            setActiveKey("assignment");
+        }
+    }, [location.pathname]);
+
+    const handleTabChange = (key: string) => {
+        setActiveKey(key);
+        if (key === "schedule") {
+            navigate(PATHS.TECHNICIAN.SCHEDULE);
+        } else if (key === "survey") {
+            navigate(PATHS.TECHNICIAN.SURVEY);
+        } else {
+            navigate(PATHS.TECHNICIAN.ASSIGNMENT);
+        }
+    };
+
+    const items = [
+        { key: "schedule", label: "Lịch làm việc của tôi" },
+        { key: "assignment", label: "Công việc được giao" },
+        { key: "survey", label: "Khảo sát bảo trì" },
+    ];
+
     return (
         <div style={{ padding: 20 }}>
-
-            {/* Gọi trang danh sách công việc */}
-            <TechnicianAssignmentPage />
+            <Tabs
+                activeKey={activeKey}
+                onChange={handleTabChange}
+                items={items}
+                type="card"
+            />
+            <div style={{ marginTop: 16 }}>
+                <Outlet />
+            </div>
         </div>
     );
 };
 
-export default HomeTechnicianPage;
+export default HomeTechnicianLayout;

@@ -6,77 +6,68 @@ import {
     Space,
     Tag,
     Button,
-    Image,
     Typography,
-    Popconfirm,
     Divider,
+    Image,
     Empty,
 } from "antd";
-import {
-    CheckOutlined,
-    CloseOutlined,
-    EyeOutlined,
-} from "@ant-design/icons";
-import {
-    useTechnicianAssignmentsQuery,
-    useAcceptTechnicianAssignmentMutation,
-} from "@/hooks/useTechnicianAssignments";
-import ModalRejectAssignment from "./modal.technician.assignment";
-import ViewTechnicianAssignment from "./view.technician.assignment";
+import { FileAddOutlined, EyeOutlined } from "@ant-design/icons";
+import { useMaintenanceSurveysInProgressQuery } from "@/hooks/useMaintenanceSurveys";
+import ModalCreateSurvey from "./modal.create.survey";
 import queryString from "query-string";
 import dayjs from "dayjs";
+import ViewMaintenanceSurvey from "./view.survey"
 
 const { Text, Title } = Typography;
 
-const TechnicianAssignmentPage = () => {
-    const [openRejectModal, setOpenRejectModal] = useState(false);
-    const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | number | null>(null);
+/** Trang: Danh sách phiếu đang xử lý để khảo sát */
+const MaintenanceSurveyPage = () => {
+    const [openCreateModal, setOpenCreateModal] = useState(false);
+    const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [openViewModal, setOpenViewModal] = useState(false);
-
+    const [selectedSurveyId, setSelectedSurveyId] = useState<string | null>(null);
+    // Tạo query string mặc định
     const [query] = useState<string>(() =>
         queryString.stringify({
             page: 1,
             size: 20,
-            sort: "assignedAt,desc",
+            sort: "createdAt,desc",
         })
     );
 
-    const { data, isFetching } = useTechnicianAssignmentsQuery(query);
-    const { mutate: acceptAssignment, isPending: isAccepting } =
-        useAcceptTechnicianAssignmentMutation();
+    const { data, isFetching } = useMaintenanceSurveysInProgressQuery(query);
+    const surveys = data?.result || [];
 
-    const assignments = data?.result || [];
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
     return (
         <div style={{ padding: "24px 36px" }}>
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
-                Danh sách công việc được phân công cho kỹ thuật viên
+                Danh sách phiếu đang xử lý để khảo sát
             </h2>
 
             {isFetching && <p>Đang tải dữ liệu...</p>}
 
-            {(!assignments || assignments.length === 0) && !isFetching ? (
-                <Empty description="Không có công việc nào được phân công" />
+            {(!surveys || surveys.length === 0) && !isFetching ? (
+                <Empty description="Không có phiếu nào đang chờ khảo sát" />
             ) : (
                 <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                    {assignments.map((item) => {
+                    {surveys.map((item) => {
                         const { requestInfo } = item;
                         const device = requestInfo.device || {};
-                        const attachmentImages = [
+
+                        // Ảnh thiết bị
+                        const deviceImages = [device.image1, device.image2, device.image3].filter(Boolean);
+                        // Ảnh phiếu bảo trì
+                        const requestImages = [
                             requestInfo.attachment1,
                             requestInfo.attachment2,
                             requestInfo.attachment3,
                         ].filter(Boolean);
-                        const deviceImages = [
-                            device.image1,
-                            device.image2,
-                            device.image3,
-                        ].filter(Boolean);
 
                         return (
                             <Card
-                                key={item.id}
+                                key={requestInfo.requestId}
                                 bordered
                                 hoverable
                                 style={{
@@ -87,16 +78,13 @@ const TechnicianAssignmentPage = () => {
                                 bodyStyle={{ padding: 0 }}
                             >
                                 <Row gutter={24} align="top">
-                                    {/* Cột ảnh minh chứng */}
+                                    {/* Cột ảnh minh chứng + ảnh thiết bị */}
                                     <Col xs={24} md={8} lg={7}>
-                                        <Title
-                                            level={5}
-                                            style={{ textAlign: "center", marginBottom: 12 }}
-                                        >
+                                        <Title level={5} style={{ textAlign: "center", marginBottom: 12 }}>
                                             Ảnh phiếu bảo trì
                                         </Title>
 
-                                        {attachmentImages.length > 0 ? (
+                                        {requestImages.length > 0 ? (
                                             <div
                                                 style={{
                                                     display: "flex",
@@ -106,7 +94,7 @@ const TechnicianAssignmentPage = () => {
                                                     marginBottom: 16,
                                                 }}
                                             >
-                                                {attachmentImages.map((img, idx) => (
+                                                {requestImages.map((img, idx) => (
                                                     <Image
                                                         key={idx}
                                                         width={120}
@@ -122,21 +110,12 @@ const TechnicianAssignmentPage = () => {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div
-                                                style={{
-                                                    textAlign: "center",
-                                                    color: "#999",
-                                                    marginBottom: 16,
-                                                }}
-                                            >
+                                            <div style={{ textAlign: "center", color: "#999", marginBottom: 16 }}>
                                                 Không có hình ảnh phiếu
                                             </div>
                                         )}
 
-                                        <Title
-                                            level={5}
-                                            style={{ textAlign: "center", marginBottom: 12 }}
-                                        >
+                                        <Title level={5} style={{ textAlign: "center", marginBottom: 12 }}>
                                             Ảnh thiết bị
                                         </Title>
 
@@ -181,42 +160,26 @@ const TechnicianAssignmentPage = () => {
                                                 <Tag color="geekblue">{requestInfo.status}</Tag>
                                             </Space>
 
-                                            <h3
-                                                style={{
-                                                    fontWeight: 600,
-                                                    marginTop: 6,
-                                                    marginBottom: 8,
-                                                }}
-                                            >
-                                                {requestInfo.issueName || "Chưa có tên sự cố"}
+                                            <h3 style={{ fontWeight: 600, marginTop: 6 }}>
+                                                {requestInfo.issueName || "Chưa có tên vấn đề"}
                                             </h3>
 
                                             <Row gutter={[8, 8]}>
                                                 <Col span={12}>
-                                                    <Text strong>Người tạo:</Text>{" "}
-                                                    {requestInfo.fullName}
+                                                    <Text strong>Người tạo:</Text> {requestInfo.fullName}
                                                 </Col>
                                                 <Col span={12}>
-                                                    <Text strong>Vị trí:</Text>{" "}
-                                                    {requestInfo.locationDetail ?? "-"}
+                                                    <Text strong>Vị trí:</Text> {requestInfo.locationDetail ?? "-"}
                                                 </Col>
                                                 <Col span={12}>
                                                     <Text strong>Ngày tạo phiếu:</Text>{" "}
-                                                    {dayjs(requestInfo.createdAt).format(
-                                                        "DD-MM-YYYY HH:mm"
-                                                    )}
+                                                    {dayjs(requestInfo.createdAt).format("DD-MM-YYYY HH:mm")}
                                                 </Col>
                                                 <Col span={12}>
-                                                    <Text strong>Người phân công:</Text>{" "}
-                                                    {item.assignedBy ?? "-"}
+                                                    <Text strong>Trạng thái:</Text> {requestInfo.status}
                                                 </Col>
                                                 <Col span={12}>
-                                                    <Text strong>Thời gian phân công:</Text>{" "}
-                                                    {dayjs(item.assignedAt).format("DD-MM-YYYY HH:mm")}
-                                                </Col>
-                                                <Col span={12}>
-                                                    <Text strong>Ghi chú:</Text>{" "}
-                                                    {requestInfo.note ?? "-"}
+                                                    <Text strong>Loại bảo trì:</Text> {requestInfo.maintenanceType}
                                                 </Col>
                                             </Row>
 
@@ -226,27 +189,21 @@ const TechnicianAssignmentPage = () => {
                                                 <Title level={5}>Thông tin thiết bị</Title>
                                                 <Row gutter={[8, 4]}>
                                                     <Col span={12}>
-                                                        <Text>Mã thiết bị:</Text>{" "}
-                                                        <b>{device.deviceCode}</b>
+                                                        <Text>Mã thiết bị:</Text> <b>{device.deviceCode}</b>
                                                     </Col>
                                                     <Col span={12}>
-                                                        <Text>Tên thiết bị:</Text>{" "}
-                                                        <b>{device.deviceName}</b>
+                                                        <Text>Tên thiết bị:</Text> <b>{device.deviceName}</b>
                                                     </Col>
                                                     <Col span={12}>
-                                                        <Text>Công ty:</Text>{" "}
-                                                        {device.companyName ?? "-"}
+                                                        <Text>Công ty:</Text> {device.companyName}
                                                     </Col>
                                                     <Col span={12}>
-                                                        <Text>Bộ phận:</Text>{" "}
-                                                        {device.departmentName ?? "-"}
+                                                        <Text>Bộ phận:</Text> {device.departmentName}
                                                     </Col>
                                                     <Col span={12}>
                                                         <Text>Loại sở hữu:</Text>{" "}
                                                         {device.ownershipType === "CUSTOMER" ? (
-                                                            <Tag color="magenta">
-                                                                Thiết bị khách hàng
-                                                            </Tag>
+                                                            <Tag color="magenta">Thiết bị khách hàng</Tag>
                                                         ) : (
                                                             <Tag color="green">Thiết bị nội bộ</Tag>
                                                         )}
@@ -256,44 +213,28 @@ const TechnicianAssignmentPage = () => {
 
                                             <Divider style={{ margin: "10px 0" }} />
 
+                                            {/* Nút thao tác */}
                                             <Space>
-                                                <Popconfirm
-                                                    title="Xác nhận nhận việc"
-                                                    description="Bạn có chắc chắn muốn nhận công việc này không?"
-                                                    okText="Đồng ý"
-                                                    cancelText="Hủy"
-                                                    onConfirm={() => {
-                                                        if (!item.id) return;
-                                                        acceptAssignment(item.id);
-                                                    }}
-                                                >
-                                                    <Button
-                                                        icon={<CheckOutlined />}
-                                                        type="primary"
-                                                        loading={isAccepting}
-                                                    >
-                                                        Nhận việc
-                                                    </Button>
-                                                </Popconfirm>
                                                 <Button
-                                                    icon={<CloseOutlined />}
-                                                    danger
+                                                    icon={<FileAddOutlined />}
+                                                    type="primary"
                                                     onClick={() => {
-                                                        setSelectedAssignmentId(item.id!);
-                                                        setOpenRejectModal(true);
+                                                        setSelectedRequestId(requestInfo.requestId!);
+                                                        setOpenCreateModal(true);
                                                     }}
                                                 >
-                                                    Từ chối
+                                                    Tạo khảo sát
                                                 </Button>
                                                 <Button
                                                     icon={<EyeOutlined />}
                                                     onClick={() => {
-                                                        setSelectedAssignmentId(item.id!);
+                                                        setSelectedSurveyId(requestInfo.requestId!);
                                                         setOpenViewModal(true);
                                                     }}
                                                 >
                                                     Xem chi tiết
                                                 </Button>
+
                                             </Space>
                                         </div>
                                     </Col>
@@ -304,21 +245,18 @@ const TechnicianAssignmentPage = () => {
                 </Space>
             )}
 
-            {/* Modal từ chối */}
-            <ModalRejectAssignment
-                openModal={openRejectModal}
-                setOpenModal={setOpenRejectModal}
-                assignmentId={selectedAssignmentId}
+            <ModalCreateSurvey
+                openModal={openCreateModal}
+                setOpenModal={setOpenCreateModal}
+                maintenanceRequestId={selectedRequestId}
             />
-
-            {/* Modal xem chi tiết */}
-            <ViewTechnicianAssignment
+            <ViewMaintenanceSurvey
                 open={openViewModal}
                 onClose={setOpenViewModal}
-                assignmentId={selectedAssignmentId}
+                surveyId={selectedSurveyId}
             />
         </div>
     );
 };
 
-export default TechnicianAssignmentPage;
+export default MaintenanceSurveyPage;

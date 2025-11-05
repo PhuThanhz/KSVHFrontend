@@ -41,8 +41,12 @@ import type {
     IIssueSkillMappingResponse,
     IReqRejectAssignmentDTO,
     IResTechnicianAssignmentDTO,
+    IReqMaintenanceSurveyDTO,
+    IResMaintenanceSurveyDTO,
+    IResMaintenanceSurveyListDTO,
 } from '@/types/backend';
 import axios from 'config/axios-customize';
+import type { IMaintenanceCause, IMaintenanceCauseRequest } from "@/types/backend";
 import type {
     IResMaintenanceRequestDTO,
     IResMaintenanceRequestDetailDTO,
@@ -166,6 +170,32 @@ export const callFetchPermission = (query: string) => {
 export const callFetchPermissionById = (id: string) => {
     return axios.get<IBackendRes<IPermission>>(`/api/v1/permissions/${id}`);
 }
+
+
+
+//================================Module MaintenanceCause ================================//
+export const callFetchMaintenanceCause = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IMaintenanceCause>>>(
+        `/api/v1/causes?${query}`
+    );
+}
+
+export const callFetchMaintenanceCauseById = (id: string) => {
+    return axios.get<IBackendRes<IMaintenanceCause>>(`/api/v1/causes/${id}`);
+};
+
+export const callCreateMaintenanceCause = (payload: IMaintenanceCauseRequest) => {
+    return axios.post<IBackendRes<IMaintenanceCause>>(`/api/v1/causes`, payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
+export const callUpdateMaintenanceCause = (payload: IMaintenanceCauseRequest) => {
+    return axios.put<IBackendRes<IMaintenanceCause>>(`/api/v1/causes`, payload, {
+        headers: { "Content-Type": "application/json" },
+    });
+};
+
 
 //================================Module Role ================================//
 export const callCreateRole = (role: IRole) => {
@@ -684,8 +714,6 @@ export const callDeleteMaterialSupplier = (id: string | number) => {
 
 
 /** ========================= MODULE TECHNICIAN ========================= **/
-/** ========================= MODULE TECHNICIAN ========================= **/
-
 
 export const callFetchTechnician = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<ITechnician>>>(`/api/v1/technicians?${query}`);
@@ -830,8 +858,6 @@ export const callDeleteDevice = (id: string) => {
 };
 
 
-
-
 /** ======================== Module ShiftTemplate ======================== **/
 
 export const callFetchShiftTemplate = (query: string) => {
@@ -918,25 +944,23 @@ export const callFetchMyTechnicianAvailability = (query: string) => {
 
 
 /** ======================== Module Maintenance Request ======================== **/
-// Lấy danh sách phiếu bảo trì
 export const callFetchMaintenanceRequest = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResMaintenanceRequestDTO>>>(
         `/api/v1/maintenance-requests?${query}`
     );
 };
 
-// Lấy chi tiết 1 phiếu bảo trì theo ID
 export const callFetchMaintenanceRequestById = (id: string) => {
     return axios.get<IBackendRes<IResMaintenanceRequestDetailDTO>>(
         `/api/v1/maintenance-requests/${id}`
     );
 };
-// Lấy log từ chối bảo trì
 export const callFetchRejectLogsByRequestId = (id: string) => {
     return axios.get<IBackendRes<IResMaintenanceRejectDTO>>(
         `/api/v1/maintenance-requests/${id}/reject-logs`
     );
 };
+
 // ======================= TẠO PHIẾU BẢO TRÌ ======================= //
 
 // Tạo phiếu bảo trì nội bộ (nhân viên)
@@ -1037,5 +1061,26 @@ export const callRejectTechnicianAssignment = (
     return axios.post<IBackendRes<IResTechnicianAssignmentDTO>>(
         `/api/v1/technician/assignments/${id}/reject`,
         data
+    );
+};
+
+
+// ======================= Cập nhật khảo sát ======================= //
+export const callCreateMaintenanceSurvey = (data: IReqMaintenanceSurveyDTO) => {
+    return axios.post<IBackendRes<IResMaintenanceSurveyDTO>>(
+        "/api/v1/maintenance-surveys",
+        data,
+        { headers: { "Content-Type": "application/json" } }
+    );
+};
+export const callFetchMaintenanceSurveyById = (id: string) => {
+    return axios.get<IBackendRes<IResMaintenanceSurveyListDTO>>(
+        `/api/v1/maintenance-surveys/${id}`
+    );
+};
+
+export const callFetchMaintenanceSurveysInProgress = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceSurveyListDTO>>>(
+        `/api/v1/maintenance-surveys/in-progress?${query}`
     );
 };

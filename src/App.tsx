@@ -37,7 +37,7 @@ import InventoryItemPage from "./pages/admin/inventory-item";
 import DevicePage from "pages/admin/device";
 import ShiftTemplatePage from "@/pages/admin/shift-template";
 import TechnicianAvailabilityPage from "@/pages/admin/technician-availability";
-import HomeTechnicianPage from "pages/technician/home-technician";
+import HomeTechnicianLayout from "pages/technician/home-technician";
 import CreateMaintenanceRequestClientPage from "@/pages/client/maintenance-request/create-request-client";
 import CustomerPurchaseHistoryPage from "./pages/admin/customer-purchase-history";
 import PurchaseHistoryPage from "@/pages/client/purchase-history";
@@ -50,8 +50,11 @@ import ResetPasswordPage from "@/pages/auth/reset-password";
 import MaintenancePage from "@/pages/admin/maintenance/maintenance";
 import IssueSkillMappingPage from "@/pages/admin/issue-skill-mapping";
 import TechnicianAssignmentPage from "@/pages/technician/assignment/home-assignment";
+import HomeSchedulePage from "@/pages/technician/schedule/home-schedule";
 import ProtectedTechnicianPage from "./routes/protected-technician";
 import RoleBasedRedirect from "./routes/RoleBasedRedirect";
+import MaintenanceSurveyPage from "@/pages/technician/survey/home-survey";
+import MaintenanceCausePage from './pages/admin/maintenance-cause';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -116,32 +119,42 @@ export default function App() {
     // ==================== TECHNICIAN =====================//
     {
       path: PATHS.TECHNICIAN.ROOT,
-      element:
-        isAuthenticated && userRole === "TECHNICIAN" ? (
-          <LayoutApp>
-            <LayoutClient />
-          </LayoutApp>
-        ) : isLoading ? (
-          <Loading />
-        ) : (
-          <NotPermitted message="Trang bạn yêu cầu hiện không khả dụng. Vui lòng kiểm tra lại hoặc quay về trang chính." />
-
-        ),
+      element: (
+        isAuthenticated && userRole === "TECHNICIAN"
+          ? <LayoutApp><LayoutClient /></LayoutApp>
+          : isLoading ? <Loading /> : <NotPermitted message="..." />
+      ),
       errorElement: <NotFound />,
       children: [
-        { index: true, element: <HomeTechnicianPage /> },
         {
-          path: PATHS.TECHNICIAN.ASSIGNMENT,
+          path: PATHS.TECHNICIAN.ROOT,
           element: (
-            <ProtectedTechnicianPage
-              redirectPath={PATHS.LOGIN}
-            >
-              <TechnicianAssignmentPage />
+            <ProtectedTechnicianPage redirectPath={PATHS.LOGIN}>
+              <HomeTechnicianLayout />
             </ProtectedTechnicianPage>
           ),
+          children: [
+            {
+              index: true,
+              element: <TechnicianAssignmentPage />,
+            },
+            {
+              path: "assignment",
+              element: <TechnicianAssignmentPage />,
+            },
+            {
+              path: "schedule",
+              element: <HomeSchedulePage />,
+            },
+            {
+              path: "survey",
+              element: <MaintenanceSurveyPage />,
+            },
+          ],
         },
       ],
     },
+
     // ==========================  ADMIN =======================//
     {
       path: PATHS.ADMIN.ROOT,
@@ -242,6 +255,15 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_CAUSE,
+          element: (
+            <ProtectedRoute>
+              <MaintenanceCausePage />
+            </ProtectedRoute>
+          ),
+        },
+
         {
           path: PATHS.ADMIN.CUSTOMER,
           element: (

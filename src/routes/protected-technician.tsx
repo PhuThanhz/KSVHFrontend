@@ -18,20 +18,24 @@ const ProtectedTechnicianPage: React.FC<ProtectedTechnicianPageProps> = ({
     const { isAuthenticated, user } = useAppSelector((s) => s.account);
     const role = user?.role?.name;
 
-    const { data, isFetching, isError } = useTechnicianAssignmentsQuery("page=1&size=10&sort=assignedAt,desc");
-    const assignments = data?.result ?? [];
+    const { isFetching, isError } = useTechnicianAssignmentsQuery(
+        "page=1&size=10&sort=assignedAt,desc"
+    );
 
     if (isFetching) return <Loading />;
 
     if (!isAuthenticated) return <Navigate to={redirectPath} replace />;
 
     if (role !== ROLES.TECHNICIAN) {
-        return <NotPermitted message="Trang bạn yêu cầu hiện không khả dụng. Vui lòng kiểm tra lại hoặc quay về trang chính." />
-            ;
+        return (
+            <NotPermitted message="Trang bạn yêu cầu hiện không khả dụng. Vui lòng kiểm tra lại hoặc quay về trang chính." />
+        );
     }
 
-    if (isError || assignments.length === 0) {
-        return <NotPermitted message="Trang bạn yêu cầu hiện không khả dụng. Vui lòng kiểm tra lại hoặc quay về trang chính." />;
+    if (isError) {
+        return (
+            <NotPermitted message="Không thể tải dữ liệu kỹ thuật viên. Vui lòng thử lại sau." />
+        );
     }
 
     return <>{children}</>;

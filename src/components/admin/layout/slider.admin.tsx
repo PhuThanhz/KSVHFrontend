@@ -141,6 +141,7 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
+
                 // --- Issue Skill Mapping ---
                 ...(checkPermission(
                     ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE
@@ -189,7 +190,15 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
-
+                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_CAUSE?.GET_PAGINATE ?? {})
+                    ? [
+                        {
+                            label: <Link to="/admin/maintenance-cause">Quản lý nguyên nhân hư hỏng</Link>,
+                            key: "/admin/maintenance-cause",
+                            icon: <BugOutlined />,
+                        },
+                    ]
+                    : []),
 
                 ...((checkPermission(ALL_PERMISSIONS.COMPANY?.GET_PAGINATE ?? {}) ||
                     checkPermission(ALL_PERMISSIONS.DEPARTMENT?.GET_PAGINATE ?? {}) ||

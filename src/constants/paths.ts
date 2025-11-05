@@ -34,6 +34,7 @@ export const PATHS = {
         CUSTOMER_PURCHASE_HISTORY: "/admin/customer-purchase-history",
         MAINTENANCE: "/admin/maintenance",
         ISSUE_SKILL_MAPPING: "/admin/issue-skill-mapping",
+        MAINTENANCE_CAUSE: "/admin/maintenance-cause",
     },
 
     CLIENT: {
@@ -47,5 +48,7 @@ export const PATHS = {
     TECHNICIAN: {
         ROOT: "/technician",
         ASSIGNMENT: "/technician/assignment",
+        SCHEDULE: "/technician/schedule",
+        SURVEY: "/technician/survey",
     },
 };
