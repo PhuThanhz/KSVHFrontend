@@ -107,6 +107,7 @@ const CompanyPage = () => {
             align: "center",
             render: (_, entity) => (
                 <Space>
+
                     <Access permission={ALL_PERMISSIONS.COMPANY.GET_BY_ID} hideChildren>
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}

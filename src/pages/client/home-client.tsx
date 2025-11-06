@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button, Modal, Typography } from "antd";
 import CreateMaintenanceRequestClientPage from "./maintenance-request/create-request-client";
-import { useMyPurchaseHistoryQuery } from "@/hooks/useCustomerPurchaseHistory";
 import {
     ToolOutlined,
     SafetyOutlined,
@@ -12,14 +11,18 @@ import {
     ThunderboltOutlined,
     SettingOutlined
 } from '@ant-design/icons';
+import { usePermission } from "@/hooks/usePermission";
 
 const { Title, Paragraph } = Typography;
 
 const HomeClientPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { data, isLoading } = useMyPurchaseHistoryQuery();
-    const purchaseHistory = data?.result ?? [];
-
+    const { hasPermission } = usePermission();
+    const canCreateMaintenance = hasPermission(
+        "UI_MODULE",
+        "VIEW",
+        "/ui/client/maintenance/create-request"
+    );
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
     const features = [
@@ -98,7 +101,7 @@ const HomeClientPage = () => {
                             Chúng tôi cung cấp dịch vụ bảo trì chuyên nghiệp,
                             nhanh chóng và đáng tin cậy cho mọi thiết bị của bạn.
                         </Paragraph>
-                        {purchaseHistory.length > 0 && (
+                        {canCreateMaintenance && (
                             <Button
                                 type="primary"
                                 size="large"
@@ -109,6 +112,7 @@ const HomeClientPage = () => {
                                 Tạo Phiếu Bảo Trì Ngay
                             </Button>
                         )}
+
                     </div>
                 </div>
             </div>

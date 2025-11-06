@@ -2,19 +2,18 @@ import { Button, Divider, Form, Input } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { callLogin } from "@/config/api";
 import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setUserLoginInfo } from "@/redux/slice/accountSlide";
 import styles from "@/styles/auth.module.scss";
-import { useAppSelector } from "@/redux/hooks";
 import { notify } from "@/components/common/notify";
 
 const LoginPage = () => {
     const [isSubmit, setIsSubmit] = useState(false);
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector((state) => state.account.isAuthenticated);
     const navigate = useNavigate();
-
     const location = useLocation();
+
     const params = new URLSearchParams(location.search);
     const callback = params.get("callback");
 
@@ -24,46 +23,43 @@ const LoginPage = () => {
         }
     }, [isAuthenticated, navigate]);
 
-    const onFinish = async (values: { username: string; password: string }) => {
-        const { username, password } = values;
+    const handleLogin = async (username: string, password: string) => {
         setIsSubmit(true);
-
         try {
             const res = await callLogin(username, password);
-            setIsSubmit(false);
+            const { access_token, user } = res?.data || {};
 
-            if (res?.data) {
-                const { access_token, user } = res.data;
-
-                if (!access_token) {
-                    notify.error("Không nhận được access_token từ server.");
-                    return;
-                }
-                localStorage.setItem("access_token", access_token);
-
-                if (!user) {
-                    notify.error("Không nhận được thông tin người dùng.");
-                    return;
-                }
-                dispatch(setUserLoginInfo(user));
-
-                notify.success("Đăng nhập tài khoản thành công!");
-                if (callback && callback.startsWith("/")) {
-                    navigate(callback, { replace: true });
-                } else {
-                    navigate("/redirect", { replace: true });
-                }
+            if (!access_token) {
+                notify.error("Không nhận được access_token từ server.");
                 return;
             }
 
-            const message = Array.isArray(res?.message) ? res.message[0] : res?.message || "Đăng nhập thất bại!";
-            notify.error(message);
+            if (!user) {
+                notify.error("Không nhận được thông tin người dùng.");
+                return;
+            }
+
+            localStorage.setItem("access_token", access_token);
+            dispatch(setUserLoginInfo(user));
+            notify.success("Đăng nhập tài khoản thành công!");
+
+            // Điều hướng sau đăng nhập
+            if (callback && callback.startsWith("/")) {
+                navigate(callback, { replace: true });
+            } else {
+                navigate("/", { replace: true });
+            }
         } catch (error: any) {
-            setIsSubmit(false);
             const message =
                 error?.response?.data?.message || error?.message || "Lỗi kết nối đến máy chủ. Vui lòng thử lại.";
             notify.error(message);
+        } finally {
+            setIsSubmit(false);
         }
+    };
+
+    const onFinish = (values: { username: string; password: string }) => {
+        handleLogin(values.username, values.password);
     };
 
     return (
@@ -76,9 +72,8 @@ const LoginPage = () => {
                             <Divider />
                         </div>
 
-                        <Form name="login-form" onFinish={onFinish} autoComplete="off">
+                        <Form name="login-form" onFinish={onFinish} autoComplete="off" layout="vertical">
                             <Form.Item
-                                labelCol={{ span: 24 }}
                                 label="Email"
                                 name="username"
                                 rules={[{ required: true, message: "Email không được để trống!" }]}
@@ -87,7 +82,6 @@ const LoginPage = () => {
                             </Form.Item>
 
                             <Form.Item
-                                labelCol={{ span: 24 }}
                                 label="Mật khẩu"
                                 name="password"
                                 rules={[{ required: true, message: "Mật khẩu không được để trống!" }]}
@@ -102,8 +96,9 @@ const LoginPage = () => {
                             </Form.Item>
 
                             <Divider />
+
                             <div style={{ textAlign: "center" }}>
-                                <p className="text text-normal">
+                                <p>
                                     <span>Bạn quên mật khẩu hoặc chưa kích hoạt tài khoản?</span>
                                     <br />
                                     <Link to="/forgot-password">Nhận mã xác nhận qua email</Link>

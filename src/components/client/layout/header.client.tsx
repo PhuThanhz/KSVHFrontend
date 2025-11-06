@@ -1,58 +1,54 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from "react";
 import {
     ContactsOutlined,
     FireOutlined,
     LogoutOutlined,
     MenuFoldOutlined,
-    TwitterOutlined,
     HistoryOutlined,
     ToolOutlined,
-} from '@ant-design/icons';
-import { Avatar, Drawer, Dropdown, Space, message, Menu, ConfigProvider } from 'antd';
-import type { MenuProps } from 'antd';
-import styles from '@/styles/client.module.scss';
-import { isMobile } from 'react-device-detect';
-import { FaReact } from 'react-icons/fa';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { callLogout } from '@/config/api';
-import { setLogoutAction } from '@/redux/slice/accountSlide';
-import ManageAccount from '../modal/manage.account';
-import { useMyPurchaseHistoryQuery, useMyMaintenanceRequestsQuery } from '@/hooks/useCustomerPurchaseHistory';
-import { PATHS } from '@/constants/paths';
+} from "@ant-design/icons";
+import {
+    Avatar,
+    Drawer,
+    Dropdown,
+    Space,
+    message,
+    Menu,
+    ConfigProvider,
+} from "antd";
+import type { MenuProps } from "antd";
+import styles from "@/styles/client.module.scss";
+import { isMobile } from "react-device-detect";
+import { FaReact } from "react-icons/fa";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { callLogout } from "@/config/api";
+import { setLogoutAction } from "@/redux/slice/accountSlide";
+import ManageAccount from "../modal/manage.account";
+import { PATHS } from "@/constants/paths";
+import { usePermission } from "@/hooks/usePermission";
 
 const Header = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-
-    const isAuthenticated = useAppSelector((state) => state.account.isAuthenticated);
-    const user = useAppSelector((state) => state.account.user);
-
-    const [openMobileMenu, setOpenMobileMenu] = useState<boolean>(false);
-    const [openManageAccount, setOpenManageAccount] = useState<boolean>(false);
+    const { isAuthenticated, user } = useAppSelector((state) => state.account);
+    const [openMobileMenu, setOpenMobileMenu] = useState(false);
+    const [openManageAccount, setOpenManageAccount] = useState(false);
     const [current, setCurrent] = useState(PATHS.CLIENT.HOME);
     const location = useLocation();
 
-    // ========================= Gọi API lấy lịch sử mua hàng =========================
-    const { data: dataPurchase, isLoading: loadingPurchase } = useMyPurchaseHistoryQuery();
-    const purchaseHistory = useMemo(() => dataPurchase?.result ?? [], [dataPurchase]);
-
-    // ========================= Gọi API lấy danh sách phiếu bảo trì =========================
-    const { data: dataMaintenance, isLoading: loadingMaintenance } =
-        useMyMaintenanceRequestsQuery("page=1&pageSize=10");
-    const maintenanceRequests = useMemo(() => dataMaintenance?.result ?? [], [dataMaintenance]);
+    const { hasPermission } = usePermission?.() || { hasPermission: () => true };
 
     useEffect(() => {
         setCurrent(location.pathname);
     }, [location]);
 
-    const onClick: MenuProps['onClick'] = (e) => setCurrent(e.key);
+    const onClick: MenuProps["onClick"] = (e) => setCurrent(e.key);
 
     const handleLogout = async () => {
         try {
             await callLogout();
         } catch {
-            // Bỏ qua lỗi server — vẫn tiếp tục logout local
         } finally {
             localStorage.removeItem("access_token");
             sessionStorage.clear();
@@ -60,93 +56,141 @@ const Header = () => {
             navigate(PATHS.HOME, { replace: true });
             message.success("Đăng xuất thành công");
         }
-    }
+    };
 
-    /** ========================= MENU CHÍNH ========================= */
-    const items: MenuProps['items'] = [];
+    /** ========================= DROPDOWN MENU ========================= */
+    const canViewPurchaseHistory = hasPermission(
+        "UI_MODULE",
+        "VIEW",
+        "/ui/client/purchase-history"
+    );
+    const canViewMaintenance = hasPermission(
+        "UI_MODULE",
+        "VIEW",
+        "/ui/client/maintenance/my-requests"
+    );
+    const canAccessAdmin = hasPermission(
+        "UI_MODULE",
+        "VIEW",
+        "/ui/admin/dashboard"
+    );
+    const canAccessTechnician = hasPermission(
+        "UI_MODULE",
+        "VIEW",
+        "/ui/technician/home"
+    );
+    const itemsDropdown: MenuProps["items"] = isAuthenticated
+        ? [
+            // ==================== Công việc của tôi ==================== //
+            ...(canAccessTechnician
+                ? [
+                    {
+                        label: (
+                            <Link to={PATHS.TECHNICIAN.ROOT}>
+                                Trang kỹ thuật viên
+                            </Link>
+                        ),
+                        key: "technician",
+                        icon: <ToolOutlined />,
+                    },
+                ]
+                : []),
+            // ==================== Lịch sử mua hàng ==================== //
+            ...(canViewPurchaseHistory
+                ? [
+                    {
+                        label: (
+                            <Link to={PATHS.CLIENT.PURCHASE_HISTORY}>
+                                Lịch sử mua hàng
+                            </Link>
+                        ),
+                        key: "purchase-history",
+                        icon: <HistoryOutlined />,
+                    },
+                ]
+                : []),
 
-    /** ========================= DROPDOWN MENU (quyền khách hàng) ========================= */
-    const itemsDropdown: MenuProps['items'] = [
-        // Nếu có lịch sử mua hàng
-        ...(isAuthenticated && !loadingPurchase && purchaseHistory.length > 0
-            ? [
-                {
-                    label: <Link to={PATHS.CLIENT.PURCHASE_HISTORY}>Lịch sử mua hàng</Link>,
-                    key: PATHS.CLIENT.PURCHASE_HISTORY,
-                    icon: <HistoryOutlined />,
-                },
-            ]
-            : []),
+            // ==================== Phiếu bảo trì ==================== //
+            ...(canViewMaintenance
+                ? [
+                    {
+                        label: (
+                            <Link to={PATHS.CLIENT.MY_MAINTENANCE_REQUESTS}>
+                                Phiếu bảo trì của tôi
+                            </Link>
+                        ),
+                        key: "maintenance",
+                        icon: <ToolOutlined />,
+                    },
+                ]
+                : []),
 
-        // Nếu có phiếu bảo trì
-        ...(isAuthenticated && !loadingMaintenance && maintenanceRequests.length > 0
-            ? [
-                {
-                    label: <Link to={PATHS.CLIENT.MY_MAINTENANCE_REQUESTS}>Phiếu bảo trì của tôi</Link>,
-                    key: PATHS.CLIENT.MY_MAINTENANCE_REQUESTS,
-                    icon: <ToolOutlined />,
-                },
-            ]
-            : []),
+            // ==================== Quản lý tài khoản ==================== //
+            {
+                label: (
+                    <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() => setOpenManageAccount(true)}
+                    >
+                        Quản lý tài khoản
+                    </span>
+                ),
+                key: "manage-account",
+                icon: <ContactsOutlined />,
+            },
 
-        // Quản lý tài khoản
-        {
-            label: (
-                <label
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setOpenManageAccount(true)}
-                >
-                    Quản lý tài khoản
-                </label>
-            ),
-            key: 'manage-account',
-            icon: <ContactsOutlined />,
-        },
+            // ==================== Trang quản trị (chỉ admin) ==================== //
+            ...(canAccessAdmin
+                ? [
+                    {
+                        label: <Link to={PATHS.ADMIN.ROOT}>Trang Quản Trị</Link>,
+                        key: "admin",
+                        icon: <FireOutlined />,
+                    },
+                ]
+                : []),
 
-        // Nếu có quyền admin
-        ...(user.role?.permissions?.length
-            ? [
-                {
-                    label: <Link to={PATHS.ADMIN.ROOT}>Trang Quản Trị</Link>,
-                    key: 'admin',
-                    icon: <FireOutlined />,
-                },
-            ]
-            : []),
+            // ==================== Đăng xuất ==================== //
+            {
+                label: (
+                    <span style={{ cursor: "pointer" }} onClick={handleLogout}>
+                        Đăng xuất
+                    </span>
+                ),
+                key: "logout",
+                icon: <LogoutOutlined />,
+            },
+        ]
+        : [
+            {
+                label: <Link to={PATHS.LOGIN}>Đăng Nhập</Link>,
+                key: "login",
+            },
+        ];
 
-        // Đăng xuất
-        {
-            label: (
-                <label style={{ cursor: 'pointer' }} onClick={handleLogout}>
-                    Đăng xuất
-                </label>
-            ),
-            key: 'logout',
-            icon: <LogoutOutlined />,
-        },
-    ];
-
+    const items: MenuProps["items"] = [];
     const itemsMobiles = [...items, ...itemsDropdown];
 
     return (
         <>
-            <div className={styles['header-section']}>
-                <div className={styles['container']}>
+            <div className={styles["header-section"]}>
+                <div className={styles["container"]}>
                     {!isMobile ? (
-                        <div style={{ display: 'flex', gap: 30 }}>
-                            <div className={styles['brand']}>
+                        <div style={{ display: "flex", gap: 30 }}>
+                            <div className={styles["brand"]}>
                                 <FaReact
                                     onClick={() => navigate(PATHS.CLIENT.HOME)}
                                     title="AMMS"
+                                    style={{ cursor: "pointer" }}
                                 />
                             </div>
-                            <div className={styles['top-menu']}>
+                            <div className={styles["top-menu"]}>
                                 <ConfigProvider
                                     theme={{
                                         token: {
-                                            colorPrimary: '#fff',
-                                            colorBgContainer: '#222831',
-                                            colorText: '#a7a7a7',
+                                            colorPrimary: "#fff",
+                                            colorBgContainer: "#222831",
+                                            colorText: "#a7a7a7",
                                         },
                                     }}
                                 >
@@ -158,20 +202,15 @@ const Header = () => {
                                     />
                                 </ConfigProvider>
 
-                                <div className={styles['extra']}>
+                                <div className={styles["extra"]}>
                                     {!isAuthenticated ? (
                                         <Link to={PATHS.LOGIN}>Đăng Nhập</Link>
                                     ) : (
-                                        <Dropdown
-                                            menu={{ items: itemsDropdown }}
-                                            trigger={['click']}
-                                        >
-                                            <Space style={{ cursor: 'pointer' }}>
+                                        <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
+                                            <Space style={{ cursor: "pointer" }}>
                                                 <span>Welcome {user?.name}</span>
                                                 <Avatar>
-                                                    {user?.name
-                                                        ?.substring(0, 2)
-                                                        ?.toUpperCase()}
+                                                    {user?.name?.substring(0, 2)?.toUpperCase()}
                                                 </Avatar>
                                             </Space>
                                         </Dropdown>
@@ -180,11 +219,9 @@ const Header = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className={styles['header-mobile']}>
+                        <div className={styles["header-mobile"]}>
                             <span>AMMS</span>
-                            <MenuFoldOutlined
-                                onClick={() => setOpenMobileMenu(true)}
-                            />
+                            <MenuFoldOutlined onClick={() => setOpenMobileMenu(true)} />
                         </div>
                     )}
                 </div>
@@ -199,9 +236,8 @@ const Header = () => {
                 <Menu
                     onClick={onClick}
                     selectedKeys={[current]}
-                    mode="horizontal"
+                    mode="inline"
                     items={itemsMobiles}
-                    overflowedIndicator={null}
                 />
             </Drawer>
 

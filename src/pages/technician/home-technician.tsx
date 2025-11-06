@@ -7,7 +7,7 @@ import { PATHS } from "@/constants/paths";
 const HomeTechnicianLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [activeKey, setActiveKey] = useState("assignment");
+    const [activeKey, setActiveKey] = useState("/");
     useEffect(() => {
         if (location.pathname.includes("schedule")) {
             setActiveKey("schedule");

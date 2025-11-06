@@ -42,36 +42,26 @@ import CreateMaintenanceRequestClientPage from "@/pages/client/maintenance-reque
 import CustomerPurchaseHistoryPage from "./pages/admin/customer-purchase-history";
 import PurchaseHistoryPage from "@/pages/client/purchase-history";
 import MyMaintenanceRequestsPage from "@/pages/client/maintenance-request/my-maintenance-requests";
-import Loading from "./components/share/loading";
-import NotPermitted from "@/components/share/not-permitted";
-import ProtectedCustomerPage from "./routes/protected-customer";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
 import MaintenancePage from "@/pages/admin/maintenance/maintenance";
 import IssueSkillMappingPage from "@/pages/admin/issue-skill-mapping";
 import TechnicianAssignmentPage from "@/pages/technician/assignment/home-assignment";
 import HomeSchedulePage from "@/pages/technician/schedule/home-schedule";
-import ProtectedTechnicianPage from "./routes/protected-technician";
-import RoleBasedRedirect from "./routes/RoleBasedRedirect";
 import MaintenanceSurveyPage from "@/pages/technician/survey/home-survey";
 import MaintenanceCausePage from './pages/admin/maintenance-cause';
+import ProtectedUIRoute from "components/share/ProtectedUIRoute";
 
 export default function App() {
   const dispatch = useAppDispatch();
-  const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
-  const userRole = useAppSelector(state => state.account.user?.role?.name);
-  const isLoading = useAppSelector(state => state.account.isLoading);
+  const isLoading = useAppSelector((state) => state.account.isLoading);
 
   useEffect(() => {
-    if (
-      window.location.pathname === PATHS.LOGIN
-    ) return;
+    if (window.location.pathname === PATHS.LOGIN) return;
     dispatch(fetchAccount());
-  }, []);
+  }, [dispatch]);
 
   const router = createBrowserRouter([
-    { path: "/redirect", element: <RoleBasedRedirect /> },
-
     // =================== CUSTOMER =======================//
     {
       path: PATHS.CLIENT.HOME,
@@ -83,89 +73,63 @@ export default function App() {
       errorElement: <NotFound />,
       children: [
         { index: true, element: <HomeClientPage /> },
-        // =================== CREATE MAINTENANCE =======================//
         {
           path: PATHS.CLIENT.CREATE_MAINTENANCE_REQUEST,
-          element: <CreateMaintenanceRequestClientPage />,
+          element: (
+            <ProtectedUIRoute module="UI_MODULE" path="/ui/client/maintenance/create-request">
+              <CreateMaintenanceRequestClientPage />
+            </ProtectedUIRoute>
+          ),
         },
-        // =================== PURCHASE HISTORY =======================//
         {
           path: PATHS.CLIENT.PURCHASE_HISTORY,
           element: (
-            <ProtectedCustomerPage
-              redirectPath={PATHS.LOGIN}
-              path="purchase-history"
-            >
+            <ProtectedUIRoute module="UI_MODULE" path="/ui/client/purchase-history">
               <PurchaseHistoryPage />
-            </ProtectedCustomerPage>
+            </ProtectedUIRoute>
           ),
         },
-        // =================== MY MAINTENANCE REQUESTS =======================//
         {
           path: PATHS.CLIENT.MY_MAINTENANCE_REQUESTS,
           element: (
-            <ProtectedCustomerPage
-              redirectPath={PATHS.LOGIN}
-              path="maintenance-requests"
-            >
+            <ProtectedUIRoute module="UI_MODULE" path="/ui/client/maintenance/my-requests">
               <MyMaintenanceRequestsPage />
-            </ProtectedCustomerPage>
+            </ProtectedUIRoute>
           ),
         },
 
       ],
     },
-
     // ==================== TECHNICIAN =====================//
     {
       path: PATHS.TECHNICIAN.ROOT,
       element: (
-        isAuthenticated && userRole === "TECHNICIAN"
-          ? <LayoutApp><LayoutClient /></LayoutApp>
-          : isLoading ? <Loading /> : <NotPermitted message="..." />
+        <LayoutApp>
+          <LayoutClient />
+        </LayoutApp>
       ),
       errorElement: <NotFound />,
       children: [
         {
           path: PATHS.TECHNICIAN.ROOT,
           element: (
-            <ProtectedTechnicianPage redirectPath={PATHS.LOGIN}>
+            <ProtectedUIRoute module="UI_MODULE" path="/ui/technician/home">
               <HomeTechnicianLayout />
-            </ProtectedTechnicianPage>
+            </ProtectedUIRoute>
           ),
           children: [
-            {
-              index: true,
-              element: <TechnicianAssignmentPage />,
-            },
-            {
-              path: "assignment",
-              element: <TechnicianAssignmentPage />,
-            },
-            {
-              path: "schedule",
-              element: <HomeSchedulePage />,
-            },
-            {
-              path: "survey",
-              element: <MaintenanceSurveyPage />,
-            },
+            { index: true, element: <TechnicianAssignmentPage /> },
+            { path: "assignment", element: <TechnicianAssignmentPage /> },
+            { path: "schedule", element: <HomeSchedulePage /> },
+            { path: "survey", element: <MaintenanceSurveyPage /> },
           ],
         },
       ],
     },
-
     // ==========================  ADMIN =======================//
     {
       path: PATHS.ADMIN.ROOT,
-      element: isAuthenticated && (userRole === 'SUPER_ADMIN' || userRole === 'EMPLOYEE') ? (
-        <LayoutAdmin />
-      ) : isLoading ? (
-        <Loading />
-      ) : (
-        <NotPermitted message="Trang bạn yêu cầu hiện không khả dụng. Vui lòng kiểm tra lại hoặc quay về trang chính." />
-
-      ),
+      element: <LayoutAdmin />,
       errorElement: <NotFound />,
       children: [
         {
@@ -397,6 +361,7 @@ export default function App() {
         },
       ],
     },
+    // ================= AUTH =================//
     { path: PATHS.LOGIN, element: <LoginPage /> },
     { path: PATHS.FORGOT_PASSWORD, element: <ForgotPasswordPage /> },
     { path: PATHS.RESET_PASSWORD, element: <ResetPasswordPage /> },
