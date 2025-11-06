@@ -58,7 +58,9 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
                 <Descriptions.Item label="Số điện thoại">
                     {info?.phone || "-"}
                 </Descriptions.Item>
-
+                <Descriptions.Item label="Địa điểm">
+                    {info?.locationDetail || "-"}
+                </Descriptions.Item>
                 {info?.creatorType === "EMPLOYEE" && (
                     <>
                         <Descriptions.Item label="Chức vụ">
@@ -219,26 +221,26 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
                     <Title level={5}>Thông tin khảo sát</Title>
                     <Descriptions bordered column={2} size="small">
                         <Descriptions.Item label="Nguyên nhân">
-                            {survey.surveyInfo?.causeName}
+                            {survey?.causeName}
                         </Descriptions.Item>
                         <Descriptions.Item label="Mức độ hư hại">
-                            {survey.surveyInfo?.damageLevel}
+                            {survey?.damageLevel}
                         </Descriptions.Item>
                         <Descriptions.Item label="Loại bảo trì thực tế">
-                            {survey.surveyInfo?.maintenanceTypeActual}
+                            {survey?.maintenanceTypeActual}
                         </Descriptions.Item>
                         <Descriptions.Item label="Ngày khảo sát">
-                            {survey.surveyInfo?.surveyDate
-                                ? dayjs(survey.surveyInfo?.surveyDate).format(
+                            {survey?.surveyDate
+                                ? dayjs(survey?.surveyDate).format(
                                     "DD/MM/YYYY HH:mm"
                                 )
                                 : "-"}
                         </Descriptions.Item>
                         <Descriptions.Item label="Kỹ thuật viên khảo sát">
-                            {survey.surveyInfo?.technicianName}
+                            {survey?.technicianName}
                         </Descriptions.Item>
                         <Descriptions.Item label="Mô tả thực tế">
-                            {survey.surveyInfo?.actualIssueDescription || "-"}
+                            {survey?.actualIssueDescription || "-"}
                         </Descriptions.Item>
                     </Descriptions>
                 </>
