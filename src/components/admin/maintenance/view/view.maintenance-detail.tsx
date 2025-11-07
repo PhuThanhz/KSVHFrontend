@@ -175,7 +175,7 @@ const ViewMaintenanceDetail = ({ requestId }: ViewMaintenanceDetailProps) => {
                                 <Image
                                     key={index}
                                     width={120}
-                                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/MAINTENANCE_REQUEST/${file}`}
+                                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/maintenance_request/${file}`}
                                     alt={`attachment-${index + 1}`}
                                 />
                             ))}

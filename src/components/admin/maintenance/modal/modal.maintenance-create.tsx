@@ -147,14 +147,14 @@ const ModalCreateMaintenance = ({
                 setLoadingUpload(true);
                 const res = await callUploadMultipleFiles(
                     [file as File],
-                    "MAINTENANCE_REQUEST"
+                    "maintenance_request"
                 );
                 if (res?.data && Array.isArray(res.data)) {
                     const newFiles: UploadFile[] = res.data.map((f) => ({
                         uid: uuidv4(),
                         name: f.fileName,
                         status: "done" as const,
-                        url: `${import.meta.env.VITE_BACKEND_URL}/storage/MAINTENANCE_REQUEST/${f.fileName}`,
+                        url: `${import.meta.env.VITE_BACKEND_URL}/storage/maintenance_request/${f.fileName}`,
                     }));
                     setFileList((prev) => [...prev, ...newFiles].slice(0, 3));
                     onSuccess?.("ok");

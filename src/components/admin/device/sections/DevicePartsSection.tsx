@@ -3,7 +3,12 @@ import { ProFormList, ProFormGroup, ProFormText, ProFormDigit } from "@ant-desig
 
 const DevicePartsSection = () => {
     return (
-        <Card size="small" title="Linh kiện / Vật tư" bordered={false} style={{ background: "#fafafa" }}>
+        <Card
+            size="small"
+            title="Linh kiện / Vật tư"
+            bordered={false}
+            style={{ background: "#fafafa" }}
+        >
             <ProFormList
                 name="parts"
                 alwaysShowItemLabel
@@ -12,7 +17,6 @@ const DevicePartsSection = () => {
                     creatorButtonText: "Thêm linh kiện",
                     type: "dashed",
                 }}
-
                 copyIconProps={false}
                 deleteIconProps={{ tooltipText: "Xóa dòng này" }}
             >
@@ -44,6 +48,8 @@ const DevicePartsSection = () => {
                                 rules={[{ required: true, message: "Nhập số lượng" }]}
                             />
                         </Col>
+                        {/* Thêm ẩn trạng thái mặc định */}
+                        <ProFormText name="status" hidden initialValue="WORKING" />
                     </Row>
                 </ProFormGroup>
             </ProFormList>

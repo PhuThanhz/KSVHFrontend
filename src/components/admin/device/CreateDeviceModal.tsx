@@ -212,6 +212,7 @@ const CreateDeviceModal = ({ openModal, setOpenModal }: IProps) => {
                         partCode: String(p.partCode || "").trim(),
                         partName: String(p.partName || "").trim(),
                         quantity: Number(p.quantity || 1),
+                        status: "WORKING",
                     })),
             };
         },

@@ -182,9 +182,28 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                                 key: "quantity",
                                 align: "center",
                             },
+                            {
+                                title: "Trạng thái",
+                                dataIndex: "status",
+                                key: "status",
+                                align: "center",
+                                render: (v?: string) => {
+                                    switch (v) {
+                                        case "WORKING":
+                                            return <Tag color="green">Đang hoạt động</Tag>;
+                                        case "BROKEN":
+                                            return <Tag color="red">Hư hỏng</Tag>;
+                                        case "REPLACED":
+                                            return <Tag color="blue">Đã thay mới</Tag>;
+                                        case "UNDER_MAINTENANCE":
+                                            return <Tag color="orange">Đang bảo trì</Tag>;
+                                        default:
+                                            return <Tag>-</Tag>;
+                                    }
+                                },
+                            },
                         ]}
                     />
-
                     <Divider orientation="left">Thông tin hệ thống</Divider>
                     <Descriptions bordered size="small" column={2}>
                         <Descriptions.Item label="Người tạo">{data.createdBy || "-"}</Descriptions.Item>

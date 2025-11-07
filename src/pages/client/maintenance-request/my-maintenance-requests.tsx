@@ -85,7 +85,7 @@ const MyMaintenanceRequestsPage = () => {
                                                             ? mainImage
                                                             : `${import.meta.env.VITE_BACKEND_URL
                                                             }/storage/${attachments[0]
-                                                                ? "MAINTENANCE_REQUEST"
+                                                                ? "maintenance_request"
                                                                 : "DEVICE"
                                                             }/${mainImage}`
                                                     }

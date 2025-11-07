@@ -147,7 +147,7 @@ const ViewTechnicianAssignment = ({ open, onClose, assignmentId }: IProps) => {
                                             key={idx}
                                             width={120}
                                             height={120}
-                                            src={`${backendURL}/storage/MAINTENANCE_REQUEST/${img}`}
+                                            src={`${backendURL}/storage/maintenance_request/${img}`}
                                             alt={`maintenance-${idx + 1}`}
                                             style={{
                                                 borderRadius: 8,

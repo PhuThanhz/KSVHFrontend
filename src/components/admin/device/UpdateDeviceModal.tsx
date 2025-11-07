@@ -94,8 +94,10 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                     partCode: p.partCode || "",
                     partName: p.partName || "",
                     quantity: Number(p.quantity || 1),
+                    status: p.status || "WORKING",
                 }))
-                : [{ partCode: "", partName: "", quantity: 1 }];
+                : [{ partCode: "", partName: "", quantity: 1, status: "WORKING" }];
+
 
         form.setFieldsValue({
             ...detail,
@@ -295,6 +297,7 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                         partCode: String(p.partCode || "").trim(),
                         partName: String(p.partName || "").trim(),
                         quantity: Number(p.quantity || 1),
+                        status: p.status || "WORKING",
                     })),
             };
         },

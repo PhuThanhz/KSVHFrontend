@@ -471,6 +471,8 @@ export interface IDevicePart {
     partName: string;
     quantity: number;
     deviceId?: string;
+    status?: 'WORKING' | 'BROKEN' | 'REPLACED' | 'UNDER_MAINTENANCE';
+    lastReplacedAt?: string;
 }
 
 /** ========================== LIST ITEM ========================== */
