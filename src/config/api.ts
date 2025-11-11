@@ -44,6 +44,10 @@ import type {
     IReqMaintenanceSurveyDTO,
     IResMaintenanceSurveyDTO,
     IResMaintenanceSurveyListDTO,
+    IReqMaintenancePlanDTO,
+    IResMaintenancePlanCreateDTO,
+    IResMaintenanceSurveyedListDTO,
+    IResMaintenanceSurveyedDetailDTO,
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type { IMaintenanceCause, IMaintenanceCauseRequest } from "@/types/backend";
@@ -347,7 +351,6 @@ export const callDeletePosition = (id: string | number) => {
 };
 
 /** ======================== Module Employee ======================== **/
-
 export const callFetchEmployee = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IEmployee>>>(`/api/v1/employees?${query}`);
 };
@@ -365,7 +368,17 @@ export const callCreateEmployee = (data: {
     positionId: number;
     companyId: number;
 }) => {
-    return axios.post<IBackendRes<IEmployee>>(`/api/v1/employees`, data, {
+    const payload = {
+        employeeCode: data.employeeCode,
+        fullName: data.fullName,
+        phone: data.phone ?? null,
+        email: data.email ?? null,
+        departmentId: data.departmentId,
+        positionId: data.positionId,
+        companyId: data.companyId,
+    };
+
+    return axios.post<IBackendRes<IEmployee>>(`/api/v1/employees`, payload, {
         headers: { "Content-Type": "application/json" },
     });
 };
@@ -380,32 +393,48 @@ export const callUpdateEmployee = (data: {
     positionId: number;
     companyId: number;
 }) => {
-    return axios.put<IBackendRes<IEmployee>>(`/api/v1/employees`, data, {
+    const payload = {
+        id: data.id,
+        employeeCode: data.employeeCode,
+        fullName: data.fullName,
+        phone: data.phone ?? null,
+        email: data.email ?? null,
+        departmentId: data.departmentId,
+        positionId: data.positionId,
+        companyId: data.companyId,
+    };
+
+    return axios.put<IBackendRes<IEmployee>>(`/api/v1/employees`, payload, {
         headers: { "Content-Type": "application/json" },
     });
 };
 
-export const callDeleteEmployee = (id: string | number) => {
-    return axios.delete<IBackendRes<IEmployee>>(`/api/v1/employees/${id}`);
-};
+
+
 
 /** ======================== Module Customer ======================== **/
+
 
 export const callFetchCustomer = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<ICustomer>>>(`/api/v1/customers?${query}`);
 };
-
 export const callFetchCustomerById = (id: string | number) => {
     return axios.get<IBackendRes<ICustomer>>(`/api/v1/customers/${id}`);
 };
-
 export const callCreateCustomer = (data: {
     name: string;
     email: string;
     phone?: string;
     address?: string;
 }) => {
-    return axios.post<IBackendRes<ICustomer>>(`/api/v1/customers`, data, {
+    const payload = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone ?? null,
+        address: data.address ?? null,
+    };
+
+    return axios.post<IBackendRes<ICustomer>>(`/api/v1/customers`, payload, {
         headers: { "Content-Type": "application/json" },
     });
 };
@@ -416,17 +445,25 @@ export const callUpdateCustomer = (data: {
     phone?: string;
     address?: string;
 }) => {
-    return axios.put<IBackendRes<ICustomer>>(`/api/v1/customers`, data, {
+    const payload = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone ?? null,
+        address: data.address ?? null,
+    };
+
+    return axios.put<IBackendRes<ICustomer>>(`/api/v1/customers`, payload, {
         headers: { "Content-Type": "application/json" },
     });
 };
 
-export const callDeleteCustomer = (id: string | number) => {
-    return axios.delete<IBackendRes<ICustomer>>(`/api/v1/customers/${id}`);
+export const callDeactivateCustomer = (id: string | number) => {
+    return axios.put<IBackendRes<ICustomer>>(`/api/v1/customers/${id}/deactivate`);
 };
 
 
-/** ======================== Module Customer ======================== **/
+/** ======================== Module Device ======================== **/
 
 export const callFetchDeviceType = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IDeviceType>>>(`/api/v1/device-types?${query}`);
@@ -712,9 +749,7 @@ export const callDeleteMaterialSupplier = (id: string | number) => {
     return axios.delete<IBackendRes<string>>(`/api/v1/material-suppliers/${id}`);
 };
 
-
 /** ========================= MODULE TECHNICIAN ========================= **/
-
 export const callFetchTechnician = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<ITechnician>>>(`/api/v1/technicians?${query}`);
 };
@@ -727,7 +762,7 @@ export const callCreateTechnician = (technician: ITechnician) => {
     const payload = {
         technicianCode: technician.technicianCode,
         fullName: technician.fullName,
-        activeStatus: technician.activeStatus ?? true,
+        // backend hiện đồng bộ theo User.active nên không cần gửi activeStatus nữa
         technicianType: technician.technicianType,
         technicianSupplierId:
             technician.technicianType === "OUTSOURCE"
@@ -752,7 +787,6 @@ export const callUpdateTechnician = (technician: ITechnician) => {
         id: technician.id,
         technicianCode: technician.technicianCode,
         fullName: technician.fullName,
-        activeStatus: technician.activeStatus ?? true,
         technicianType: technician.technicianType,
         technicianSupplierId:
             technician.technicianType === "OUTSOURCE"
@@ -771,11 +805,6 @@ export const callUpdateTechnician = (technician: ITechnician) => {
         headers: { "Content-Type": "application/json" },
     });
 };
-
-export const callDeleteTechnician = (id: number | string) => {
-    return axios.delete<IBackendRes<string>>(`/api/v1/technicians/${id}`);
-};
-
 
 
 
@@ -1082,5 +1111,28 @@ export const callFetchMaintenanceSurveyById = (id: string) => {
 export const callFetchMaintenanceSurveysInProgress = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResMaintenanceSurveyListDTO>>>(
         `/api/v1/maintenance-surveys/in-progress?${query}`
+    );
+};
+
+/** ===================== Lập kế hoạch bảo trì ===================== */
+
+export const callCreateMaintenancePlan = (payload: IReqMaintenancePlanDTO) => {
+    return axios.post<IBackendRes<IResMaintenancePlanCreateDTO>>(
+        `/api/v1/maintenance-plans`,
+        payload,
+        { headers: { "Content-Type": "application/json" } }
+    );
+};
+/** ===================== Danh sách phiếu đã khảo sát ===================== */
+export const callFetchSurveyedMaintenanceRequests = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceSurveyedListDTO>>>(
+        `/api/v1/maintenance-plans/surveyed?${query}`
+    );
+};
+/** ===================== Chi tiết phiếu đã khảo sát ===================== */
+
+export const callFetchSurveyedMaintenanceDetail = (id: string) => {
+    return axios.get<IBackendRes<IResMaintenanceSurveyedDetailDTO>>(
+        `/api/v1/maintenance-plans/surveyed/${id}`
     );
 };

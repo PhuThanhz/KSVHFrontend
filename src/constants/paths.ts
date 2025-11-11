@@ -47,8 +47,13 @@ export const PATHS = {
 
     TECHNICIAN: {
         ROOT: "/technician",
-        ASSIGNMENT: "/technician/assignment",
-        SCHEDULE: "/technician/schedule",
-        SURVEY: "/technician/survey",
+        ASSIGNMENT: "/technician/assignment",          // Công việc được giao
+        SCHEDULE: "/technician/schedule",              // Lịch làm việc
+        SURVEY: "/technician/survey",                  // Khảo sát
+        PLAN: "/technician/plan",                      // Kế hoạch làm việc
+        NOTIFICATIONS: "/technician/notifications",    // Thông báo
+        PROFILE: "/technician/profile",                // Hồ sơ cá nhân
+        PROGRESS: "/technician/progress",              // Cập nhật tiến độ công việc
     },
+
 };

@@ -6,7 +6,7 @@ import {
     PlusOutlined,
 } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Tag, Select, Popconfirm, Badge } from "antd";
+import { Button, Space, Tag, Select, Badge } from "antd";
 import { useEffect, useState } from "react";
 import queryString from "query-string";
 import { sfLike } from "spring-filter-query-builder";
@@ -29,13 +29,8 @@ const TechnicianPage = () => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
-    const [supplierFilter, setSupplierFilter] = useState<string | null>(null);
-    const [skillFilter, setSkillFilter] = useState<string | null>(null);
     const [technicianTypeFilter, setTechnicianTypeFilter] = useState<string | null>(null);
-
-    const [supplierOptions, setSupplierOptions] = useState<{ label: string; value: string }[]>([]);
-    const [skillOptions, setSkillOptions] = useState<{ label: string; value: string }[]>([]);
-
+    const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const [query, setQuery] = useState<string>(() =>
         queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc" }, { encode: false })
     );
@@ -45,28 +40,7 @@ const TechnicianPage = () => {
     const { data: suppliersData } = useTechnicianSuppliersQuery("page=1&size=100");
     const { data: skillsData } = useSkillsQuery("page=1&size=100");
 
-    useEffect(() => {
-        if (suppliersData?.result) {
-            setSupplierOptions(
-                suppliersData.result.map((s) => ({
-                    label: s.name,
-                    value: s.name,
-                }))
-            );
-        }
-    }, [suppliersData]);
-
-    useEffect(() => {
-        if (skillsData?.result) {
-            setSkillOptions(
-                skillsData.result.map((s) => ({
-                    label: s.techniqueName,
-                    value: s.techniqueName,
-                }))
-            );
-        }
-    }, [skillsData]);
-
+    // ---------- Filter Builder ---------- //
     const buildQuery = (params: any, sort: any) => {
         const q: any = { page: params.current, size: params.pageSize, filter: "" };
 
@@ -82,6 +56,11 @@ const TechnicianPage = () => {
                 ? `${q.filter} and technicianType='${technicianTypeFilter}'`
                 : `technicianType='${technicianTypeFilter}'`;
 
+        if (statusFilter !== null)
+            q.filter = q.filter
+                ? `${q.filter} and activeStatus=${statusFilter === "active"}`
+                : `activeStatus=${statusFilter === "active"}`;
+
         if (createdAtFilter)
             q.filter = q.filter
                 ? `${q.filter} and ${createdAtFilter}`
@@ -89,6 +68,7 @@ const TechnicianPage = () => {
 
         if (!q.filter) delete q.filter;
 
+        // Sắp xếp
         let sortBy = "sort=createdAt,desc";
         if (sort?.fullName)
             sortBy = sort.fullName === "ascend" ? "sort=fullName,asc" : "sort=fullName,desc";
@@ -98,6 +78,7 @@ const TechnicianPage = () => {
         return `${queryString.stringify(q)}&${sortBy}`;
     };
 
+    // ---------- Columns ---------- //
     const columns: ProColumns<ITechnician>[] = [
         {
             title: "STT",
@@ -121,13 +102,14 @@ const TechnicianPage = () => {
             hideInSearch: true,
         },
         {
-            title: "Trạng thái",
+            title: "Trạng thái hoạt động",
             dataIndex: "activeStatus",
-            render: (v) =>
-                v ? (
-                    <Badge status="success" text="Hoạt động" />
+            align: "center",
+            render: (value) =>
+                value ? (
+                    <Badge status="success" text="Đang hoạt động" />
                 ) : (
-                    <Badge status="error" text="Ngừng" />
+                    <Badge status="error" text="Ngừng hoạt động" />
                 ),
             hideInSearch: true,
         },
@@ -161,6 +143,8 @@ const TechnicianPage = () => {
             ),
         },
     ];
+
+    // ---------- Render ---------- //
     return (
         <div>
             <Access permission={ALL_PERMISSIONS.TECHNICIAN.GET_PAGINATE}>
@@ -176,34 +160,11 @@ const TechnicianPage = () => {
                     }}
                     pagination={{
                         defaultPageSize: 10,
-
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
-                        showSizeChanger: true,
                         total: data?.meta?.total,
                         showQuickJumper: true,
-                        size: "default",
-                        showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
-                                    {range[0]}–{range[1]}
-                                </span>{" "}
-                                trên{" "}
-                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
-                                    {total.toLocaleString()}
-                                </span>{" "}
-                                kỹ thuật viên
-                            </div>
-                        ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
+                        showSizeChanger: true,
                     }}
                     toolBarRender={() => [
                         <Space key="toolbar" size={12} align="center" wrap>
@@ -217,6 +178,18 @@ const TechnicianPage = () => {
                                 ]}
                                 onChange={(v) => setTechnicianTypeFilter(v || null)}
                             />
+
+                            <Select
+                                placeholder="Trạng thái hoạt động"
+                                allowClear
+                                style={{ width: 180 }}
+                                options={[
+                                    { label: "Đang hoạt động", value: "active" },
+                                    { label: "Ngừng hoạt động", value: "inactive" },
+                                ]}
+                                onChange={(v) => setStatusFilter(v || null)}
+                            />
+
                             <DateRangeFilter
                                 label="Ngày tạo"
                                 fieldName="createdAt"
@@ -224,6 +197,7 @@ const TechnicianPage = () => {
                                 width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
+
                             <Access permission={ALL_PERMISSIONS.TECHNICIAN.CREATE} hideChildren>
                                 <Button
                                     icon={<PlusOutlined />}
@@ -241,6 +215,7 @@ const TechnicianPage = () => {
                 />
             </Access>
 
+            {/* ---------- Modal + View Drawer ---------- */}
             <ModalTechnician
                 openModal={openModal}
                 setOpenModal={setOpenModal}

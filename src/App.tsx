@@ -51,10 +51,11 @@ import HomeSchedulePage from "@/pages/technician/schedule/home-schedule";
 import MaintenanceSurveyPage from "@/pages/technician/survey/home-survey";
 import MaintenanceCausePage from './pages/admin/maintenance-cause';
 import ProtectedUIRoute from "components/share/ProtectedUIRoute";
+import HomePlanPage from "@/pages/technician/plan/home-plan";
+import LayoutTechnician from "@/components/technician/layout/layout.technician";
 
 export default function App() {
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector((state) => state.account.isLoading);
 
   useEffect(() => {
     if (window.location.pathname === PATHS.LOGIN) return;
@@ -105,27 +106,26 @@ export default function App() {
       path: PATHS.TECHNICIAN.ROOT,
       element: (
         <LayoutApp>
-          <LayoutClient />
+          <LayoutTechnician />
         </LayoutApp>
       ),
       errorElement: <NotFound />,
       children: [
         {
-          path: PATHS.TECHNICIAN.ROOT,
+          index: true,
           element: (
             <ProtectedUIRoute module="UI_MODULE" path="/ui/technician/home">
               <HomeTechnicianLayout />
             </ProtectedUIRoute>
           ),
-          children: [
-            { index: true, element: <TechnicianAssignmentPage /> },
-            { path: "assignment", element: <TechnicianAssignmentPage /> },
-            { path: "schedule", element: <HomeSchedulePage /> },
-            { path: "survey", element: <MaintenanceSurveyPage /> },
-          ],
         },
+        { path: "assignment", element: <TechnicianAssignmentPage /> },
+        { path: "schedule", element: <HomeSchedulePage /> },
+        { path: "survey", element: <MaintenanceSurveyPage /> },
+        { path: "plan", element: <HomePlanPage /> },
       ],
     },
+
     // ==========================  ADMIN =======================//
     {
       path: PATHS.ADMIN.ROOT,

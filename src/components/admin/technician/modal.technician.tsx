@@ -91,7 +91,7 @@ const ModalTechnician = ({
                                     : undefined,
                             technicianSupplier: type === "OUTSOURCE" ? supplierItem : undefined,
                             skillIds: skillItems,
-                            activeStatus: detail.activeStatus ?? true,
+
                         });
                     }, 0);
                 }
@@ -138,7 +138,6 @@ const ModalTechnician = ({
             technicianType: values.technicianType,
             costPerHire:
                 values.technicianType === "OUTSOURCE" ? values.costPerHire || 0 : 0,
-            activeStatus: values.activeStatus ?? true,
             technicianSupplierId:
                 values.technicianType === "OUTSOURCE"
                     ? Number(values.technicianSupplier?.value)

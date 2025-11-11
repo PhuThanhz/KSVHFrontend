@@ -5,7 +5,6 @@ import {
     callFetchTechnicianById,
     callCreateTechnician,
     callUpdateTechnician,
-    callDeleteTechnician,
 } from "@/config/api";
 import { notify } from "@/components/common/notify";
 
@@ -19,7 +18,7 @@ export const useTechniciansQuery = (query: string) => {
                 throw new Error(res?.message || "Không thể lấy danh sách kỹ thuật viên");
             return res.data as IModelPaginate<ITechnician>;
         },
-        staleTime: 1000 * 60 * 2, // cache 2 phút
+        staleTime: 1000 * 60 * 2,
         retry: false,
     });
 };
@@ -34,30 +33,26 @@ export const useTechnicianByIdQuery = (id?: string | number) => {
             const res = await callFetchTechnicianById(id);
             if (!res?.data)
                 throw new Error(res?.message || "Không thể lấy thông tin kỹ thuật viên");
+
             return res.data as ITechnician;
         },
         retry: false,
     });
 };
-
-/** ========================= Tạo mới kỹ thuật viên ========================= */
 export const useCreateTechnicianMutation = () => {
     const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: async (payload: ITechnician) => {
             const res = await callCreateTechnician(payload);
-            if (!res?.data || res.statusCode !== 201) {
-                throw new Error(res?.message || "Không thể tạo kỹ thuật viên");
-            }
+            if (!res?.data) throw new Error(res?.message || "Không thể tạo kỹ thuật viên");
             return res.data;
         },
-        onSuccess: (_, variables) => {
+        onSuccess: (data, variables) => {
             notify.created("Tạo kỹ thuật viên thành công");
-            queryClient.invalidateQueries({ queryKey: ["technicians"], exact: false });
-            // Nếu muốn làm mới detail sau khi tạo, có thể thêm:
+            queryClient.invalidateQueries({ queryKey: ["technicians"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
             if (variables?.id) {
-                queryClient.invalidateQueries({ queryKey: ["technician", variables.id] });
+                queryClient.setQueryData(["technician", variables.id], data);
             }
         },
         onError: (error: any) => {
@@ -66,23 +61,20 @@ export const useCreateTechnicianMutation = () => {
     });
 };
 
-/** ========================= Cập nhật kỹ thuật viên ========================= */
 export const useUpdateTechnicianMutation = () => {
     const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: async (payload: ITechnician) => {
             const res = await callUpdateTechnician(payload);
-            if (!res?.data || res.statusCode !== 200) {
-                throw new Error(res?.message || "Không thể cập nhật kỹ thuật viên");
-            }
+            if (!res?.data) throw new Error(res?.message || "Không thể cập nhật kỹ thuật viên");
             return res.data;
         },
         onSuccess: (data, variables) => {
             notify.updated("Cập nhật kỹ thuật viên thành công");
-            queryClient.invalidateQueries({ queryKey: ["technicians"], exact: false });
+            queryClient.invalidateQueries({ queryKey: ["technicians"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
             if (variables?.id) {
-                queryClient.invalidateQueries({ queryKey: ["technician", variables.id] });
+                queryClient.setQueryData(["technician", variables.id], data);
             }
         },
         onError: (error: any) => {

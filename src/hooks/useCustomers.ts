@@ -4,7 +4,6 @@ import {
     callFetchCustomerById,
     callCreateCustomer,
     callUpdateCustomer,
-    callDeleteCustomer,
 } from "@/config/api";
 import type { ICustomer, IModelPaginate } from "@/types/backend";
 import { notify } from "@/components/common/notify";
@@ -34,20 +33,18 @@ export const useCustomerByIdQuery = (id?: string | number) => {
         },
     });
 };
-
-/** ========================= Tạo mới khách hàng ========================= */
 export const useCreateCustomerMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (payload: any) => {
             const res = await callCreateCustomer(payload);
-            if (!res?.data)
-                throw new Error(res?.message || "Không thể tạo khách hàng");
-            return res;
+            if (!res?.data) throw new Error(res?.message || "Không thể tạo khách hàng");
+            return res.data;
         },
-        onSuccess: (res) => {
-            notify.created(res?.message || "Tạo khách hàng thành công");
+        onSuccess: () => {
+            notify.created("Tạo khách hàng thành công");
             queryClient.invalidateQueries({ queryKey: ["customers"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi tạo khách hàng");
@@ -55,43 +52,24 @@ export const useCreateCustomerMutation = () => {
     });
 };
 
-/** ========================= Cập nhật khách hàng ========================= */
 export const useUpdateCustomerMutation = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (payload: any) => {
             const res = await callUpdateCustomer(payload);
-            if (!res?.data)
-                throw new Error(res?.message || "Không thể cập nhật khách hàng");
-            return res;
+            if (!res?.data) throw new Error(res?.message || "Không thể cập nhật khách hàng");
+            return res.data;
         },
-        onSuccess: (res) => {
-            notify.updated(res?.message || "Cập nhật khách hàng thành công");
+        onSuccess: (data, variables) => {
+            notify.updated("Cập nhật khách hàng thành công");
             queryClient.invalidateQueries({ queryKey: ["customers"] });
+            queryClient.invalidateQueries({ queryKey: ["users"] });
+            if (variables?.id) {
+                queryClient.setQueryData(["customer", variables.id], data);
+            }
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi cập nhật khách hàng");
-        },
-    });
-};
-
-/** ========================= Xóa khách hàng ========================= */
-export const useDeleteCustomerMutation = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (id: string | number) => {
-            const res = await callDeleteCustomer(id);
-            if (!res?.statusCode || res.statusCode !== 200) {
-                throw new Error(res?.message || "Không thể xóa khách hàng");
-            }
-            return res.data;
-        },
-        onSuccess: () => {
-            notify.deleted("Xóa khách hàng thành công");
-            queryClient.invalidateQueries({ queryKey: ["customers"], exact: false });
-        },
-        onError: (error: any) => {
-            notify.error(error.message || "Lỗi khi xóa khách hàng");
         },
     });
 };

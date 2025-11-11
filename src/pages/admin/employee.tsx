@@ -4,7 +4,6 @@ import {
     EditOutlined,
     EyeOutlined,
     PlusOutlined,
-    DeleteOutlined,
 } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
 import {
@@ -12,14 +11,11 @@ import {
     Space,
     Tag,
     Select,
-    Popconfirm,
+    Badge,
 } from "antd";
 import { useEffect, useState } from "react";
 import queryString from "query-string";
-import {
-    useEmployeesQuery,
-    useDeleteEmployeeMutation,
-} from "@/hooks/useEmployees";
+import { useEmployeesQuery } from "@/hooks/useEmployees";
 import ModalEmployee from "@/components/admin/employee/modal.employee";
 import ViewDetailEmployee from "@/components/admin/employee/view.employee";
 import { useCompaniesQuery } from "@/hooks/useCompanies";
@@ -41,6 +37,7 @@ const EmployeePage = () => {
     const [companyFilter, setCompanyFilter] = useState<string | null>(null);
     const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
     const [positionFilter, setPositionFilter] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
     const [companyOptions, setCompanyOptions] = useState<{ label: string; value: string }[]>([]);
     const [departmentOptions, setDepartmentOptions] = useState<{ label: string; value: string }[]>([]);
@@ -53,12 +50,11 @@ const EmployeePage = () => {
             sort: "createdAt,desc",
         }, { encode: false })
     );
-    const { data, isFetching } = useEmployeesQuery(query);
-    const { mutate: deleteEmployee, isPending: isDeleting } = useDeleteEmployeeMutation();
 
-    const { data: companiesData, isLoading: isCompaniesLoading } = useCompaniesQuery("page=1&size=100");
-    const { data: departmentsData, isLoading: isDepartmentsLoading } = useDepartmentsQuery("page=1&size=100");
-    const { data: positionsData, isLoading: isPositionsLoading } = usePositionsQuery("page=1&size=100");
+    const { data, isFetching } = useEmployeesQuery(query);
+    const { data: companiesData } = useCompaniesQuery("page=1&size=100");
+    const { data: departmentsData } = useDepartmentsQuery("page=1&size=100");
+    const { data: positionsData } = usePositionsQuery("page=1&size=100");
 
     useEffect(() => {
         if (companiesData?.result) {
@@ -78,7 +74,6 @@ const EmployeePage = () => {
         }
     }, [positionsData]);
 
-
     const buildQuery = (params: any, sort: any) => {
         const q: any = { page: params.current, size: params.pageSize, filter: "" };
 
@@ -89,7 +84,13 @@ const EmployeePage = () => {
                 ? `${q.filter} and ${sfLike("employeeCode", params.employeeCode)}`
                 : sfLike("employeeCode", params.employeeCode);
 
-        // Filter by Company, Department, Position
+        // ✅ Filter trạng thái
+        if (statusFilter !== null)
+            q.filter = q.filter
+                ? `${q.filter} and active=${statusFilter === "active"}`
+                : `active=${statusFilter === "active"}`;
+
+        // Filter công ty, phòng ban, chức vụ
         if (companyFilter)
             q.filter = q.filter
                 ? `${q.filter} and company.name='${companyFilter}'`
@@ -103,7 +104,7 @@ const EmployeePage = () => {
                 ? `${q.filter} and position.name='${positionFilter}'`
                 : `position.name='${positionFilter}'`;
 
-        // Filter by CreatedAt
+        // Filter ngày tạo
         if (createdAtFilter)
             q.filter = q.filter ? `${q.filter} and ${createdAtFilter}` : createdAtFilter;
 
@@ -119,7 +120,6 @@ const EmployeePage = () => {
         return `${queryString.stringify(q)}&${sortBy}`;
     };
 
-    // columns
     const columns: ProColumns<IEmployee>[] = [
         {
             title: "STT",
@@ -151,6 +151,19 @@ const EmployeePage = () => {
             hideInSearch: true,
         },
         {
+            title: "Trạng thái", // ✅ thêm cột trạng thái
+            dataIndex: "active",
+            align: "center",
+            width: 140,
+            hideInSearch: true,
+            render: (_, record) =>
+                record.active ? (
+                    <Badge status="success" text="Đang hoạt động" />
+                ) : (
+                    <Badge status="error" text="Ngừng hoạt động" />
+                ),
+        },
+        {
             title: "Ngày tạo",
             dataIndex: "createdAt",
             hideInSearch: true,
@@ -163,7 +176,6 @@ const EmployeePage = () => {
             align: "center",
             render: (_, entity) => (
                 <Space size="middle">
-                    {/* Xem chi tiết */}
                     <Access permission={ALL_PERMISSIONS.EMPLOYEE.GET_BY_ID} hideChildren>
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
@@ -173,41 +185,14 @@ const EmployeePage = () => {
                             }}
                         />
                     </Access>
-
-                    {/* Cập nhật */}
                     <Access permission={ALL_PERMISSIONS.EMPLOYEE.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{
-                                fontSize: 18,
-                                color: "#faad14",
-                                cursor: "pointer",
-                            }}
+                            style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
                             }}
                         />
-                    </Access>
-
-                    {/* Xóa */}
-                    <Access permission={ALL_PERMISSIONS.EMPLOYEE.DELETE} hideChildren>
-                        <Popconfirm
-                            title="Xác nhận xóa nhân viên?"
-                            okText="Xóa"
-                            cancelText="Hủy"
-                            okButtonProps={{ danger: true, loading: isDeleting }}
-                            onConfirm={() => {
-                                if (entity.id) deleteEmployee(entity.id);
-                            }}
-                        >
-                            <DeleteOutlined
-                                style={{
-                                    fontSize: 18,
-                                    color: "#ff4d4f",
-                                    cursor: "pointer",
-                                }}
-                            />
-                        </Popconfirm>
                     </Access>
                 </Space>
             ),
@@ -231,66 +216,47 @@ const EmployeePage = () => {
                         defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
-                        showSizeChanger: true,
                         total: data?.meta?.total,
                         showQuickJumper: true,
-                        size: "default",
-                        showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
-                                    {range[0]}–{range[1]}
-                                </span>{" "}
-                                trên{" "}
-                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
-                                    {total.toLocaleString()}
-                                </span>{" "}
-                                nhân viên
-                            </div>
-                        ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
+                        showSizeChanger: true,
                     }}
                     toolBarRender={() => [
                         <Space key="toolbar" size={12} align="center" wrap>
                             <Select
                                 placeholder="Công ty"
                                 allowClear
-                                style={{ width: 180 }}
+                                style={{ width: 160 }}
                                 options={companyOptions}
-                                loading={isCompaniesLoading}
                                 onChange={(value) => setCompanyFilter(value || null)}
                             />
-
                             <Select
                                 placeholder="Phòng ban"
                                 allowClear
-                                style={{ width: 180 }}
+                                style={{ width: 160 }}
                                 options={departmentOptions}
-                                loading={isDepartmentsLoading}
                                 onChange={(value) => setDepartmentFilter(value || null)}
                             />
-
                             <Select
                                 placeholder="Chức vụ"
                                 allowClear
-                                style={{ width: 180 }}
+                                style={{ width: 160 }}
                                 options={positionOptions}
-                                loading={isPositionsLoading}
                                 onChange={(value) => setPositionFilter(value || null)}
                             />
-
+                            {/* ✅ Filter trạng thái hoạt động */}
+                            <Select
+                                placeholder="Trạng thái"
+                                allowClear
+                                style={{ width: 160 }}
+                                options={[
+                                    { label: "Đang hoạt động", value: "active" },
+                                    { label: "Ngừng hoạt động", value: "inactive" },
+                                ]}
+                                onChange={(value) => setStatusFilter(value || null)}
+                            />
                             <DateRangeFilter
                                 label="Ngày tạo"
                                 fieldName="createdAt"
-                                size="middle"
-                                width={320}
                                 onChange={(filterStr) => setCreatedAtFilter(filterStr)}
                             />
                             <Access permission={ALL_PERMISSIONS.EMPLOYEE.CREATE} hideChildren>

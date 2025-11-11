@@ -1,4 +1,4 @@
-import { Drawer, Descriptions, Typography, Divider, Spin, Empty } from "antd";
+import { Drawer, Descriptions, Typography, Divider, Spin, Empty, Badge } from "antd";
 import dayjs from "dayjs";
 import { useCustomerByIdQuery } from "@/hooks/useCustomers";
 
@@ -61,6 +61,14 @@ const ViewDetailCustomer = ({ onClose, open, customerId }: IProps) => {
                             <Text>{data.address ?? "-"}</Text>
                         </Descriptions.Item>
 
+                        <Descriptions.Item label="Trạng thái">
+                            {data.active ? (
+                                <Badge status="success" text="Đang hoạt động" />
+                            ) : (
+                                <Badge status="error" text="Ngừng hoạt động" />
+                            )}
+                        </Descriptions.Item>
+
                         <Descriptions.Item label="Ngày tạo">
                             <Text type="secondary">
                                 {data.createdAt
@@ -79,6 +87,7 @@ const ViewDetailCustomer = ({ onClose, open, customerId }: IProps) => {
                     </Descriptions>
 
                     <Divider />
+
                     <div style={{ textAlign: "right", marginTop: 10 }}>
                         <Text type="secondary">
                             Người tạo: <b>{data.createdBy ?? "Không rõ"}</b> <br />

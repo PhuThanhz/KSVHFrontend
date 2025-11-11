@@ -39,26 +39,42 @@ const ViewDetailEmployee = ({ onClose, open, employeeId }: IProps) => {
                         labelStyle={{ fontWeight: 600, background: "#fafafa" }}
                     >
                         <Descriptions.Item label="Mã nhân viên">
-                            <Text strong>{data.employeeCode}</Text>
+                            <Text strong>{data.employeeCode ?? "-"}</Text>
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Họ và tên">
-                            <Text>{data.fullName}</Text>
+                            <Text>{data.fullName ?? "-"}</Text>
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Email">
                             <Text>{data.email ?? "-"}</Text>
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Số điện thoại">
                             <Text>{data.phone ?? "-"}</Text>
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Công ty">
                             <Badge status="processing" text={data.company?.name ?? "-"} />
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Phòng ban">
                             <Badge status="default" text={data.department?.name ?? "-"} />
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Chức vụ">
                             <Badge status="success" text={data.position?.name ?? "-"} />
                         </Descriptions.Item>
+
+                        {/* Trạng thái hoạt động */}
+                        <Descriptions.Item label="Trạng thái">
+                            {data.active ? (
+                                <Badge status="success" text="Đang hoạt động" />
+                            ) : (
+                                <Badge status="error" text="Ngừng hoạt động" />
+                            )}
+                        </Descriptions.Item>
+
                         <Descriptions.Item label="Ngày tạo">
                             <Text type="secondary">
                                 {data.createdAt
@@ -66,6 +82,7 @@ const ViewDetailEmployee = ({ onClose, open, employeeId }: IProps) => {
                                     : "-"}
                             </Text>
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Ngày cập nhật">
                             <Text type="secondary">
                                 {data.updatedAt

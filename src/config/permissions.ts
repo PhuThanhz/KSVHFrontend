@@ -67,7 +67,6 @@ export const ALL_PERMISSIONS = {
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
         CREATE: { method: "POST", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
-        DELETE: { method: "DELETE", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
     },
 
     CUSTOMER: {
@@ -75,7 +74,6 @@ export const ALL_PERMISSIONS = {
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/customers/{id}", module: "CUSTOMER" },
         CREATE: { method: "POST", apiPath: "/api/v1/customers", module: "CUSTOMER" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/customers", module: "CUSTOMER" },
-        DELETE: { method: "DELETE", apiPath: "/api/v1/customers/{id}", module: "CUSTOMER" },
     },
     DEVICE_TYPES: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/device-types", module: "DEVICE_TYPES" },

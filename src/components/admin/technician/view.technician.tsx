@@ -70,14 +70,14 @@ const ViewTechnician = ({ onClose, open, technicianId }: IProps) => {
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Trạng thái">
-                            {technician.activeStatus ? (
+                            {technician.active ? (
                                 <Badge status="success" text="Đang hoạt động" />
                             ) : (
-                                <Badge status="error" text="Ngừng" />
+                                <Badge status="error" text="Ngừng hoạt động" />
                             )}
                         </Descriptions.Item>
 
-                        {/* Chỉ hiển thị nếu là thuê ngoài */}
+                        {/* Hiển thị thêm nếu là thuê ngoài */}
                         {isOutsource && (
                             <>
                                 <Descriptions.Item label="Nhà cung cấp">
@@ -86,7 +86,9 @@ const ViewTechnician = ({ onClose, open, technicianId }: IProps) => {
 
                                 <Descriptions.Item label="Chi phí thuê (VNĐ)">
                                     <Text>
-                                        {technician.costPerHire ? formatCurrency(technician.costPerHire) : "-"}
+                                        {technician.costPerHire
+                                            ? formatCurrency(technician.costPerHire)
+                                            : "-"}
                                     </Text>
                                 </Descriptions.Item>
                             </>

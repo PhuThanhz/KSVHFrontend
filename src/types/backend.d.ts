@@ -165,7 +165,7 @@ export interface IEmployee {
     fullName: string;
     phone?: string | null;
     email?: string | null;
-
+    active?: boolean;
     company: {
         id: number | string;
         name?: string;
@@ -207,6 +207,7 @@ export interface ICustomer {
     phone?: string | null;
     email?: string | null;
     address?: string | null;
+    active?: boolean;
     createdBy?: string | null;
     updatedBy?: string | null;
     createdAt?: string | null;
@@ -395,7 +396,7 @@ export interface ITechnician {
     id?: string;
     technicianCode: string;
     fullName: string;
-    activeStatus?: boolean;
+    active?: boolean;
     technicianType: TechnicianTypeEnum;
     supplier?: {
         id: number | string;
@@ -915,4 +916,94 @@ export interface IResMaintenanceSurveyListDTO {
     requestInfo: IResRequestCommonDTO;
     assignedAt?: string;
     assignedBy?: string;
+}
+
+
+/** ==============================
+ *   MODULE MAINTENANCE PLAN
+ *  ============================== */
+
+/** ---------- REQUEST: LẬP KẾ HOẠCH BẢO TRÌ ---------- */
+export interface IReqMaintenancePlanDTO {
+    maintenanceRequestId: string;
+    solutionIds?: number[];              // List<Long> bên backend
+    customSolution?: string | null;
+    useMaterial?: boolean;
+    note?: string | null;
+    materials?: IReqMaintenancePlanMaterialItemDTO[];
+}
+
+/** ---------- ITEM VẬT TƯ TRONG KẾ HOẠCH ---------- */
+export interface IReqMaintenancePlanMaterialItemDTO {
+    inventoryItemId?: number | null;
+    partCode?: string | null;
+    partName?: string | null;
+    quantity?: number | null;
+    image?: string | null;
+    isNewProposal?: boolean | null;
+    isShortage?: boolean | null;
+}
+
+/** ---------- RESPONSE: SAU KHI TẠO KẾ HOẠCH ---------- */
+export interface IResMaintenancePlanCreateDTO {
+    planId: string;
+    maintenanceRequestId: string;
+    maintenanceRequestCode: string;
+    solutionNames: string[];
+    useMaterial?: boolean;
+    note?: string | null;
+    status: MaintenanceRequestStatus;
+    createdAt: string;
+    createdBy: string;
+}
+
+/** ---------- DANH SÁCH PHIẾU ĐÃ KHẢO SÁT ---------- */
+export interface IResMaintenanceSurveyedListDTO {
+    requestId: string;
+    requestCode: string;
+    priorityLevel: PriorityLevel;
+    status: MaintenanceRequestStatus;
+
+    device?: IResMaintenanceSurveyedListDeviceSimple;
+
+    maintenanceTypeActual?: MaintenanceType | null;
+    actualIssueDescription?: string | null;
+    damageLevel?: string | null; // backend trả string
+}
+
+/** ---------- THIẾT BỊ TRONG DANH SÁCH KHẢO SÁT ---------- */
+export interface IResMaintenanceSurveyedListDeviceSimple {
+    deviceCode?: string;
+    deviceName?: string;
+    image1?: string | null;
+    image2?: string | null;
+    image3?: string | null;
+}
+
+/** ---------- CHI TIẾT PHIẾU ĐÃ KHẢO SÁT ---------- */
+export interface IResMaintenanceSurveyedDetailDTO {
+    requestId: string;
+    requestCode: string;
+    issueName?: string | null;
+    issueDescription?: string | null;
+    priorityLevel: PriorityLevel;
+    maintenanceType: MaintenanceType;
+    status: MaintenanceRequestStatus;
+    damageLevel?: DamageLevel | null;
+
+    device?: IResMaintenanceSurveyedDetailDeviceSimple;
+    assignmentInfo?: IResMaintenanceAssignmentDTO;
+    surveyInfo?: IResSurveyCommonDTO;
+}
+
+/** ---------- THIẾT BỊ TRONG CHI TIẾT KHẢO SÁT ---------- */
+export interface IResMaintenanceSurveyedDetailDeviceSimple {
+    deviceCode?: string;
+    deviceName?: string;
+    ownershipType?: DeviceOwnershipType;
+    image1?: string | null;
+    image2?: string | null;
+    image3?: string | null;
+    companyName?: string | null;
+    departmentName?: string | null;
 }
