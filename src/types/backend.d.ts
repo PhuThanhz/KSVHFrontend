@@ -922,29 +922,14 @@ export interface IResMaintenanceSurveyListDTO {
 /** ==============================
  *   MODULE MAINTENANCE PLAN
  *  ============================== */
-
-/** ---------- REQUEST: LẬP KẾ HOẠCH BẢO TRÌ ---------- */
 export interface IReqMaintenancePlanDTO {
     maintenanceRequestId: string;
-    solutionIds?: number[];              // List<Long> bên backend
+    solutionIds?: number[];
     customSolution?: string | null;
     useMaterial?: boolean;
     note?: string | null;
     materials?: IReqMaintenancePlanMaterialItemDTO[];
 }
-
-/** ---------- ITEM VẬT TƯ TRONG KẾ HOẠCH ---------- */
-export interface IReqMaintenancePlanMaterialItemDTO {
-    inventoryItemId?: number | null;
-    partCode?: string | null;
-    partName?: string | null;
-    quantity?: number | null;
-    image?: string | null;
-    isNewProposal?: boolean | null;
-    isShortage?: boolean | null;
-}
-
-/** ---------- RESPONSE: SAU KHI TẠO KẾ HOẠCH ---------- */
 export interface IResMaintenancePlanCreateDTO {
     planId: string;
     maintenanceRequestId: string;
@@ -957,30 +942,24 @@ export interface IResMaintenancePlanCreateDTO {
     createdBy: string;
 }
 
-/** ---------- DANH SÁCH PHIẾU ĐÃ KHẢO SÁT ---------- */
 export interface IResMaintenanceSurveyedListDTO {
     requestId: string;
     requestCode: string;
     priorityLevel: PriorityLevel;
     status: MaintenanceRequestStatus;
-    device?: IResMaintenanceSurveyedListDeviceSimple;
+    device: {
+        deviceCode?: string;
+        deviceName?: string;
+        image1?: string | null;
+        image2?: string | null;
+        image3?: string | null;
+    };
     maintenanceTypeActual?: MaintenanceType | null;
     actualIssueDescription?: string | null;
     damageLevel?: string | null;
-    /** ====== Thông tin từ chối kế hoạch (admin) ====== */
     rejectInfo?: IResMaintenancePlanRejectDTO;
 }
 
-/** ---------- THIẾT BỊ TRONG DANH SÁCH KHẢO SÁT ---------- */
-export interface IResMaintenanceSurveyedListDeviceSimple {
-    deviceCode?: string;
-    deviceName?: string;
-    image1?: string | null;
-    image2?: string | null;
-    image3?: string | null;
-}
-
-/** ---------- CHI TIẾT PHIẾU ĐÃ KHẢO SÁT ---------- */
 export interface IResMaintenanceSurveyedDetailDTO {
     requestId: string;
     requestCode: string;
@@ -991,33 +970,53 @@ export interface IResMaintenanceSurveyedDetailDTO {
     status: MaintenanceRequestStatus;
     damageLevel?: DamageLevel | null;
 
-    device?: IResMaintenanceSurveyedDetailDeviceSimple;
+    device?: {
+        deviceCode?: string;
+        deviceName?: string;
+        ownershipType?: DeviceOwnershipType;
+        image1?: string | null;
+        image2?: string | null;
+        image3?: string | null;
+        companyName?: string | null;
+        departmentName?: string | null;
+    };
+
     assignmentInfo?: IResMaintenanceAssignmentDTO;
     surveyInfo?: IResSurveyCommonDTO;
-
-    /** ====== Thông tin từ chối kế hoạch (admin) ====== */
     rejectInfo?: IResMaintenancePlanRejectDTO;
 
-    /** ====== Thông tin kế hoạch (nếu có) ====== */
-    planInfo?: IResMaintenancePlanInfo;
+    /** ===== Thông tin kế hoạch (nếu có) ===== */
+    planInfo?: {
+        planId: string;
+        createdAt: string;
+
+        // ===== Bổ sung cho form lập lại kế hoạch =====
+        note?: string | null;
+        customSolution?: string | null;
+        useMaterial?: boolean;
+        solutionIds?: number[];
+        materials?: {
+            partCode?: string | null;
+            partName?: string | null;
+            quantity?: number | null;
+            isNewProposal?: boolean | null;
+            isShortage?: boolean | null;
+        }[];
+    };
 }
 
-/** ---------- THÔNG TIN KẾ HOẠCH ---------- */
-export interface IResMaintenancePlanInfo {
-    planId: string;
-    createdAt: string; // ISO-8601 format, từ Instant trong backend
-}
-/** ---------- THIẾT BỊ TRONG CHI TIẾT KHẢO SÁT ---------- */
-export interface IResMaintenanceSurveyedDetailDeviceSimple {
-    deviceCode?: string;
-    deviceName?: string;
-    ownershipType?: DeviceOwnershipType;
-    image1?: string | null;
-    image2?: string | null;
-    image3?: string | null;
-    companyName?: string | null;
-    departmentName?: string | null;
-}
+
+
+
+
+
+
+
+
+
+
+
+
 /** ==============================
  *   MODULE MAINTENANCE APPROVAL
  *  ============================== */
@@ -1053,6 +1052,24 @@ export interface IResMaintenancePlanApprovalDTO {
     note?: string;
     message: string;
 }
+export interface IResMaintenancePlanApprovalListDTO {
+    planId: string;
+    requestId: string;
+    requestCode: string;
+    priorityLevel?: string;
+    status?: MaintenanceRequestStatus;
+    createdAt?: string;
+    maintenanceTypeActual?: string;
+    actualIssueDescription?: string;
+    device?: {
+        deviceCode?: string;
+        deviceName?: string;
+        image1?: string;
+        image2?: string;
+        image3?: string;
+    };
+    solutionName?: string;
+}
 export interface IResMaintenancePlanDetailDTO {
     requestInfo: IResRequestCommonDTO;
     surveyInfo?: IResSurveyCommonDTO;
@@ -1064,15 +1081,8 @@ export interface IResMaintenancePlanDetailDTO {
         createdAt?: string;
         createdBy?: string;
     };
-}
-export interface IResMaintenancePlanSimpleDTO {
-    planId: string;
-    requestCode: string;
-    deviceName?: string;
-    solutionName?: string;
-    priorityLevel?: string;
-    status?: MaintenanceRequestStatus;
-    createdAt?: string;
+    rejectLogs?: IResMaintenancePlanRejectDTO[];
+
 }
 /** ---------- THÔNG TIN TỪ CHỐI KẾ HOẠCH (ADMIN) ---------- */
 export interface IResMaintenancePlanRejectDTO {
@@ -1080,4 +1090,89 @@ export interface IResMaintenancePlanRejectDTO {
     reasonName?: string;     // Lý do từ chối
     note?: string;           // Ghi chú chi tiết
     rejectedAt?: string;     // Thời điểm từ chối
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/** ==============================
+ *   MODULE MAINTENANCE EXECUTION (KỸ THUẬT VIÊN THI CÔNG)
+ *  ============================== */
+
+
+/** KTV cập nhật tiến độ thi công */
+export interface IReqUpdateProgressDTO {
+    progressPercent?: number;
+    note?: string | null;
+    image1?: string | null;
+    image2?: string | null;
+    image3?: string | null;
+    video?: string | null;
+}
+
+/** Vật tư trong thi công (dựa theo IResMaterialDTO trong module approval) */
+export interface IResExecutionMaterialGroupDTO {
+    providedMaterials: IResMaterialDTO[];
+    pendingMaterials: IResMaterialDTO[];
+}
+
+/** Tiến độ thi công (ResExecutionProgressDTO) */
+export interface IResExecutionProgressDTO {
+    progressPercent?: number;
+    currentNote?: string | null;
+    image1?: string | null;
+    image2?: string | null;
+    image3?: string | null;
+    video?: string | null;
+    startAt?: string | null;
+    endAt?: string | null;
+}
+
+/** Thông tin kế hoạch (rút gọn cho thi công) */
+export interface IResPlanCommonDTO {
+    planId?: string;
+    solutionName?: string | null;
+    useMaterial?: boolean | null;
+    note?: string | null;
+    createdAt?: string | null;
+    createdBy?: string | null;
+}
+
+/** Thẻ danh sách thi công (ResExecutionCardDTO) */
+export interface IResExecutionCardDTO {
+    // Thông tin phiếu bảo trì
+    requestId: string;
+    requestCode: string;
+    deviceCode?: string | null;
+    deviceName?: string | null;
+    locationDetail?: string | null;
+    companyName?: string | null;
+    departmentName?: string | null;
+    status: MaintenanceRequestStatus;
+    attachment1?: string | null;
+    attachment2?: string | null;
+    attachment3?: string | null;
+    createdAt?: string | null;
+    completedAt?: string | null;
+
+    // Khảo sát và kế hoạch
+    surveyInfo?: IResSurveyCommonDTO | null;
+    planInfo?: IResPlanCommonDTO | null;
+}
+
+/** Chi tiết thi công (ResExecutionDetailDTO) */
+export interface IResExecutionDetailDTO {
+    requestInfo: IResRequestCommonDTO;
+    surveyInfo?: IResSurveyCommonDTO | null;
+    planInfo?: IResPlanCommonDTO | null;
+    materials?: IResExecutionMaterialGroupDTO | null;
+    progress?: IResExecutionProgressDTO | null;
 }

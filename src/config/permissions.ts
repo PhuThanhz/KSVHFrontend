@@ -233,7 +233,7 @@ export const ALL_PERMISSIONS = {
     },
     MAINTENANCE_APPROVAL: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-approvals", module: "MAINTENANCE_APPROVAL" },
-        GET_DETAIL: { method: "GET", apiPath: "/api/v1/maintenance-approvals/{planId}/detail", module: "MAINTENANCE_APPROVAL" },
+        GET_DETAIL: { method: "GET", apiPath: "/api/v1/maintenance-approvals/{planId}", module: "MAINTENANCE_APPROVAL" },
         GET_MATERIALS: { method: "GET", apiPath: "/api/v1/maintenance-approvals/{planId}/materials", module: "MAINTENANCE_APPROVAL" },
         APPROVE: { method: "PUT", apiPath: "/api/v1/maintenance-approvals/{planId}/approve", module: "MAINTENANCE_APPROVAL" },
         REJECT: { method: "PUT", apiPath: "/api/v1/maintenance-approvals/{planId}/reject", module: "MAINTENANCE_APPROVAL" },

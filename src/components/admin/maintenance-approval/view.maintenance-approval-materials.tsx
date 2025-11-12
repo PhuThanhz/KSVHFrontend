@@ -1,9 +1,11 @@
-import { useParams } from "react-router-dom";
 import { useMaintenancePlanMaterialsQuery } from "@/hooks/useMaintenanceApprovals";
 import { Table, Tag, Spin, Card } from "antd";
 
-export default function ViewMaintenanceApprovalMaterials() {
-    const { planId } = useParams();
+interface IProps {
+    planId: string;
+}
+
+export default function ViewMaintenanceApprovalMaterials({ planId }: IProps) {
     const { data, isLoading } = useMaintenancePlanMaterialsQuery(planId);
 
     if (isLoading) {
@@ -14,13 +16,37 @@ export default function ViewMaintenanceApprovalMaterials() {
         );
     }
 
-    if (!data) return <p>Không tìm thấy vật tư của kế hoạch</p>;
+    if (!data) {
+        return <p>Không tìm thấy danh sách vật tư cho kế hoạch này.</p>;
+    }
+
+    const { requestCode, availableMaterials, shortageMaterials, newProposals } = data;
 
     const columns = [
-        { title: "Mã linh kiện", dataIndex: "partCode", key: "partCode" },
-        { title: "Tên linh kiện", dataIndex: "partName", key: "partName" },
-        { title: "Số lượng cần", dataIndex: "quantity", key: "quantity" },
-        { title: "Kho", dataIndex: "warehouseName", key: "warehouseName" },
+        {
+            title: "Mã linh kiện",
+            dataIndex: "partCode",
+            key: "partCode",
+            render: (v: string) => v || "—",
+        },
+        {
+            title: "Tên linh kiện",
+            dataIndex: "partName",
+            key: "partName",
+            render: (v: string) => v || "—",
+        },
+        {
+            title: "Số lượng cần",
+            dataIndex: "quantity",
+            key: "quantity",
+            render: (v: number) => v ?? "—",
+        },
+        {
+            title: "Kho",
+            dataIndex: "warehouseName",
+            key: "warehouseName",
+            render: (v: string) => v || "—",
+        },
         {
             title: "Tồn kho",
             dataIndex: "stock",
@@ -30,48 +56,52 @@ export default function ViewMaintenanceApprovalMaterials() {
         {
             title: "Trạng thái",
             key: "status",
-            render: (_: any, record: any) => (
-                <>
-                    {record.isNewProposal && <Tag color="blue">Đề xuất mới</Tag>}
-                    {record.isShortage && <Tag color="red">Thiếu hàng</Tag>}
-                    {!record.isNewProposal && !record.isShortage && (
-                        <Tag color="green">Đủ vật tư</Tag>
-                    )}
-                </>
-            ),
+            render: (_: any, record: any) => {
+                if (record.isNewProposal)
+                    return <Tag color="blue">Đề xuất mới</Tag>;
+                if (record.isShortage)
+                    return <Tag color="red">Thiếu hàng</Tag>;
+                return <Tag color="green">Đủ vật tư</Tag>;
+            },
         },
     ];
 
     return (
         <div className="p-4 space-y-4">
             <h2 className="text-xl font-semibold mb-2">
-                Danh sách vật tư - {data.requestCode}
+                Danh sách vật tư của kế hoạch - {requestCode}
             </h2>
 
+            {/* === Vật tư có sẵn === */}
             <Card title="Vật tư đầy đủ">
                 <Table
                     rowKey="partCode"
                     columns={columns}
-                    dataSource={data.availableMaterials}
+                    dataSource={availableMaterials || []}
                     pagination={false}
+                    locale={{ emptyText: "Không có vật tư đầy đủ" }}
                 />
             </Card>
 
+            {/* === Vật tư thiếu === */}
             <Card title="Vật tư thiếu">
                 <Table
                     rowKey="partCode"
                     columns={columns}
-                    dataSource={data.shortageMaterials}
+                    dataSource={shortageMaterials || []}
                     pagination={false}
+                    locale={{ emptyText: "Không có vật tư thiếu" }}
                 />
             </Card>
 
+            {/* === Vật tư đề xuất mới === */}
             <Card title="Vật tư đề xuất mới">
                 <Table
                     rowKey="partCode"
                     columns={columns}
-                    dataSource={data.newProposals}
+                    dataSource={newProposals || []}
                     pagination={false}
+                    locale={{ emptyText: "Không có vật tư đề xuất mới" }}
                 />
             </Card>
         </div>

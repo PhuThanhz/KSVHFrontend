@@ -17,7 +17,10 @@ import {
     LaptopOutlined,
     HistoryOutlined,
     NodeIndexOutlined,
-    CheckCircleOutlined
+    CheckCircleOutlined,
+    SettingOutlined,
+    InboxOutlined,
+    SolutionOutlined
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
@@ -57,7 +60,8 @@ const SliderAdmin: React.FC<IProps> = ({
                     key: "/admin",
                     icon: <AppstoreOutlined />,
                 },
-                // --- Quản lý người dùng ---
+
+                // ========== QUẢN LÝ NGƯỜI DÙNG ==========
                 ...(checkPermission(ALL_PERMISSIONS.USERS.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.EMPLOYEE.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {}) ||
@@ -70,326 +74,252 @@ const SliderAdmin: React.FC<IProps> = ({
                             icon: <UserOutlined />,
                             children: [
                                 ...(checkPermission(ALL_PERMISSIONS.USERS.GET_PAGINATE)
-                                    ? [
-                                        {
-                                            label: <Link to="/admin/user">Tất cả người dùng</Link>,
-                                            key: "/admin/user",
-                                            icon: <UserOutlined />,
-                                        },
-                                    ]
-                                    : []),
-
+                                    ? [{
+                                        label: <Link to="/admin/user">Tất cả người dùng</Link>,
+                                        key: "/admin/user",
+                                        icon: <UserOutlined />,
+                                    }] : []),
                                 ...(checkPermission(ALL_PERMISSIONS.EMPLOYEE.GET_PAGINATE)
-                                    ? [
-                                        {
-                                            label: <Link to="/admin/employee">Nhân viên</Link>,
-                                            key: "/admin/employee",
-                                            icon: <TeamOutlined />,
-                                        },
-                                    ]
-                                    : []),
-                                // --- Quản lý khách hàng ---
-                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {}) ||
-                                    checkPermission(ALL_PERMISSIONS.CUSTOMER_PURCHASE_HISTORY?.GET_PAGINATE ?? {})
-                                    ? [
-                                        {
-                                            label: "Quản lý khách hàng",
-                                            key: "/admin/customer-group",
-                                            icon: <TeamOutlined />,
-                                            children: [
-                                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {})
-                                                    ? [
-                                                        {
-                                                            label: <Link to="/admin/customer">Danh sách khách hàng</Link>,
-                                                            key: "/admin/customer",
-                                                            icon: <UserOutlined />,
-                                                        },
-                                                    ]
-                                                    : []),
-                                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER_PURCHASE_HISTORY?.GET_PAGINATE ?? {})
-                                                    ? [
-                                                        {
-                                                            label: <Link to="/admin/customer-purchase-history">Lịch sử mua hàng</Link>,
-                                                            key: "/admin/customer-purchase-history",
-                                                            icon: <HistoryOutlined />,
-                                                        },
-                                                    ]
-                                                    : []),
-                                            ],
-                                        },
-                                    ]
-                                    : []),
+                                    ? [{
+                                        label: <Link to="/admin/employee">Nhân viên</Link>,
+                                        key: "/admin/employee",
+                                        icon: <TeamOutlined />,
+                                    }] : []),
+                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER?.GET_PAGINATE ?? {})
+                                    ? [{
+                                        label: <Link to="/admin/customer">Khách hàng</Link>,
+                                        key: "/admin/customer",
+                                        icon: <TeamOutlined />,
+                                    }] : []),
+                                ...(checkPermission(ALL_PERMISSIONS.CUSTOMER_PURCHASE_HISTORY?.GET_PAGINATE ?? {})
+                                    ? [{
+                                        label: <Link to="/admin/customer-purchase-history">Lịch sử mua hàng</Link>,
+                                        key: "/admin/customer-purchase-history",
+                                        icon: <HistoryOutlined />,
+                                    }] : []),
                                 ...(checkPermission(ALL_PERMISSIONS.TECHNICIAN.GET_PAGINATE)
-                                    ? [
-                                        {
-                                            label: <Link to="/admin/technician">Kỹ thuật viên</Link>,
-                                            key: "/admin/technician",
-                                            icon: <ToolOutlined />,
-                                        },
-                                    ]
-                                    : []),
+                                    ? [{
+                                        label: <Link to="/admin/technician">Kỹ thuật viên</Link>,
+                                        key: "/admin/technician",
+                                        icon: <ToolOutlined />,
+                                    }] : []),
+                                ...(checkPermission(ALL_PERMISSIONS.TECHNICIAN_AVAILABILITY?.GET_PAGINATE ?? {})
+                                    ? [{
+                                        label: <Link to="/admin/technician-availability">Ca làm việc KTV</Link>,
+                                        key: "/admin/technician-availability",
+                                        icon: <ToolOutlined />,
+                                    }] : []),
                             ],
                         },
-                    ]
-                    : []),
-                // --- Yêu cầu bảo trì ---
-                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REQUESTS?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/maintenance">Yêu cầu bảo trì</Link>,
-                            key: "/admin/maintenance",
-                            icon: <ToolOutlined />,
-                        },
-                    ]
-                    : []),
-                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_APPROVAL?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/maintenance-approval">Phê duyệt kế hoạch bảo trì</Link>,
-                            key: "/admin/maintenance-approval",
-                            icon: <CheckCircleOutlined />,
-                        },
-                    ]
-                    : []),
-                // --- Issue Skill Mapping ---
-                ...(checkPermission(
-                    ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE
-                )
-                    ? [
-                        {
-                            label: (
-                                <Link to="/admin/issue-skill-mapping">
-                                    Cấu hình phân
-                                    công tự động
-                                </Link>
-                            ),
-                            key: "/admin/issue-skill-mapping",
-                            icon: <NodeIndexOutlined />,
-                        },
-                    ]
-                    : []),
+                    ] : []),
 
-                ...((checkPermission(ALL_PERMISSIONS.ROLES.GET_PAGINATE) ||
-                    checkPermission(ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE))
-                    ? [
-                        {
-                            label: "Cấu hình phân quyền",
-                            key: "/admin/authorization",
-                            icon: <ApiOutlined />,
-                            children: [
-                                ...(checkPermission(ALL_PERMISSIONS.ROLES.GET_PAGINATE)
-                                    ? [
-                                        {
-                                            label: <Link to="/admin/role">Quản lý vai trò</Link>,
-                                            key: "/admin/role",
-                                            icon: <ExceptionOutlined />,
-                                        },
-                                    ]
-                                    : []),
-                                ...(checkPermission(ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE)
-                                    ? [
-                                        {
-                                            label: <Link to="/admin/permission">Quản lý phân quyền</Link>,
-                                            key: "/admin/permission",
-                                            icon: <ApiOutlined />,
-                                        },
-                                    ]
-                                    : []),
-                            ],
-                        },
-                    ]
-                    : []),
-                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_CAUSE?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/maintenance-cause">Quản lý nguyên nhân hư hỏng</Link>,
-                            key: "/admin/maintenance-cause",
-                            icon: <BugOutlined />,
-                        },
-                    ]
-                    : []),
+                // ========== QUẢN LÝ BẢO TRÌ ==========
+                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REQUESTS?.GET_PAGINATE ?? {}) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_APPROVAL?.GET_PAGINATE ?? {}) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_CAUSE?.GET_PAGINATE ?? {}) ||
+                    checkPermission(ALL_PERMISSIONS.SOLUTION?.GET_PAGINATE ?? {}) ||
+                    checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE)
+                    ? [{
+                        label: "Quản lý bảo trì",
+                        key: "/admin/maintenance-group",
+                        icon: <ToolOutlined />,
+                        children: [
+                            ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REQUESTS?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/maintenance">Yêu cầu bảo trì</Link>,
+                                    key: "/admin/maintenance",
+                                    icon: <ToolOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_APPROVAL?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/maintenance-approval">Phê duyệt kế hoạch</Link>,
+                                    key: "/admin/maintenance-approval",
+                                    icon: <CheckCircleOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/issue">Quản lý vấn đề</Link>,
+                                    key: "/admin/issue",
+                                    icon: <BugOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_CAUSE?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/maintenance-cause">Nguyên nhân hư hỏng</Link>,
+                                    key: "/admin/maintenance-cause",
+                                    icon: <BugOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.SOLUTION?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/solution">Phương án xử lý</Link>,
+                                    key: "/admin/solution",
+                                    icon: <SolutionOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/issue-skill-mapping">Phân công tự động</Link>,
+                                    key: "/admin/issue-skill-mapping",
+                                    icon: <NodeIndexOutlined />,
+                                }] : []),
+                        ],
+                    }] : []),
 
-                ...((checkPermission(ALL_PERMISSIONS.COMPANY?.GET_PAGINATE ?? {}) ||
+                // ========== QUẢN LÝ THIẾT BỊ & TÀI SẢN ==========
+                ...(checkPermission(ALL_PERMISSIONS.DEVICE.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.DEVICE_TYPES.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.ASSET_TYPE?.GET_PAGINATE ?? {})
+                    ? [{
+                        label: "Quản lý thiết bị & tài sản",
+                        key: "/admin/device-asset-group",
+                        icon: <LaptopOutlined />,
+                        children: [
+                            ...(checkPermission(ALL_PERMISSIONS.DEVICE.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/device">Thiết bị</Link>,
+                                    key: "/admin/device",
+                                    icon: <LaptopOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.DEVICE_TYPES.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/device-type">Loại thiết bị</Link>,
+                                    key: "/admin/device-type",
+                                    icon: <AppstoreAddOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.ASSET_TYPE?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/asset-type">Loại tài sản</Link>,
+                                    key: "/admin/asset-type",
+                                    icon: <DeploymentUnitOutlined />,
+                                }] : []),
+                        ],
+                    }] : []),
+
+                // ========== QUẢN LÝ KHO & VẬT TƯ ==========
+                ...(checkPermission(ALL_PERMISSIONS.WAREHOUSE?.GET_PAGINATE ?? {}) ||
+                    checkPermission(ALL_PERMISSIONS.INVENTORY_ITEM.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_PAGINATE ?? {}) ||
+                    checkPermission(ALL_PERMISSIONS.UNIT.GET_PAGINATE)
+                    ? [{
+                        label: "Quản lý kho & vật tư",
+                        key: "/admin/inventory-group",
+                        icon: <InboxOutlined />,
+                        children: [
+                            ...(checkPermission(ALL_PERMISSIONS.WAREHOUSE?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/warehouse">Kho</Link>,
+                                    key: "/admin/warehouse",
+                                    icon: <BankOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.INVENTORY_ITEM.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/inventory-items">Vật tư tồn kho</Link>,
+                                    key: "/admin/inventory-items",
+                                    icon: <AppstoreOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/material-supplier">Nhà cung cấp vật tư</Link>,
+                                    key: "/admin/material-supplier",
+                                    icon: <ShopOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.UNIT.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/unit">Đơn vị</Link>,
+                                    key: "/admin/unit",
+                                    icon: <DeploymentUnitOutlined />,
+                                }] : []),
+                        ],
+                    }] : []),
+
+                // ========== CẤU TRÚC TỔ CHỨC ==========
+                ...(checkPermission(ALL_PERMISSIONS.COMPANY?.GET_PAGINATE ?? {}) ||
                     checkPermission(ALL_PERMISSIONS.DEPARTMENT?.GET_PAGINATE ?? {}) ||
-                    checkPermission(ALL_PERMISSIONS.POSITION?.GET_PAGINATE ?? {}))
-                    ? [
-                        {
-                            label: "Cấu trúc tổ chức",
-                            key: "/admin/organization",
-                            icon: <ApartmentOutlined />,
-                            children: [
-                                ...(checkPermission(ALL_PERMISSIONS.COMPANY?.GET_PAGINATE ?? {})
-                                    ? [
-                                        {
-                                            label: <Link to="/admin/company">Quản lý công ty</Link>,
-                                            key: "/admin/company",
-                                            icon: <BankOutlined />,
-                                        },
-                                    ]
-                                    : []),
-                                ...(checkPermission(ALL_PERMISSIONS.DEPARTMENT?.GET_PAGINATE ?? {})
-                                    ? [
-                                        {
-                                            label: <Link to="/admin/department">Quản lý phòng ban</Link>,
-                                            key: "/admin/department",
-                                            icon: <ApartmentOutlined />,
-                                        },
-                                    ]
-                                    : []),
-                                ...(checkPermission(ALL_PERMISSIONS.POSITION?.GET_PAGINATE ?? {})
-                                    ? [
-                                        {
-                                            label: <Link to="/admin/position">Quản lý chức vụ</Link>,
-                                            key: "/admin/position",
-                                            icon: <TeamOutlined />,
-                                        },
-                                    ]
-                                    : []),
-                            ],
-                        },
-                    ]
-                    : []),
+                    checkPermission(ALL_PERMISSIONS.POSITION?.GET_PAGINATE ?? {})
+                    ? [{
+                        label: "Cấu trúc tổ chức",
+                        key: "/admin/organization",
+                        icon: <ApartmentOutlined />,
+                        children: [
+                            ...(checkPermission(ALL_PERMISSIONS.COMPANY?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/company">Công ty</Link>,
+                                    key: "/admin/company",
+                                    icon: <BankOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.DEPARTMENT?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/department">Phòng ban</Link>,
+                                    key: "/admin/department",
+                                    icon: <ApartmentOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.POSITION?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/position">Chức vụ</Link>,
+                                    key: "/admin/position",
+                                    icon: <TeamOutlined />,
+                                }] : []),
+                        ],
+                    }] : []),
 
-                ...(checkPermission(ALL_PERMISSIONS.SKILL.GET_PAGINATE)
-                    ? [
-                        {
-                            label: <Link to="/admin/skill">Quản lý kỹ năng</Link>,
-                            key: "/admin/skill",
-                            icon: <ToolOutlined />,
-                        },
-                    ]
-                    : []),
-
-                ...(checkPermission(ALL_PERMISSIONS.ASSET_TYPE?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/asset-type">Quản lý loại tài sản</Link>,
-                            key: "/admin/asset-type",
-                            icon: <DeploymentUnitOutlined />,
-                        },
-                    ]
-                    : []),
-
-
-
-                ...(checkPermission(ALL_PERMISSIONS.DEVICE_TYPES.GET_PAGINATE)
-                    ? [
-                        {
-                            label: <Link to="/admin/device-type">Quản lý loại thiết bị</Link>,
-                            key: "/admin/device-type",
-                            icon: <AppstoreAddOutlined />,
-                        },
-                    ]
-                    : []),
-
-                ...(checkPermission(ALL_PERMISSIONS.SOLUTION?.GET_PAGINATE ?? {})
-
-                    ? [
-                        {
-                            label: <Link to="/admin/solution">Quản lý phương án xử lý</Link>,
-                            key: "/admin/solution",
-                            icon: <AppstoreAddOutlined />,
-                        },
-                    ]
-                    : []),
-                ...(checkPermission(ALL_PERMISSIONS.WAREHOUSE?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/warehouse">Quản lý kho</Link>,
-                            key: "/admin/warehouse",
-                            icon: <BankOutlined />,
-                        },
-                    ]
-                    : []),
-                ...(checkPermission(ALL_PERMISSIONS.UNIT.GET_PAGINATE)
-                    ? [
-                        {
-                            label: <Link to="/admin/unit">Quản lý đơn vị</Link>,
-                            key: "/admin/unit",
-                            icon: <DeploymentUnitOutlined />,
-                        },
-                    ]
-                    : []),
-                // --- Reject Reason ---
-                ...(checkPermission(ALL_PERMISSIONS.REJECT_REASON.GET_PAGINATE)
-                    ? [
-                        {
-                            label: <Link to="/admin/reject-reason">Quản lý lý do từ chối</Link>,
-                            key: "/admin/reject-reason",
-                            icon: <StopOutlined />,
-                        },
-                    ]
-                    : []),
-                ...(checkPermission(ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_PAGINATE)
-                    ? [
-                        {
-                            label: <Link to="/admin/technician-supplier">Quản lý nhà cung cấp kỹ thuật viên</Link>,
-                            key: "/admin/technician-supplier",
-                            icon: <ToolOutlined />,
-                        },
-                    ]
-                    : []),
-
-                ...(checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE)
-                    ? [
-                        {
-                            label: <Link to="/admin/issue">Quản lý vấn đề</Link>,
-                            key: "/admin/issue",
-                            icon: <ToolOutlined />,
-                        },
-                    ]
-                    : []),
-
-                ...(checkPermission(ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/material-supplier">Quản lý nhà cung cấp vật tư</Link>,
-                            key: "/admin/material-supplier",
-                            icon: <ShopOutlined />,
-                        },
-                    ]
-                    : []),
-
-                ...(checkPermission(ALL_PERMISSIONS.INVENTORY_ITEM.GET_PAGINATE)
-                    ? [
-                        {
-                            label: <Link to="/admin/inventory-items">Quản lý vật tư tồn kho</Link>,
-                            key: "/admin/inventory-items",
-                            icon: <AppstoreOutlined />,
-                        },
-                    ]
-                    : []),
-
-                ...(checkPermission(ALL_PERMISSIONS.DEVICE.GET_PAGINATE)
-                    ? [
-                        {
-                            label: <Link to="/admin/device">Quản lý thiết bị</Link>,
-                            key: "/admin/device",
-                            icon: <LaptopOutlined />,
-                        },
-                    ]
-                    : []),
-                ...(checkPermission(ALL_PERMISSIONS.SHIFT_TEMPLATE?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/shift-template">Quản lý ca làm việc mẫu</Link>,
-                            key: "/admin/shift-template",
-                            icon: <AppstoreOutlined />,
-                        },
-                    ]
-                    : []),
-
-                ...(checkPermission(ALL_PERMISSIONS.TECHNICIAN_AVAILABILITY?.GET_PAGINATE ?? {})
-                    ? [
-                        {
-                            label: <Link to="/admin/technician-availability">Ca làm việc kỹ thuật viên</Link>,
-                            key: "/admin/technician-availability",
-                            icon: <ToolOutlined />,
-                        },
-                    ]
-                    : []),
-
-
+                // ========== HỆ THỐNG & CẤU HÌNH ==========
+                ...(checkPermission(ALL_PERMISSIONS.ROLES.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.SKILL.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.SHIFT_TEMPLATE?.GET_PAGINATE ?? {}) ||
+                    checkPermission(ALL_PERMISSIONS.REJECT_REASON.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_PAGINATE)
+                    ? [{
+                        label: "Hệ thống & cấu hình",
+                        key: "/admin/system-config",
+                        icon: <SettingOutlined />,
+                        children: [
+                            ...(checkPermission(ALL_PERMISSIONS.ROLES.GET_PAGINATE) ||
+                                checkPermission(ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE)
+                                ? [{
+                                    label: "Phân quyền",
+                                    key: "/admin/authorization",
+                                    icon: <ApiOutlined />,
+                                    children: [
+                                        ...(checkPermission(ALL_PERMISSIONS.ROLES.GET_PAGINATE)
+                                            ? [{
+                                                label: <Link to="/admin/role">Vai trò</Link>,
+                                                key: "/admin/role",
+                                                icon: <ExceptionOutlined />,
+                                            }] : []),
+                                        ...(checkPermission(ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE)
+                                            ? [{
+                                                label: <Link to="/admin/permission">Quyền hạn</Link>,
+                                                key: "/admin/permission",
+                                                icon: <ApiOutlined />,
+                                            }] : []),
+                                    ],
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.SKILL.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/skill">Kỹ năng</Link>,
+                                    key: "/admin/skill",
+                                    icon: <ToolOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.SHIFT_TEMPLATE?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/shift-template">Ca làm việc mẫu</Link>,
+                                    key: "/admin/shift-template",
+                                    icon: <AppstoreOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.REJECT_REASON.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/reject-reason">Lý do từ chối</Link>,
+                                    key: "/admin/reject-reason",
+                                    icon: <StopOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_PAGINATE)
+                                ? [{
+                                    label: <Link to="/admin/technician-supplier">NCC kỹ thuật viên</Link>,
+                                    key: "/admin/technician-supplier",
+                                    icon: <ShopOutlined />,
+                                }] : []),
+                        ],
+                    }] : []),
             ];
 
             setMenuItems(full);
@@ -397,7 +327,6 @@ const SliderAdmin: React.FC<IProps> = ({
     }, [permissions]);
 
     return (
-
         <Sider
             theme="light"
             collapsible
@@ -424,7 +353,6 @@ const SliderAdmin: React.FC<IProps> = ({
                 onClick={(e) => setActiveMenu(e.key)}
             />
         </Sider>
-
     );
 };
 

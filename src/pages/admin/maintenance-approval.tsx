@@ -3,8 +3,11 @@ import {
     Tabs,
     Card,
     Tag,
+    Row,
+    Col,
     Typography,
     Button,
+    Image,
     Input,
     DatePicker,
     Spin,
@@ -16,12 +19,10 @@ import dayjs from "dayjs";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { notify } from "@/components/common/notify";
-
 import {
     useMaintenanceApprovalsQuery,
     useApprovePlanMutation,
 } from "@/hooks/useMaintenanceApprovals";
-
 import ViewMaintenanceApprovalDetail from "@/components/admin/maintenance-approval/view.maintenance-approval-detail";
 import ViewMaintenanceApprovalMaterials from "@/components/admin/maintenance-approval/view.maintenance-approval-materials";
 import ModalRejectMaintenancePlan from "@/components/admin/maintenance-approval/modal.reject-maintenance-plan";
@@ -36,7 +37,6 @@ export default function MaintenanceApprovalPage() {
     const [query, setQuery] = useState(`page=${page}&pageSize=${pageSize}`);
     const [showDetail, setShowDetail] = useState<string | null>(null);
     const [showMaterials, setShowMaterials] = useState<string | null>(null);
-
     const [rejectModal, setRejectModal] = useState<{ open: boolean; planId: string | null }>({
         open: false,
         planId: null,
@@ -50,10 +50,8 @@ export default function MaintenanceApprovalPage() {
     const { data, isLoading, refetch } = useMaintenanceApprovalsQuery(query);
     const plans = data?.result || [];
 
-    const filtered = plans.filter((p) => {
-        if (activeTab === "ALL") return true;
-        return p.status === activeTab;
-    });
+    const filtered =
+        activeTab === "ALL" ? plans : plans.filter((p) => p.status === activeTab);
 
     const handlePageChange = (newPage: number, newSize?: number) => {
         setPage(newPage);
@@ -188,9 +186,24 @@ export default function MaintenanceApprovalPage() {
                 <>
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                         {filtered.map((plan) => {
+                            const device = plan.device;
+                            const deviceImages = [
+                                device?.image1,
+                                device?.image2,
+                                device?.image3,
+                            ].filter(Boolean);
+
+                            const hasImages = deviceImages.length > 0;
                             const createdAt = plan.createdAt
                                 ? dayjs(plan.createdAt).format("DD/MM/YYYY HH:mm")
                                 : "-";
+
+                            const priorityColor =
+                                plan.priorityLevel === "KHAN_CAP"
+                                    ? "red"
+                                    : plan.priorityLevel === "CAO"
+                                        ? "orange"
+                                        : "blue";
 
                             return (
                                 <Card
@@ -203,113 +216,203 @@ export default function MaintenanceApprovalPage() {
                                         border: "1px solid #e8e8e8",
                                     }}
                                 >
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            flexWrap: "wrap",
-                                            gap: 12,
-                                        }}
-                                    >
-                                        <div>
-                                            <Text strong style={{ fontSize: 15 }}>
-                                                {plan.deviceName}
-                                            </Text>
-                                            <p>
-                                                <Text type="secondary">Mã phiếu: </Text>
-                                                <Text strong>{plan.requestCode}</Text>
-                                            </p>
-                                            <p>
-                                                <Text type="secondary">Giải pháp: </Text>
-                                                {plan.solutionName || "—"}
-                                            </p>
-                                            <p>
-                                                <Text type="secondary">Mức ưu tiên: </Text>
-                                                <Tag color="orange">{plan.priorityLevel}</Tag>
-                                            </p>
-                                            <p>
-                                                <Text type="secondary">Trạng thái: </Text>
-                                                <Tag
-                                                    color={
-                                                        plan.status === "DA_PHE_DUYET"
-                                                            ? "green"
-                                                            : plan.status === "TU_CHOI_PHE_DUYET"
-                                                                ? "default"
-                                                                : "gold"
-                                                    }
+                                    <Row gutter={[12, 12]} align="middle">
+                                        {/* Hình ảnh thiết bị */}
+                                        <Col xs={24} sm={6} md={5}>
+                                            {hasImages ? (
+                                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                                    <Image
+                                                        src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${deviceImages[0]}`}
+                                                        alt={device?.deviceName}
+                                                        width="100%"
+                                                        height={120}
+                                                        style={{
+                                                            objectFit: "cover",
+                                                            borderRadius: 6,
+                                                            border: "1px solid #e8e8e8",
+                                                        }}
+                                                    />
+                                                    {deviceImages.length > 1 && (
+                                                        <div style={{ display: "flex", gap: 8 }}>
+                                                            {deviceImages.slice(1).map((img, idx) => (
+                                                                <Image
+                                                                    key={idx}
+                                                                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${img}`}
+                                                                    alt={`thumb-${idx}`}
+                                                                    width="48%"
+                                                                    height={80}
+                                                                    style={{
+                                                                        objectFit: "cover",
+                                                                        borderRadius: 6,
+                                                                        border: "1px solid #e8e8e8",
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    style={{
+                                                        width: "100%",
+                                                        height: 120,
+                                                        background: "#f5f5f5",
+                                                        borderRadius: 6,
+                                                        display: "flex",
+                                                        justifyContent: "center",
+                                                        alignItems: "center",
+                                                        color: "#aaa",
+                                                        border: "1px solid #ddd",
+                                                    }}
                                                 >
-                                                    {plan.status}
-                                                </Tag>
-                                            </p>
-                                            <p style={{ color: "#888", fontSize: 12 }}>
-                                                Ngày tạo: {createdAt}
-                                            </p>
-                                        </div>
+                                                    Không có hình ảnh thiết bị
+                                                </div>
+                                            )}
+                                        </Col>
 
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: 6,
-                                                justifyContent: "flex-end",
-                                                minWidth: 180,
-                                            }}
-                                        >
-                                            {plan.status === "DA_LAP_KE_HOACH" && (
-                                                <>
+                                        {/* Nội dung thông tin kế hoạch */}
+                                        <Col xs={24} sm={18} md={19}>
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    flexWrap: "wrap",
+                                                }}
+                                            >
+                                                <div>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                        <Text strong style={{ fontSize: 16 }}>
+                                                            {device?.deviceName || "Thiết bị không xác định"}{" "}
+                                                            <Text type="secondary" style={{ fontSize: 13 }}>
+                                                                ({device?.deviceCode || "Không có mã"})
+                                                            </Text>
+                                                        </Text>
+                                                    </div>
+
+                                                    <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.6 }}>
+                                                        <p>
+                                                            <Text type="secondary">Mã phiếu: </Text>
+                                                            <Text strong>{plan.requestCode}</Text>
+                                                        </p>
+                                                        <p>
+                                                            <Text type="secondary">Giải pháp: </Text>
+                                                            {plan.solutionName || "—"}
+                                                        </p>
+                                                        <p>
+                                                            <Text type="secondary">Loại bảo trì thực tế: </Text>
+                                                            <Tag color="blue">{plan.maintenanceTypeActual}</Tag>
+                                                        </p>
+                                                        <p>
+                                                            <Text type="secondary">Sự cố thực tế: </Text>
+                                                            {plan.actualIssueDescription || "—"}
+                                                        </p>
+                                                        <p>
+                                                            <Text type="secondary">Mức ưu tiên: </Text>
+                                                            <Tag color={priorityColor}>{plan.priorityLevel}</Tag>
+                                                        </p>
+                                                        <p>
+                                                            <Text type="secondary">Trạng thái: </Text>
+                                                            <Tag
+                                                                color={
+                                                                    plan.status === "DA_PHE_DUYET"
+                                                                        ? "green"
+                                                                        : plan.status === "TU_CHOI_PHE_DUYET"
+                                                                            ? "default"
+                                                                            : "gold"
+                                                                }
+                                                            >
+                                                                {plan.status}
+                                                            </Tag>
+                                                        </p>
+                                                        <p style={{ color: "#888", fontSize: 12 }}>
+                                                            Ngày tạo: {createdAt}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Hành động */}
+                                                <div
+                                                    style={{
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        alignItems: "stretch",
+                                                        gap: 8,
+                                                        minWidth: 180,
+                                                    }}
+                                                >
+                                                    {plan.status === "DA_LAP_KE_HOACH" && (
+                                                        <>
+                                                            <Access
+                                                                permission={ALL_PERMISSIONS.MAINTENANCE_APPROVAL.APPROVE}
+                                                                hideChildren
+                                                            >
+                                                                <Button
+                                                                    type="primary"
+                                                                    onClick={() =>
+                                                                        setApproveModal({
+                                                                            open: true,
+                                                                            planId: plan.planId,
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    Duyệt
+                                                                </Button>
+                                                            </Access>
+
+
+                                                            <Access
+                                                                permission={ALL_PERMISSIONS.MAINTENANCE_APPROVAL.REJECT}
+                                                                hideChildren
+                                                            >
+                                                                <Button
+                                                                    danger
+                                                                    onClick={() =>
+                                                                        setRejectModal({
+                                                                            open: true,
+                                                                            planId: plan.planId,
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    Không duyệt
+                                                                </Button>
+                                                            </Access>
+                                                        </>
+                                                    )}
                                                     <Access
-                                                        permission={
-                                                            ALL_PERMISSIONS.MAINTENANCE_APPROVAL.APPROVE
-                                                        }
+                                                        permission={ALL_PERMISSIONS.MAINTENANCE_APPROVAL.GET_DETAIL}
                                                         hideChildren
                                                     >
                                                         <Button
-                                                            type="primary"
-                                                            onClick={() =>
-                                                                setApproveModal({
-                                                                    open: true,
-                                                                    planId: plan.planId,
-                                                                })
-                                                            }
+                                                            onClick={() => setShowDetail(plan.planId)}
+                                                            style={{
+                                                                backgroundColor: "#0091EA",
+                                                                color: "white",
+                                                            }}
                                                         >
-                                                            Duyệt
+                                                            Xem chi tiết
                                                         </Button>
                                                     </Access>
-                                                    <Button
-                                                        danger
-                                                        onClick={() =>
-                                                            setRejectModal({
-                                                                open: true,
-                                                                planId: plan.planId,
-                                                            })
-                                                        }
+
+                                                    <Access
+                                                        permission={ALL_PERMISSIONS.MAINTENANCE_APPROVAL.GET_MATERIALS}
+                                                        hideChildren
                                                     >
-                                                        Không duyệt
-                                                    </Button>
-                                                </>
-                                            )}
+                                                        <Button
+                                                            style={{
+                                                                backgroundColor: "#00C853",
+                                                                color: "white",
+                                                            }}
+                                                            onClick={() => setShowMaterials(plan.planId)}
+                                                        >
+                                                            Danh sách vật tư
+                                                        </Button>
+                                                    </Access>
 
-                                            <Button
-                                                onClick={() => setShowDetail(plan.planId)}
-                                                style={{
-                                                    backgroundColor: "#0091EA",
-                                                    color: "white",
-                                                }}
-                                            >
-                                                Xem chi tiết
-                                            </Button>
+                                                </div>
 
-                                            <Button
-                                                style={{
-                                                    backgroundColor: "#00C853",
-                                                    color: "white",
-                                                }}
-                                                onClick={() => setShowMaterials(plan.planId)}
-                                            >
-                                                Danh sách vật tư
-                                            </Button>
-                                        </div>
-                                    </div>
+                                            </div>
+                                        </Col>
+                                    </Row>
                                 </Card>
                             );
                         })}
@@ -317,13 +420,7 @@ export default function MaintenanceApprovalPage() {
 
                     {/* Pagination */}
                     {data?.meta && (
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "center",
-                                marginTop: 24,
-                            }}
-                        >
+                        <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
                             <Pagination
                                 current={data.meta.page}
                                 total={data.meta.total}
@@ -366,8 +463,9 @@ export default function MaintenanceApprovalPage() {
                     title="Chi tiết kế hoạch bảo trì"
                     footer={null}
                     width={900}
+                    destroyOnClose
                 >
-                    <ViewMaintenanceApprovalDetail />
+                    <ViewMaintenanceApprovalDetail planId={showDetail} />
                 </Modal>
             )}
 
@@ -379,8 +477,9 @@ export default function MaintenanceApprovalPage() {
                     title="Danh sách vật tư của kế hoạch"
                     footer={null}
                     width={900}
+                    destroyOnClose
                 >
-                    <ViewMaintenanceApprovalMaterials />
+                    <ViewMaintenanceApprovalMaterials planId={showMaterials} />
                 </Modal>
             )}
         </div>

@@ -8,8 +8,8 @@ import {
 } from "@/config/api";
 import type {
     IModelPaginate,
-    IResMaintenancePlanSimpleDTO,
     IResMaintenancePlanDetailDTO,
+    IResMaintenancePlanApprovalListDTO,
     IResMaintenancePlanMaterialGroupDTO,
     IResMaintenancePlanApprovalDTO,
     IReqRejectPlanDTO,
@@ -26,7 +26,7 @@ export const useMaintenanceApprovalsQuery = (query: string) => {
             const res = await callFetchMaintenanceApprovals(query);
             if (!res?.data)
                 throw new Error("Không thể lấy danh sách kế hoạch bảo trì");
-            return res.data as IModelPaginate<IResMaintenancePlanSimpleDTO>;
+            return res.data as IModelPaginate<IResMaintenancePlanApprovalListDTO>;
         },
     });
 };

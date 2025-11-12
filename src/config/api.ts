@@ -48,7 +48,7 @@ import type {
     IResMaintenancePlanCreateDTO,
     IResMaintenanceSurveyedListDTO,
     IResMaintenanceSurveyedDetailDTO,
-    IResMaintenancePlanSimpleDTO,
+    IResMaintenancePlanApprovalListDTO,
     IResMaintenancePlanDetailDTO,
     IResMaintenancePlanMaterialGroupDTO,
     IResMaintenancePlanApprovalDTO,
@@ -1161,13 +1161,13 @@ export const callFetchSurveyedMaintenanceDetail = (id: string) => {
  *  ============================ */
 
 export const callFetchMaintenanceApprovals = (query: string) => {
-    return axios.get<IBackendRes<IModelPaginate<IResMaintenancePlanSimpleDTO>>>(
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenancePlanApprovalListDTO>>>(
         `/api/v1/maintenance-approvals?${query}`
     );
 };
 export const callFetchMaintenancePlanDetail = (planId: string) => {
     return axios.get<IBackendRes<IResMaintenancePlanDetailDTO>>(
-        `/api/v1/maintenance-approvals/${planId}/detail`
+        `/api/v1/maintenance-approvals/${planId}`
     );
 };
 export const callFetchMaintenancePlanMaterials = (planId: string) => {

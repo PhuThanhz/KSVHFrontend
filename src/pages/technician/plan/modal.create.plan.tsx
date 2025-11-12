@@ -17,7 +17,11 @@ import {
     callFetchSurveyedMaintenanceDetail,
     callFetchSolution,
 } from "@/config/api";
-import type { IReqMaintenancePlanDTO, ISolution, IResMaintenanceSurveyedDetailDTO } from "@/types/backend";
+import type {
+    IReqMaintenancePlanDTO,
+    ISolution,
+    IResMaintenanceSurveyedDetailDTO,
+} from "@/types/backend";
 
 interface IProps {
     openModal: boolean;
@@ -46,6 +50,7 @@ const ModalCreateMaintenancePlan = ({
     const [useMaterial, setUseMaterial] = useState(false);
     const [detail, setDetail] = useState<IResMaintenanceSurveyedDetailDTO | null>(null);
 
+    /** =================== Lấy danh sách phương án =================== */
     const fetchSolutions = async () => {
         try {
             const res = await callFetchSolution("page=1&size=50&sort=createdAt,asc");
@@ -61,6 +66,7 @@ const ModalCreateMaintenancePlan = ({
         }
     };
 
+    /** =================== Lấy chi tiết phiếu khảo sát =================== */
     useEffect(() => {
         const fetchDetail = async () => {
             if (!maintenanceRequestId || !openModal) return;
@@ -68,14 +74,33 @@ const ModalCreateMaintenancePlan = ({
                 setLoading(true);
                 const res = await callFetchSurveyedMaintenanceDetail(maintenanceRequestId);
                 if (res?.data) {
-                    setDetail(res.data);
-                    const { requestCode, device } = res.data;
+                    const data = res.data;
+                    setDetail(data);
+
+                    const { requestCode, device, planInfo } = data;
+
+                    // Set thông tin cơ bản
                     form.setFieldsValue({
                         maintenanceRequestId,
-                        note: "",
+                        readonlyRequestCode: requestCode,
+                        readonlyDeviceCode: device?.deviceCode,
                     });
-                    form.setFieldValue("readonlyRequestCode", requestCode);
-                    form.setFieldValue("readonlyDeviceCode", device?.deviceCode);
+
+                    // Nếu có planInfo (phiếu bị từ chối => có kế hoạch cũ) thì prefill
+                    if (planInfo) {
+                        form.setFieldsValue({
+                            solutionIds: planInfo.solutionIds || [],
+                            customSolution: planInfo.customSolution || "",
+                            useMaterial: planInfo.useMaterial || false,
+                            note: planInfo.note || "",
+                            materials: planInfo.materials || [],
+                        });
+                        setUseMaterial(!!planInfo.useMaterial);
+                    } else {
+                        // Trường hợp lập mới
+                        form.resetFields(["solutionIds", "customSolution", "note", "materials"]);
+                        setUseMaterial(false);
+                    }
                 }
             } catch (err) {
                 console.error("Không thể tải chi tiết phiếu khảo sát", err);
@@ -83,10 +108,12 @@ const ModalCreateMaintenancePlan = ({
                 setLoading(false);
             }
         };
+
         fetchSolutions();
         fetchDetail();
-    }, [maintenanceRequestId, openModal, form]);
+    }, [maintenanceRequestId, openModal]);
 
+    /** =================== Gửi dữ liệu =================== */
     const handleSubmit = async (values: MaintenancePlanFormValues) => {
         if (!maintenanceRequestId) return;
 
@@ -99,11 +126,11 @@ const ModalCreateMaintenancePlan = ({
             materials: values.useMaterial ? values.materials || [] : [],
         };
 
-        // ✅ Nếu phiếu bị từ chối thì gọi replan, ngược lại gọi create
         const isRejected = detail?.status === "TU_CHOI_PHE_DUYET";
         const planId = detail?.planInfo?.planId;
 
         if (isRejected && planId) {
+            // Phiếu bị từ chối → gọi replan
             replan({ planId, payload }, {
                 onSuccess: () => {
                     form.resetFields();
@@ -112,6 +139,7 @@ const ModalCreateMaintenancePlan = ({
                 },
             });
         } else {
+            // Phiếu bình thường → gọi create
             createPlan(payload, {
                 onSuccess: () => {
                     form.resetFields();
@@ -122,6 +150,7 @@ const ModalCreateMaintenancePlan = ({
         }
     };
 
+    /** =================== Giao diện =================== */
     return (
         <ModalForm<MaintenancePlanFormValues>
             key={maintenanceRequestId}
