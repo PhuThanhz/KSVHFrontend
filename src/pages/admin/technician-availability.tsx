@@ -11,7 +11,6 @@ import {
     Empty,
     Modal,
     Badge,
-    Tooltip,
 } from "antd";
 import {
     PlusOutlined,
@@ -36,21 +35,11 @@ import { useTechnicianAvailabilitiesQuery } from "@/hooks/useTechnicianAvailabil
 import type { ITechnicianAvailability } from "@/types/backend";
 
 dayjs.locale("vi");
-
 const { Text, Title } = Typography;
 
-/** Bảng màu đẹp cho các kỹ thuật viên */
 const colorPalette = [
-    "#1890ff", // Blue
-    "#52c41a", // Green
-    "#fa8c16", // Orange
-    "#722ed1", // Purple
-    "#eb2f96", // Pink
-    "#13c2c2", // Cyan
-    "#faad14", // Gold
-    "#f5222d", // Red
-    "#2f54eb", // Geek Blue
-    "#52c41a", // Lime
+    "#1890ff", "#52c41a", "#fa8c16", "#722ed1", "#eb2f96",
+    "#13c2c2", "#faad14", "#f5222d", "#2f54eb", "#52c41a"
 ];
 
 const getColorByTechnician = (id?: string) => {
@@ -66,12 +55,14 @@ const PageTechnicianAvailability = () => {
     const [selectedId, setSelectedId] = useState<string | number | null>(null);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [dataInit, setDataInit] = useState<ITechnicianAvailability | null>(null);
-    const [query] = useState("page=1&pageSize=200");
+    const [calendarRange, setCalendarRange] = useState<{ start: string; end: string } | null>(null);
+
+    const query = calendarRange
+        ? `startDate=${calendarRange.start}&endDate=${calendarRange.end}&page=1&pageSize=100`
+        : "";
+
     const { data, isFetching, refetch } = useTechnicianAvailabilitiesQuery(query);
 
-    /** ==============================
-     *  Chuẩn hóa dữ liệu hiển thị trên FullCalendar
-     * ============================== */
     const events = useMemo(() => {
         if (!data?.result) return [];
         return data.result.map((item) => {
@@ -99,17 +90,11 @@ const PageTechnicianAvailability = () => {
         });
     }, [data]);
 
-    /** ==============================
-     *  Lọc các ca trong ngày hiện tại
-     * ============================== */
     const todayEvents = useMemo(() => {
         const today = dayjs().format("YYYY-MM-DD");
         return events.filter((ev) => ev.extendedProps.workDate === today);
     }, [events]);
 
-    /** ==============================
-     *  Thống kê kỹ thuật viên
-     * ============================== */
     const technicianStats = useMemo(() => {
         const stats = new Map();
         events.forEach((ev) => {
@@ -129,12 +114,10 @@ const PageTechnicianAvailability = () => {
         return Array.from(stats.values()).sort((a, b) => b.count - a.count);
     }, [events]);
 
-
     const handleEventClick = (info: any) => {
         setSelectedId(info.event.id);
         setOpenView(true);
     };
-
 
     const handleDateClick = (arg: any) => {
         setSelectedDate(arg.dateStr);
@@ -147,7 +130,7 @@ const PageTechnicianAvailability = () => {
     }, [events, selectedDate]);
 
     const renderEventContent = (eventInfo: any) => {
-        const { techName, shiftName, status } = eventInfo.event.extendedProps;
+        const { techName, shiftName, special } = eventInfo.event.extendedProps;
         return (
             <div
                 style={{
@@ -160,6 +143,19 @@ const PageTechnicianAvailability = () => {
             >
                 <div style={{ fontWeight: 600, marginBottom: 2 }}>{techName}</div>
                 <div style={{ fontSize: "11px", opacity: 0.95 }}>{shiftName}</div>
+                {special && (
+                    <Tag
+                        color="gold"
+                        style={{
+                            fontSize: "10px",
+                            marginTop: 2,
+                            borderRadius: 4,
+                            lineHeight: "14px",
+                        }}
+                    >
+                        ĐẶC BIỆT
+                    </Tag>
+                )}
             </div>
         );
     };
@@ -167,7 +163,7 @@ const PageTechnicianAvailability = () => {
     return (
         <div style={{ padding: "20px", background: "#f0f2f5", minHeight: "100vh" }}>
             <Row gutter={[16, 16]}>
-                {/* ==================== Header Thống Kê ==================== */}
+                {/* Header */}
                 <Col span={24}>
                     <Card>
                         <Row gutter={16} align="middle">
@@ -186,7 +182,10 @@ const PageTechnicianAvailability = () => {
                                     <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
                                         Làm mới
                                     </Button>
-                                    <Access permission={ALL_PERMISSIONS.TECHNICIAN_AVAILABILITY.CREATE} hideChildren>
+                                    <Access
+                                        permission={ALL_PERMISSIONS.TECHNICIAN_AVAILABILITY.CREATE}
+                                        hideChildren
+                                    >
                                         <Button
                                             type="primary"
                                             icon={<PlusOutlined />}
@@ -196,14 +195,13 @@ const PageTechnicianAvailability = () => {
                                             Thêm ca mới
                                         </Button>
                                     </Access>
-
                                 </Space>
                             </Col>
                         </Row>
                     </Card>
                 </Col>
 
-                {/* ==================== Lịch chính ==================== */}
+                {/* Lịch chính */}
                 <Col xs={24} lg={17}>
                     <Card
                         bodyStyle={{ padding: "16px" }}
@@ -235,7 +233,6 @@ const PageTechnicianAvailability = () => {
                             eventContent={renderEventContent}
                             eventDisplay="block"
                             displayEventTime={true}
-                            displayEventEnd={false}
                             dayMaxEvents={3}
                             moreLinkText={(num) => `+${num} ca khác`}
                             eventTimeFormat={{
@@ -243,11 +240,16 @@ const PageTechnicianAvailability = () => {
                                 minute: "2-digit",
                                 meridiem: false,
                             }}
+                            datesSet={(info) => {
+                                const start = dayjs(info.start).format("YYYY-MM-DD");
+                                const end = dayjs(info.end).format("YYYY-MM-DD");
+                                setCalendarRange({ start, end });
+                            }}
                         />
                     </Card>
                 </Col>
 
-                {/* ==================== Sidebar ==================== */}
+                {/* Sidebar */}
                 <Col xs={24} lg={7}>
                     <Space direction="vertical" style={{ width: "100%" }} size={16}>
                         {/* Ca hôm nay */}
@@ -275,7 +277,7 @@ const PageTechnicianAvailability = () => {
                                         const item = ev.extendedProps;
                                         return (
                                             <Card
-                                                key={ev.id ?? `event-${Math.random()}`}
+                                                key={ev.id}
                                                 size="small"
                                                 style={{
                                                     marginBottom: 12,
@@ -285,13 +287,11 @@ const PageTechnicianAvailability = () => {
                                                 }}
                                                 hoverable
                                                 onClick={() => {
-                                                    if (ev.id) {
-                                                        setSelectedId(String(ev.id));
-                                                        setOpenView(true);
-                                                    }
+                                                    setSelectedId(String(ev.id));
+                                                    setOpenView(true);
                                                 }}
                                             >
-                                                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                                                <Space direction="vertical" size={4}>
                                                     <Text strong style={{ fontSize: 14 }}>
                                                         {item.technician?.fullName || "Kỹ thuật viên"}
                                                     </Text>
@@ -299,8 +299,7 @@ const PageTechnicianAvailability = () => {
                                                         {item.shiftTemplate?.name || "Ca làm việc"}
                                                     </Text>
                                                     <Text>
-                                                        🕒{" "}
-                                                        {dayjs(item.startTime, "HH:mm:ss").format("HH:mm")} -{" "}
+                                                        🕒 {dayjs(item.startTime, "HH:mm:ss").format("HH:mm")} -{" "}
                                                         {dayjs(item.endTime, "HH:mm:ss").format("HH:mm")}
                                                     </Text>
                                                     {item.note && (
@@ -328,7 +327,7 @@ const PageTechnicianAvailability = () => {
                                                                         ? "Nghỉ phép"
                                                                         : "Ngoại tuyến"}
                                                         </Tag>
-                                                        {item.isSpecial && <Tag color="gold">Đặc biệt</Tag>}
+                                                        {item.special && <Tag color="gold">Đặc biệt</Tag>}
                                                     </div>
                                                 </Space>
                                             </Card>
@@ -346,7 +345,6 @@ const PageTechnicianAvailability = () => {
                                     <Text strong>Kỹ thuật viên</Text>
                                 </Space>
                             }
-                            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
                         >
                             <div style={{ maxHeight: "300px", overflowY: "auto" }}>
                                 {technicianStats.map((tech) => (
@@ -383,8 +381,7 @@ const PageTechnicianAvailability = () => {
                 </Col>
             </Row>
 
-
-            {/* ==================== Modal tạo/sửa ==================== */}
+            {/* Modal tạo/sửa */}
             {openModal && (
                 <ModalTechnicianAvailability
                     openModal={openModal}
@@ -394,7 +391,7 @@ const PageTechnicianAvailability = () => {
                 />
             )}
 
-            {/* ==================== Drawer xem chi tiết ==================== */}
+            {/* Drawer xem chi tiết */}
             {openView && (
                 <ViewDetailTechnicianAvailability
                     open={openView}
@@ -407,155 +404,6 @@ const PageTechnicianAvailability = () => {
                     }}
                 />
             )}
-
-
-
-            {/* ==================== Modal xem danh sách trong ngày ==================== */}
-            <Modal
-                open={openDayModal}
-                onCancel={() => setOpenDayModal(false)}
-                width={800}
-                title={
-                    <Space>
-                        <CalendarOutlined />
-                        <Title level={4} style={{ margin: 0 }}>
-                            Ca làm việc ngày{" "}
-                            {selectedDate ? dayjs(selectedDate).format("DD/MM/YYYY") : ""}
-                        </Title>
-                    </Space>
-                }
-                footer={
-                    <Button onClick={() => setOpenDayModal(false)}>Đóng</Button>
-                }
-            >
-                <Divider style={{ margin: "12px 0" }} />
-                {eventsOfSelectedDate.length === 0 ? (
-                    <Empty
-                        description="Không có ca làm việc nào trong ngày này"
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    />
-                ) : (
-                    <div style={{ maxHeight: "500px", overflowY: "auto" }}>
-                        {eventsOfSelectedDate.map((ev) => {
-                            const item = ev.extendedProps;
-                            return (
-                                <Card
-                                    key={ev.id}
-                                    size="small"
-                                    style={{
-                                        marginBottom: 12,
-                                        borderLeft: `4px solid ${ev.backgroundColor}`,
-                                        cursor: "pointer",
-                                        transition: "all 0.3s",
-                                    }}
-                                    hoverable
-                                    onClick={() => {
-                                        if (ev.id) {
-                                            setSelectedId(String(ev.id));
-                                            setOpenView(true);
-                                            setOpenDayModal(false);
-                                        }
-                                    }}
-
-                                >
-                                    <Row gutter={16}>
-                                        <Col span={12}>
-                                            <Space direction="vertical" size={4}>
-                                                <Text strong style={{ fontSize: 15 }}>
-                                                    <UserOutlined /> {item.technician?.fullName}
-                                                </Text>
-                                                <Text>
-                                                    <Tag color={ev.backgroundColor}>
-                                                        {item.shiftTemplate?.name || "Ca làm việc"}
-                                                    </Tag>
-                                                </Text>
-                                            </Space>
-                                        </Col>
-                                        <Col span={12}>
-                                            <Space direction="vertical" size={4}>
-                                                <Text>
-                                                    🕒 {dayjs(item.startTime, "HH:mm:ss").format("HH:mm")} -{" "}
-                                                    {dayjs(item.endTime, "HH:mm:ss").format("HH:mm")}
-                                                </Text>
-                                                {item.note && (
-                                                    <Text type="secondary">
-                                                        <EnvironmentOutlined /> {item.note}
-                                                    </Text>
-                                                )}
-                                                <div>
-                                                    <Tag
-                                                        color={
-                                                            item.status === "AVAILABLE"
-                                                                ? "green"
-                                                                : item.status === "BUSY"
-                                                                    ? "orange"
-                                                                    : item.status === "ON_LEAVE"
-                                                                        ? "red"
-                                                                        : "default"
-                                                        }
-                                                    >
-                                                        {item.status === "AVAILABLE"
-                                                            ? "Đang rảnh"
-                                                            : item.status === "BUSY"
-                                                                ? "Đang bận"
-                                                                : item.status === "ON_LEAVE"
-                                                                    ? "Nghỉ phép"
-                                                                    : "Ngoại tuyến"}
-                                                    </Tag>
-                                                    {item.isSpecial && <Tag color="gold">Đặc biệt</Tag>}
-                                                </div>
-                                            </Space>
-                                        </Col>
-                                    </Row>
-                                </Card>
-                            );
-                        })}
-                    </div>
-                )}
-            </Modal>
-
-            <style>{`
-                .fc {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                }
-                .fc .fc-toolbar-title {
-                    font-size: 1.5em;
-                    font-weight: 600;
-                    color: #1890ff;
-                }
-                .fc .fc-button {
-                    background-color: #1890ff;
-                    border-color: #1890ff;
-                    text-transform: capitalize;
-                }
-                .fc .fc-button:hover {
-                    background-color: #40a9ff;
-                    border-color: #40a9ff;
-                }
-                .fc .fc-button-primary:not(:disabled).fc-button-active {
-                    background-color: #096dd9;
-                    border-color: #096dd9;
-                }
-                .fc-event {
-                    border-radius: 4px;
-                    padding: 2px;
-                    border: none !important;
-                }
-                .fc-daygrid-event {
-                    margin: 1px 2px;
-                }
-                .fc .fc-daygrid-day-number {
-                    padding: 8px;
-                    font-weight: 500;
-                }
-                .fc .fc-day-today {
-                    background-color: #e6f7ff !important;
-                }
-                .fc-col-header-cell {
-                    background-color: #fafafa;
-                    font-weight: 600;
-                }
-            `}</style>
         </div>
     );
 };

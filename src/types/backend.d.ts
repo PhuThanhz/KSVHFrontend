@@ -671,7 +671,7 @@ export interface ITechnicianAvailability {
     endTime: string;     // HH:mm:ss
 
     status?: TechnicianAvailabilityStatus;
-    isSpecial?: boolean;
+    special?: boolean;
     note?: string | null;
 
     createdAt?: string;
@@ -692,7 +692,7 @@ export interface IReqTechnicianAvailability {
     startTime?: string;
     endTime?: string;
     status?: TechnicianAvailabilityStatus;
-    isSpecial?: boolean;
+    special?: boolean;
     note?: string | null;
     workingDays?: ("MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY")[];
 }

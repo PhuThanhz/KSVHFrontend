@@ -77,7 +77,7 @@ const ModalTechnicianAvailability = ({
                     ? dayjs(dataInit.endTime, "HH:mm:ss")
                     : undefined,
                 status: dataInit.status,
-                isSpecial: dataInit.isSpecial ?? false,
+                special: dataInit.special ?? false,
                 note: dataInit.note,
             });
             setIsUsingTemplate(Boolean(dataInit.shiftTemplate));
@@ -128,7 +128,7 @@ const ModalTechnicianAvailability = ({
             startTime: start ? start.format("HH:mm:ss") : undefined,
             endTime: end ? end.format("HH:mm:ss") : undefined,
             status: isEdit ? valuesForm.status : "AVAILABLE",
-            isSpecial: valuesForm.isSpecial ?? false,
+            special: valuesForm.isSpecial ?? false,
             note: valuesForm.note ?? null,
             ...(isMultipleDays ? { workingDays } : {}),
 

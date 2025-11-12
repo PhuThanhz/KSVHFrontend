@@ -156,7 +156,7 @@ const ViewDetailTechnicianAvailability = ({
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Ca đặc biệt">
-                            {availability.isSpecial ? (
+                            {availability.special ? (
                                 <Badge status="processing" text="Có" />
                             ) : (
                                 <Badge status="default" text="Không" />

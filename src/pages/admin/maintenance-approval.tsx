@@ -15,41 +15,63 @@ import {
 import dayjs from "dayjs";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import { notify } from "@/components/common/notify";
 
-import { useMaintenanceApprovalsQuery } from "@/hooks/useMaintenanceApprovals";
-import ModalMaintenanceApproval from "@/components/admin/maintenance-approval/modal.maintenance-approval";
+import {
+    useMaintenanceApprovalsQuery,
+    useApprovePlanMutation,
+} from "@/hooks/useMaintenanceApprovals";
+
 import ViewMaintenanceApprovalDetail from "@/components/admin/maintenance-approval/view.maintenance-approval-detail";
 import ViewMaintenanceApprovalMaterials from "@/components/admin/maintenance-approval/view.maintenance-approval-materials";
+import ModalRejectMaintenancePlan from "@/components/admin/maintenance-approval/modal.reject-maintenance-plan";
 
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 
 export default function MaintenanceApprovalPage() {
-    const [activeTab, setActiveTab] = useState("ALL");
+    const [activeTab, setActiveTab] = useState("DA_LAP_KE_HOACH");
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [query, setQuery] = useState(`page=${page}&pageSize=${pageSize}`);
-
-    const [selectedPlan, setSelectedPlan] = useState<{
-        planId: string;
-        requestCode: string;
-    } | null>(null);
-
     const [showDetail, setShowDetail] = useState<string | null>(null);
     const [showMaterials, setShowMaterials] = useState<string | null>(null);
 
-    const { data, isLoading } = useMaintenanceApprovalsQuery(query);
+    const [rejectModal, setRejectModal] = useState<{ open: boolean; planId: string | null }>({
+        open: false,
+        planId: null,
+    });
+    const [approveModal, setApproveModal] = useState<{ open: boolean; planId: string | null }>({
+        open: false,
+        planId: null,
+    });
+
+    const approveMutation = useApprovePlanMutation();
+    const { data, isLoading, refetch } = useMaintenanceApprovalsQuery(query);
     const plans = data?.result || [];
 
-    const filtered =
-        activeTab === "ALL"
-            ? plans
-            : plans.filter((p) => p.status === "DA_LAP_KE_HOACH");
+    const filtered = plans.filter((p) => {
+        if (activeTab === "ALL") return true;
+        return p.status === activeTab;
+    });
 
     const handlePageChange = (newPage: number, newSize?: number) => {
         setPage(newPage);
         setPageSize(newSize || pageSize);
         setQuery(`page=${newPage}&pageSize=${newSize || pageSize}`);
+    };
+
+    /** Xử lý duyệt kế hoạch */
+    const handleApprove = async () => {
+        if (!approveModal.planId) return;
+        try {
+            await approveMutation.mutateAsync(approveModal.planId);
+            notify.success("Kế hoạch đã được duyệt thành công");
+            setApproveModal({ open: false, planId: null });
+            refetch();
+        } catch (err: any) {
+            notify.error(err.message || "Không thể duyệt kế hoạch");
+        }
     };
 
     return (
@@ -70,29 +92,51 @@ export default function MaintenanceApprovalPage() {
 
             {/* Tabs */}
             <Tabs
-                defaultActiveKey="ALL"
                 activeKey={activeTab}
-                onChange={(key) => setActiveTab(key)}
+                onChange={(key) => {
+                    setActiveTab(key);
+                    setPage(1);
+                    setQuery(`page=1&pageSize=${pageSize}`);
+                }}
                 items={[
-                    {
-                        key: "ALL",
-                        label: (
-                            <>
-                                Tất cả kế hoạch <Tag color="blue">{plans.length || 0}</Tag>
-                            </>
-                        ),
-                    },
                     {
                         key: "DA_LAP_KE_HOACH",
                         label: (
                             <>
                                 Chờ phê duyệt{" "}
                                 <Tag color="red">
-                                    {
-                                        plans.filter((p) => p.status === "DA_LAP_KE_HOACH").length ||
-                                        0
-                                    }
+                                    {plans.filter((p) => p.status === "DA_LAP_KE_HOACH").length}
                                 </Tag>
+                            </>
+                        ),
+                    },
+                    {
+                        key: "DA_PHE_DUYET",
+                        label: (
+                            <>
+                                Đã duyệt{" "}
+                                <Tag color="green">
+                                    {plans.filter((p) => p.status === "DA_PHE_DUYET").length}
+                                </Tag>
+                            </>
+                        ),
+                    },
+                    {
+                        key: "TU_CHOI_PHE_DUYET",
+                        label: (
+                            <>
+                                Bị từ chối{" "}
+                                <Tag color="default">
+                                    {plans.filter((p) => p.status === "TU_CHOI_PHE_DUYET").length}
+                                </Tag>
+                            </>
+                        ),
+                    },
+                    {
+                        key: "ALL",
+                        label: (
+                            <>
+                                Tất cả <Tag color="blue">{plans.length || 0}</Tag>
                             </>
                         ),
                     },
@@ -139,7 +183,7 @@ export default function MaintenanceApprovalPage() {
                     <Spin size="large" />
                 </div>
             ) : filtered.length === 0 ? (
-                <Empty description="Không có kế hoạch nào chờ phê duyệt" />
+                <Empty description="Không có kế hoạch nào" />
             ) : (
                 <>
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -185,7 +229,17 @@ export default function MaintenanceApprovalPage() {
                                             </p>
                                             <p>
                                                 <Text type="secondary">Trạng thái: </Text>
-                                                <Tag color="gold">{plan.status}</Tag>
+                                                <Tag
+                                                    color={
+                                                        plan.status === "DA_PHE_DUYET"
+                                                            ? "green"
+                                                            : plan.status === "TU_CHOI_PHE_DUYET"
+                                                                ? "default"
+                                                                : "gold"
+                                                    }
+                                                >
+                                                    {plan.status}
+                                                </Tag>
                                             </p>
                                             <p style={{ color: "#888", fontSize: 12 }}>
                                                 Ngày tạo: {createdAt}
@@ -201,37 +255,55 @@ export default function MaintenanceApprovalPage() {
                                                 minWidth: 180,
                                             }}
                                         >
-                                            {/* Nút mở modal phê duyệt */}
-                                            <Access
-                                                permission={
-                                                    ALL_PERMISSIONS.MAINTENANCE_APPROVAL.APPROVE
-                                                }
-                                                hideChildren
-                                            >
-                                                <Button
-                                                    type="primary"
-                                                    onClick={() =>
-                                                        setSelectedPlan({
-                                                            planId: plan.planId,
-                                                            requestCode: plan.requestCode,
-                                                        })
-                                                    }
-                                                >
-                                                    Phê duyệt
-                                                </Button>
-                                            </Access>
+                                            {plan.status === "DA_LAP_KE_HOACH" && (
+                                                <>
+                                                    <Access
+                                                        permission={
+                                                            ALL_PERMISSIONS.MAINTENANCE_APPROVAL.APPROVE
+                                                        }
+                                                        hideChildren
+                                                    >
+                                                        <Button
+                                                            type="primary"
+                                                            onClick={() =>
+                                                                setApproveModal({
+                                                                    open: true,
+                                                                    planId: plan.planId,
+                                                                })
+                                                            }
+                                                        >
+                                                            Duyệt
+                                                        </Button>
+                                                    </Access>
+                                                    <Button
+                                                        danger
+                                                        onClick={() =>
+                                                            setRejectModal({
+                                                                open: true,
+                                                                planId: plan.planId,
+                                                            })
+                                                        }
+                                                    >
+                                                        Không duyệt
+                                                    </Button>
+                                                </>
+                                            )}
 
-                                            {/* Nút xem chi tiết */}
                                             <Button
                                                 onClick={() => setShowDetail(plan.planId)}
-                                                style={{ backgroundColor: "#0091EA", color: "white" }}
+                                                style={{
+                                                    backgroundColor: "#0091EA",
+                                                    color: "white",
+                                                }}
                                             >
                                                 Xem chi tiết
                                             </Button>
 
-                                            {/* Nút danh sách vật tư */}
                                             <Button
-                                                style={{ backgroundColor: "#00C853", color: "white" }}
+                                                style={{
+                                                    backgroundColor: "#00C853",
+                                                    color: "white",
+                                                }}
                                                 onClick={() => setShowMaterials(plan.planId)}
                                             >
                                                 Danh sách vật tư
@@ -266,17 +338,27 @@ export default function MaintenanceApprovalPage() {
                 </>
             )}
 
-            {/* Modal phê duyệt kế hoạch */}
-            {selectedPlan && (
-                <ModalMaintenanceApproval
-                    open={!!selectedPlan}
-                    onClose={() => setSelectedPlan(null)}
-                    planId={selectedPlan.planId}
-                    requestCode={selectedPlan.requestCode}
-                />
-            )}
+            {/* Modal xác nhận duyệt */}
+            <Modal
+                title="Xác nhận phê duyệt kế hoạch"
+                open={approveModal.open}
+                onCancel={() => setApproveModal({ open: false, planId: null })}
+                onOk={handleApprove}
+                okText="Xác nhận"
+                cancelText="Hủy"
+            >
+                <p>Bạn có chắc chắn muốn phê duyệt kế hoạch này không?</p>
+            </Modal>
 
-            {/* Modal xem chi tiết kế hoạch */}
+            {/* Modal từ chối kế hoạch */}
+            <ModalRejectMaintenancePlan
+                openModal={rejectModal.open}
+                setOpenModal={(v) => setRejectModal({ open: v, planId: rejectModal.planId })}
+                planId={rejectModal.planId}
+                onSuccess={() => refetch()}
+            />
+
+            {/* Modal xem chi tiết */}
             {showDetail && (
                 <Modal
                     open={!!showDetail}
@@ -289,7 +371,7 @@ export default function MaintenanceApprovalPage() {
                 </Modal>
             )}
 
-            {/* Modal danh sách vật tư */}
+            {/* Modal vật tư */}
             {showMaterials && (
                 <Modal
                     open={!!showMaterials}
