@@ -457,16 +457,12 @@ export default function MaintenanceApprovalPage() {
 
             {/* Modal xem chi tiết */}
             {showDetail && (
-                <Modal
+                <ViewMaintenanceApprovalDetail
                     open={!!showDetail}
-                    onCancel={() => setShowDetail(null)}
-                    title="Chi tiết kế hoạch bảo trì"
-                    footer={null}
-                    width={900}
-                    destroyOnClose
-                >
-                    <ViewMaintenanceApprovalDetail planId={showDetail} />
-                </Modal>
+                    onClose={() => setShowDetail(null)}
+                    planId={showDetail!}
+                />
+
             )}
 
             {/* Modal vật tư */}

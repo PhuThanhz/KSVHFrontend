@@ -50,6 +50,11 @@ export interface IAccount {
     };
 }
 
+export interface IReqUpdateProfileDTO {
+    name?: string;
+    address?: string;
+    avatar?: string;
+}
 
 export interface IGetAccount extends Omit<IAccount, "access_token"> { }
 

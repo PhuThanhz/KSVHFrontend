@@ -53,10 +53,11 @@ export const PATHS = {
         SCHEDULE: "/technician/schedule",              // Lịch làm việc
         SURVEY: "/technician/survey",                  // Khảo sát
         PLAN: "/technician/plan",                      // Kế hoạch làm việc
+        EXECUTION: "/technician/execution",            // Thi công bảo trì
         NOTIFICATIONS: "/technician/notifications",    // Thông báo
         PROFILE: "/technician/profile",                // Hồ sơ cá nhân
         PROGRESS: "/technician/progress",              // Cập nhật tiến độ công việc
-
     },
+
 
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Dropdown, Space, Avatar, message, Badge } from 'antd';
-import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined } from '@ant-design/icons';
+import { MenuFoldOutlined, MenuUnfoldOutlined, BellOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { callLogout } from '@/config/api';
@@ -13,9 +13,10 @@ interface IProps {
 }
 
 const HeaderAdmin: React.FC<IProps> = ({ collapsed, setCollapsed }) => {
-    const user = useAppSelector(state => state.account.user);
+    const user = useAppSelector((state) => state.account.user);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
     const handleLogout = async () => {
         try {
@@ -28,7 +29,8 @@ const HeaderAdmin: React.FC<IProps> = ({ collapsed, setCollapsed }) => {
             navigate(PATHS.HOME, { replace: true });
             message.success("Đăng xuất thành công");
         }
-    }
+    };
+
     const itemsDropdown = [
         {
             label: <Link to={'/'}>Trang chủ</Link>,
@@ -47,8 +49,11 @@ const HeaderAdmin: React.FC<IProps> = ({ collapsed, setCollapsed }) => {
         },
     ];
 
-    // Ví dụ giả lập số thông báo chưa đọc
     const unreadCount = 3;
+
+    const avatarSrc = user?.avatar
+        ? `${backendURL}/storage/AVATAR/${user.avatar}`
+        : undefined;
 
     return (
         <div
@@ -87,8 +92,14 @@ const HeaderAdmin: React.FC<IProps> = ({ collapsed, setCollapsed }) => {
 
                 <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
                     <Space style={{ cursor: 'pointer' }}>
-                        Welcome {user?.name}
-                        <Avatar>{user?.name?.substring(0, 2)?.toUpperCase()}</Avatar>
+                        <span>Welcome {user?.name}</span>
+                        <Avatar
+                            src={avatarSrc}
+                            icon={!avatarSrc && <UserOutlined />}
+                            style={{ backgroundColor: avatarSrc ? 'transparent' : '#87d068' }}
+                        >
+                            {!avatarSrc && user?.name?.substring(0, 2)?.toUpperCase()}
+                        </Avatar>
                     </Space>
                 </Dropdown>
             </Space>

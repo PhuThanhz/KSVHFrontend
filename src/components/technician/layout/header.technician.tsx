@@ -1,4 +1,3 @@
-// src/layouts/header.technician.tsx
 import React, { useState } from "react";
 import { Dropdown, Space, Avatar, message } from "antd";
 import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
@@ -15,6 +14,9 @@ const HeaderTechnician: React.FC = () => {
     const { user } = useAppSelector((state) => state.account);
     const [menuOpen, setMenuOpen] = useState(false);
 
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+    /** ======================= LOGOUT ======================= */
     const handleLogout = async () => {
         try {
             await callLogout();
@@ -29,12 +31,15 @@ const HeaderTechnician: React.FC = () => {
         }
     };
 
+    /** ======================= MENU DROPDOWN ======================= */
     const dropdownItems: MenuProps["items"] = [
         {
             key: "info",
             label: (
                 <div className="flex flex-col p-1">
-                    <span className="font-bold text-gray-800">{user?.name || "Kỹ thuật viên"}</span>
+                    <span className="font-bold text-gray-800">
+                        {user?.name || "Kỹ thuật viên"}
+                    </span>
                     <span className="text-xs text-gray-500">Kỹ thuật viên</span>
                 </div>
             ),
@@ -44,13 +49,22 @@ const HeaderTechnician: React.FC = () => {
         {
             key: "logout",
             label: (
-                <span onClick={handleLogout} className="text-red-500 flex items-center gap-2">
+                <span
+                    onClick={handleLogout}
+                    className="text-red-500 flex items-center gap-2"
+                >
                     <LogoutOutlined /> Đăng xuất
                 </span>
             ),
         },
     ];
 
+    /** ======================= AVATAR XỬ LÝ ======================= */
+    const avatarSrc = user?.avatar
+        ? `${backendURL}/storage/AVATAR/${user.avatar}`
+        : undefined;
+
+    /** ======================= RENDER ======================= */
     return (
         <header className="fixed top-0 left-0 right-0 bg-gradient-to-b from-pink-50 to-white z-50 px-6 pt-6 pb-4 shadow-sm">
             <div className="flex items-center justify-between">
@@ -58,7 +72,7 @@ const HeaderTechnician: React.FC = () => {
                     <h1 className="text-2xl font-bold text-gray-800 m-0">
                         Morning,{" "}
                         <span className="text-pink-500">
-                            {user?.name?.split(" ").pop() || "Kevin"}
+                            {user?.name?.split(" ").pop() || "Technician"}
                         </span>
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">Have a nice day!</p>
@@ -74,9 +88,14 @@ const HeaderTechnician: React.FC = () => {
                     <div className="cursor-pointer">
                         <Avatar
                             size={48}
-                            className="bg-gradient-to-br from-pink-400 to-orange-400 text-white font-bold shadow-md"
+                            src={avatarSrc}
+                            icon={!avatarSrc && <UserOutlined />}
+                            className={`shadow-md ${avatarSrc
+                                    ? ""
+                                    : "bg-gradient-to-br from-pink-400 to-orange-400 text-white font-bold"
+                                }`}
                         >
-                            {user?.name ? user.name.charAt(0).toUpperCase() : "T"}
+                            {!avatarSrc && user?.name?.charAt(0)?.toUpperCase()}
                         </Avatar>
                     </div>
                 </Dropdown>

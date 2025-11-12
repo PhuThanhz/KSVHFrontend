@@ -37,6 +37,11 @@ const Header = () => {
     const [current, setCurrent] = useState(PATHS.CLIENT.HOME);
     const location = useLocation();
 
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
+    const avatarUrl = user?.avatar
+        ? `${backendURL}/storage/AVATAR/${user.avatar}`
+        : undefined;
+
     const { hasPermission } = usePermission?.() || { hasPermission: () => true };
 
     useEffect(() => {
@@ -79,9 +84,9 @@ const Header = () => {
         "VIEW",
         "/ui/technician/home"
     );
+
     const itemsDropdown: MenuProps["items"] = isAuthenticated
         ? [
-            // ==================== Công việc của tôi ==================== //
             ...(canAccessTechnician
                 ? [
                     {
@@ -95,7 +100,6 @@ const Header = () => {
                     },
                 ]
                 : []),
-            // ==================== Lịch sử mua hàng ==================== //
             ...(canViewPurchaseHistory
                 ? [
                     {
@@ -109,8 +113,6 @@ const Header = () => {
                     },
                 ]
                 : []),
-
-            // ==================== Phiếu bảo trì ==================== //
             ...(canViewMaintenance
                 ? [
                     {
@@ -124,8 +126,6 @@ const Header = () => {
                     },
                 ]
                 : []),
-
-            // ==================== Quản lý tài khoản ==================== //
             {
                 label: (
                     <span
@@ -138,22 +138,25 @@ const Header = () => {
                 key: "manage-account",
                 icon: <ContactsOutlined />,
             },
-
-            // ==================== Trang quản trị (chỉ admin) ==================== //
             ...(canAccessAdmin
                 ? [
                     {
-                        label: <Link to={PATHS.ADMIN.ROOT}>Trang Quản Trị</Link>,
+                        label: (
+                            <Link to={PATHS.ADMIN.ROOT}>
+                                Trang Quản Trị
+                            </Link>
+                        ),
                         key: "admin",
                         icon: <FireOutlined />,
                     },
                 ]
                 : []),
-
-            // ==================== Đăng xuất ==================== //
             {
                 label: (
-                    <span style={{ cursor: "pointer" }} onClick={handleLogout}>
+                    <span
+                        style={{ cursor: "pointer" }}
+                        onClick={handleLogout}
+                    >
                         Đăng xuất
                     </span>
                 ),
@@ -206,12 +209,23 @@ const Header = () => {
                                     {!isAuthenticated ? (
                                         <Link to={PATHS.LOGIN}>Đăng Nhập</Link>
                                     ) : (
-                                        <Dropdown menu={{ items: itemsDropdown }} trigger={["click"]}>
+                                        <Dropdown
+                                            menu={{ items: itemsDropdown }}
+                                            trigger={["click"]}
+                                        >
                                             <Space style={{ cursor: "pointer" }}>
-                                                <span>Welcome {user?.name}</span>
-                                                <Avatar>
-                                                    {user?.name?.substring(0, 2)?.toUpperCase()}
+                                                <Avatar
+                                                    src={avatarUrl}
+                                                    alt={user?.name}
+                                                >
+                                                    {!avatarUrl &&
+                                                        user?.name
+                                                            ?.substring(0, 2)
+                                                            ?.toUpperCase()}
                                                 </Avatar>
+                                                <span>
+                                                    {user?.name || "Người dùng"}
+                                                </span>
                                             </Space>
                                         </Dropdown>
                                     )}
@@ -221,7 +235,9 @@ const Header = () => {
                     ) : (
                         <div className={styles["header-mobile"]}>
                             <span>AMMS</span>
-                            <MenuFoldOutlined onClick={() => setOpenMobileMenu(true)} />
+                            <MenuFoldOutlined
+                                onClick={() => setOpenMobileMenu(true)}
+                            />
                         </div>
                     )}
                 </div>
@@ -241,7 +257,10 @@ const Header = () => {
                 />
             </Drawer>
 
-            <ManageAccount open={openManageAccount} onClose={setOpenManageAccount} />
+            <ManageAccount
+                open={openManageAccount}
+                onClose={setOpenManageAccount}
+            />
         </>
     );
 };

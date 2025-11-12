@@ -3,18 +3,20 @@ import {
     ProFormSelect,
     ProFormTextArea,
     ProFormText,
-    ProForm,
+    ProFormItem,
 } from "@ant-design/pro-components";
-import { Form, Upload, Spin } from "antd";
-import type { UploadFile } from "antd/es/upload/interface";
+import { Form, Upload, Spin, message, Modal, Image } from "antd";
+import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { PlusOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { isMobile } from "react-device-detect";
 
 import {
     callFetchIssue,
     callFetchMaintenanceSurveyById,
     callFetchMaintenanceCause,
+    callUploadMultipleFiles,
 } from "@/config/api";
 import { useCreateMaintenanceSurveyMutation } from "@/hooks/maintenance/useMaintenanceSurveys";
 import type { IReqMaintenanceSurveyDTO } from "@/types/backend";
@@ -33,8 +35,15 @@ const ModalCreateSurvey = ({
 }: IProps) => {
     const [form] = Form.useForm();
     const { mutate: createSurvey, isPending } = useCreateMaintenanceSurveyMutation();
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
     const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [previewOpen, setPreviewOpen] = useState(false);
+    const [previewImage, setPreviewImage] = useState("");
+    const [previewTitle, setPreviewTitle] = useState("");
+    const [loadingUpload, setLoadingUpload] = useState(false);
+    const [loading, setLoading] = useState(false);
+
     const [issueOptions, setIssueOptions] = useState<{ label: string; value: string }[]>([]);
     const [causeOptions, setCauseOptions] = useState<{ label: string; value: string }[]>([]);
 
@@ -51,9 +60,7 @@ const ModalCreateSurvey = ({
         { label: "Sửa chữa", value: "SUA_CHUA" },
     ]);
 
-    const [loading, setLoading] = useState(false);
-
-    /** =================== Fetch dữ liệu phiếu khảo sát (chứa thông tin thiết bị + mã phiếu) =================== */
+    /** =================== Fetch dữ liệu phiếu khảo sát =================== */
     useEffect(() => {
         const fetchSurveyDetail = async () => {
             if (!maintenanceRequestId || !openModal) return;
@@ -116,23 +123,70 @@ const ModalCreateSurvey = ({
         }
     };
 
-    /** =================== Xử lý Submit =================== */
+    /** =================== Upload ảnh/video (chung) =================== */
+    const uploadProps: UploadProps = {
+        listType: "picture-card",
+        multiple: true,
+        fileList,
+        maxCount: 3,
+        accept: ".jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.avi,.mkv,.webm",
+        customRequest: async ({ file, onSuccess, onError }: any) => {
+            try {
+                setLoadingUpload(true);
+                const res = await callUploadMultipleFiles([file as File], "survey_attachment");
+                if (res?.data && Array.isArray(res.data)) {
+                    const newFiles: UploadFile[] = res.data.map((f) => ({
+                        uid: uuidv4(),
+                        name: f.fileName,
+                        status: "done",
+                        url: `${backendURL}/storage/survey_attachment/${f.fileName}`,
+                    }));
+                    setFileList((prev) => [...prev, ...newFiles].slice(0, 3));
+                    onSuccess?.("ok");
+                } else throw new Error("Upload thất bại");
+            } catch (err: any) {
+                message.error(err?.message || "Không thể upload file");
+                onError?.(err);
+            } finally {
+                setLoadingUpload(false);
+            }
+        },
+        onRemove: (file) => setFileList((prev) => prev.filter((f) => f.uid !== file.uid)),
+        onPreview: async (file) => {
+            if (!file.url && !file.preview) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file.originFileObj as File);
+                reader.onload = () => {
+                    setPreviewImage(reader.result as string);
+                    setPreviewTitle(file.name);
+                    setPreviewOpen(true);
+                };
+            } else {
+                setPreviewImage(file.url || (file.preview as string));
+                setPreviewTitle(file.name);
+                setPreviewOpen(true);
+            }
+        },
+    };
+
+    /** =================== Submit =================== */
     const handleSubmit = async (values: IReqMaintenanceSurveyDTO) => {
         if (!maintenanceRequestId) return;
 
-        const files = fileList.map((f) => f.name);
+        const files = fileList.map((f) => f.name || "").slice(0, 3);
+        const [attachment1, attachment2, attachment3] = files;
+
         const payload: IReqMaintenanceSurveyDTO = {
             ...values,
             maintenanceRequestId,
-            attachment1: files[0],
-            attachment2: files[1],
-            attachment3: files[2],
+            attachment1,
+            attachment2,
+            attachment3,
         };
-
-        console.log("Payload gửi:", payload);
 
         createSurvey(payload, {
             onSuccess: () => {
+                message.success("Tạo khảo sát bảo trì thành công");
                 form.resetFields();
                 setFileList([]);
                 setOpenModal(false);
@@ -152,33 +206,22 @@ const ModalCreateSurvey = ({
                 destroyOnClose: true,
                 maskClosable: false,
                 width: isMobile ? "100%" : 900,
-                confirmLoading: isPending,
+                confirmLoading: isPending || loadingUpload,
                 onCancel: () => setOpenModal(false),
                 okText: "Lưu khảo sát",
                 cancelText: "Hủy",
             }}
         >
             <Spin spinning={loading}>
-                {/* ==== Mã phiếu yêu cầu & Tên thiết bị ==== */}
                 <div className="grid grid-cols-2 gap-4">
-                    <ProFormText
-                        name="requestCode"
-                        label="Mã phiếu yêu cầu"
-                        readonly
-                    />
-                    <ProFormText
-                        name="deviceName"
-                        label="Tên thiết bị"
-                        readonly
-                    />
+                    <ProFormText name="requestCode" label="Mã phiếu yêu cầu" readonly />
+                    <ProFormText name="deviceName" label="Tên thiết bị" readonly />
                 </div>
 
-                {/* ==== Vấn đề thực tế & Mức độ hư hỏng ==== */}
                 <div className="grid grid-cols-2 gap-4">
                     <ProFormSelect
                         name="issueId"
                         label="Mô tả tình trạng/vấn đề/sự cố thực tế"
-                        placeholder="Chọn tình trạng/vấn đề/sự cố"
                         showSearch
                         debounceTime={400}
                         request={async ({ keyWords }) => await fetchIssues(keyWords)}
@@ -189,18 +232,15 @@ const ModalCreateSurvey = ({
                     <ProFormSelect
                         name="damageLevel"
                         label="Mức độ hư hỏng"
-                        placeholder="Chọn mức độ hư hỏng"
                         options={damageLevelOptions}
                         rules={[{ required: true, message: "Vui lòng chọn mức độ hư hỏng" }]}
                     />
                 </div>
 
-                {/* ==== Nguyên nhân hư hỏng & Loại bảo trì ==== */}
                 <div className="grid grid-cols-2 gap-4">
                     <ProFormSelect
                         name="causeId"
                         label="Nguyên nhân hư hỏng (nếu có)"
-                        placeholder="Chọn nguyên nhân hư hỏng"
                         showSearch
                         debounceTime={400}
                         request={async ({ keyWords }) => await fetchCauses(keyWords)}
@@ -210,39 +250,46 @@ const ModalCreateSurvey = ({
                     <ProFormSelect
                         name="maintenanceTypeActual"
                         label="Loại bảo trì thực tế"
-                        placeholder="Chọn loại bảo trì thực tế"
                         options={maintenanceTypeOptions}
                     />
                 </div>
 
-                {/* ==== Upload ảnh minh chứng ==== */}
-                <ProForm.Item
-                    name="attachments"
-                    label="Ảnh/Video hiện trường"
-                    valuePropName="fileList"
-                    getValueFromEvent={(e) => e?.fileList}
-                >
-                    <Upload
-                        listType="picture-card"
-                        multiple
-                        fileList={fileList}
-                        onChange={({ fileList: newList }) => setFileList(newList)}
-                        beforeUpload={() => false}
-                    >
+                <ProFormItem label="Ảnh/Video hiện trường (tối đa 3)">
+                    <Upload {...uploadProps}>
                         {fileList.length >= 3 ? null : (
                             <div>
                                 <PlusOutlined />
-                                <div style={{ marginTop: 8 }}>Tải ảnh</div>
+                                <div style={{ marginTop: 8 }}>Tải lên</div>
                             </div>
                         )}
                     </Upload>
-                </ProForm.Item>
+                    {fileList.map(
+                        (file) =>
+                            file.url &&
+                            file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i) && (
+                                <video
+                                    key={file.uid}
+                                    src={file.url}
+                                    style={{ width: "100%", marginTop: 8, borderRadius: 6 }}
+                                    controls
+                                />
+                            )
+                    )}
+                </ProFormItem>
 
-                {/* ==== Ghi chú ==== */}
+                <Modal
+                    open={previewOpen}
+                    title={previewTitle}
+                    footer={null}
+                    onCancel={() => setPreviewOpen(false)}
+                >
+                    <Image alt="preview" src={previewImage} width="100%" />
+                </Modal>
+
                 <ProFormTextArea
                     name="note"
                     label="Ghi chú (nếu có)"
-                    placeholder="Nhập nội dung ghi chú hoặc mô tả chi tiết tình trạng"
+                    placeholder="Nhập mô tả hoặc ghi chú chi tiết"
                     fieldProps={{ rows: 4 }}
                 />
             </Spin>

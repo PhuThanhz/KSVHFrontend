@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { callFetchAccount } from '@/config/api';
 
+/** ========================= FETCH ACCOUNT ========================= */
 export const fetchAccount = createAsyncThunk(
     'account/fetchAccount',
     async () => {
@@ -19,6 +20,7 @@ interface IState {
         email: string;
         name: string;
         avatar?: string;
+        address?: string;
         role: {
             id?: string;
             name?: string;
@@ -42,6 +44,7 @@ interface IState {
     activeMenu: string;
 }
 
+/** ========================= INITIAL STATE ========================= */
 const initialState: IState = {
     isAuthenticated: false,
     isLoading: true,
@@ -62,6 +65,7 @@ const initialState: IState = {
     activeMenu: 'home',
 };
 
+/** ========================= SLICE ========================= */
 export const accountSlide = createSlice({
     name: 'account',
     initialState,
@@ -76,6 +80,7 @@ export const accountSlide = createSlice({
             state.user.email = action.payload.email ?? '';
             state.user.name = action.payload.name ?? '';
             state.user.avatar = action.payload.avatar ?? '';
+            state.user.address = action.payload.user?.address ?? '';
             state.user.role = action?.payload?.role ?? { id: '', name: '', permissions: [] };
             state.user.role.permissions = action?.payload?.role?.permissions ?? [];
             state.employee = action.payload?.employee ?? undefined;
@@ -96,7 +101,16 @@ export const accountSlide = createSlice({
             state.isRefreshToken = action.payload?.status ?? false;
             state.errorRefreshToken = action.payload?.message ?? '';
         },
+
+        updateUserProfile: (state, action) => {
+            if (action.payload) {
+                if (action.payload.name) state.user.name = action.payload.name;
+                if (action.payload.avatar) state.user.avatar = action.payload.avatar;
+                state.user.address = action.payload.address;
+            }
+        },
     },
+
     extraReducers: (builder) => {
         builder.addCase(fetchAccount.pending, (state) => {
             state.isAuthenticated = false;
@@ -124,11 +138,13 @@ export const accountSlide = createSlice({
     },
 });
 
+/** ========================= EXPORTS ========================= */
 export const {
     setActiveMenu,
     setUserLoginInfo,
     setLogoutAction,
     setRefreshTokenAction,
+    updateUserProfile,
 } = accountSlide.actions;
 
 export default accountSlide.reducer;

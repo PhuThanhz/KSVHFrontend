@@ -53,6 +53,9 @@ import type {
     IResMaintenancePlanMaterialGroupDTO,
     IResMaintenancePlanApprovalDTO,
     IReqRejectPlanDTO,
+    IResExecutionCardDTO,
+    IResExecutionDetailDTO,
+    IReqUpdateProgressDTO,
 
 } from '@/types/backend';
 import axios from 'config/axios-customize';
@@ -63,6 +66,7 @@ import type {
     IResMaintenanceAssignmentDTO,
     IReqMaintenanceRequestInternalDTO,
     IReqMaintenanceRequestCustomerDTO,
+    IReqUpdateProfileDTO
 } from '@/types/backend';
 //================================ Module Auth ================================//
 
@@ -82,15 +86,23 @@ export const callLogout = () => {
     return axios.post<IBackendRes<string>>('/api/v1/auth/logout')
 }
 
+export const callUpdateProfile = (data: IReqUpdateProfileDTO) => {
+    return axios.put<IBackendRes<{ user: IAccount["user"] }>>("/api/v1/auth/update-profile", data);
+};
+
 // ============================= Upload Single File ============================= //
 export const callUploadSingleFile = (file: File, folderType: string) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("folder", folderType);
+    formData.append("folder", folderType.toLowerCase());
 
-    return axios.post<{ fileName: string; uploadedAt: string }[]>("/api/v1/files", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
+    return axios.post<IBackendRes<IResUploadFileDTO[]>>(
+        "/api/v1/files",
+        formData,
+        {
+            headers: { "Content-Type": "multipart/form-data" },
+        }
+    );
 };
 
 
@@ -1184,5 +1196,57 @@ export const callRejectMaintenancePlan = (planId: string, data: IReqRejectPlanDT
     return axios.put<IBackendRes<IResMaintenancePlanApprovalDTO>>(
         `/api/v1/maintenance-approvals/${planId}/reject`,
         data
+    );
+};
+
+
+
+
+/* ========================   MODULE: MAINTENANCE EXECUTION ========================
+
+
+/** 1 Danh sách thi công (dành cho ADMIN) */
+export const callFetchAllExecutions = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<any>>>(
+        `/api/v1/maintenance-executions?${query}`
+    );
+};
+/** 2 Danh sách phiếu đã được duyệt để thi công (dành cho kỹ thuật viên) */
+export const callFetchApprovedExecutions = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResExecutionCardDTO>>>(
+        `/api/v1/maintenance-executions/approved?${query}`
+    );
+};
+
+/** 3 Lấy chi tiết thi công (gồm khảo sát, kế hoạch, vật tư, tiến độ) */
+export const callGetExecutionDetail = (requestId: string) => {
+    return axios.get<IBackendRes<IResExecutionDetailDTO>>(
+        `/api/v1/maintenance-executions/${requestId}/detail`
+    );
+};
+
+/** 4 Kỹ thuật viên bấm “Bắt đầu thi công” */
+export const callStartExecution = (requestId: string) => {
+    return axios.put<IBackendRes<IResExecutionDetailDTO>>(
+        `/api/v1/maintenance-executions/${requestId}/start`
+    );
+};
+
+/** 5 Kỹ thuật viên cập nhật tiến độ (gửi ảnh, video, note, %) */
+export const callUpdateExecutionProgress = (
+    requestId: string,
+    data: IReqUpdateProgressDTO
+) => {
+    return axios.put<IBackendRes<IResExecutionDetailDTO>>(
+        `/api/v1/maintenance-executions/${requestId}/progress`,
+        data,
+        { headers: { "Content-Type": "application/json" } }
+    );
+};
+
+/** 6 Kỹ thuật viên bấm “Hoàn thành công việc thi công” */
+export const callCompleteExecution = (requestId: string) => {
+    return axios.put<IBackendRes<IResExecutionDetailDTO>>(
+        `/api/v1/maintenance-executions/${requestId}/complete`
     );
 };

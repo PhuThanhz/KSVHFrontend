@@ -52,6 +52,7 @@ import MaintenanceSurveyPage from "@/pages/technician/survey/home-survey";
 import MaintenanceCausePage from './pages/admin/maintenance-cause';
 import ProtectedUIRoute from "components/share/ProtectedUIRoute";
 import HomePlanPage from "@/pages/technician/plan/home-plan";
+import HomeExecutionPage from "@/pages/technician/execution/home-execution";
 import LayoutTechnician from "@/components/technician/layout/layout.technician";
 import MaintenanceApprovalPage from "@/pages/admin/maintenance-approval";
 
@@ -124,6 +125,7 @@ export default function App() {
         { path: "schedule", element: <HomeSchedulePage /> },
         { path: "survey", element: <MaintenanceSurveyPage /> },
         { path: "plan", element: <HomePlanPage /> },
+        { path: "execution", element: <HomeExecutionPage /> },
       ],
     },
 

@@ -1,4 +1,3 @@
-// src/pages/technician/HomeTechnicianLayout.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "@/constants/paths";
@@ -10,27 +9,31 @@ import {
 } from "@ant-design/icons";
 import { Badge, Typography } from "antd";
 
-import { useTechnicianAssignmentsQuery, } from "@/hooks/maintenance/useTechnicianAssignments";
-import { useMaintenanceSurveysInProgressQuery, } from "@/hooks/maintenance/useMaintenanceSurveys";
-import { useSurveyedRequestsQuery, } from "@/hooks/maintenance/useMaintenancePlans";
+import { useTechnicianAssignmentsQuery } from "@/hooks/maintenance/useTechnicianAssignments";
+import { useMaintenanceSurveysInProgressQuery } from "@/hooks/maintenance/useMaintenanceSurveys";
+import { useSurveyedRequestsQuery } from "@/hooks/maintenance/useMaintenancePlans";
+import { useApprovedExecutionsQuery } from "@/hooks/maintenance/useMaintenanceExecutions";
 
 const { Text } = Typography;
 
 const HomeTechnicianLayout: React.FC = () => {
     const navigate = useNavigate();
 
-    // Lấy số lượng công việc (chỉ cần meta.total)
+    // ==================== Lấy dữ liệu từng giai đoạn ==================== //
     const { data: assignData } = useTechnicianAssignmentsQuery("page=1&pageSize=1");
     const { data: surveyData } = useMaintenanceSurveysInProgressQuery("page=1&pageSize=1");
     const { data: planData } = useSurveyedRequestsQuery("page=1&pageSize=1");
+    const { data: executionData } = useApprovedExecutionsQuery("page=1&pageSize=1");
 
+    // ==================== Đếm tổng ==================== //
     const counts = {
         assignment: assignData?.meta?.total || 0,
         survey: surveyData?.meta?.total || 0,
         plan: planData?.meta?.total || 0,
-        // progress: 0, // ← Không có hook → để 0
+        progress: executionData?.meta?.total || 0,
     };
 
+    // ==================== Danh mục chính ==================== //
     const categories = [
         {
             key: "assignment",
@@ -61,20 +64,18 @@ const HomeTechnicianLayout: React.FC = () => {
         },
         {
             key: "progress",
-            label: "Cập Nhật Tiến Độ",
+            label: "Thi Công & Cập Nhật Tiến Độ",
             icon: <FileDoneOutlined className="text-4xl" />,
             bg: "bg-gradient-to-br from-amber-50 to-amber-100",
             border: "border-l-4 border-amber-500",
-            path: PATHS.TECHNICIAN.PROGRESS,
-            count: 0,
+            path: PATHS.TECHNICIAN.EXECUTION,
+            count: counts.progress,
         },
     ];
 
+    // ==================== Render giao diện ==================== //
     return (
         <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white pb-24">
-
-
-            {/* Main content */}
             <div className="px-5 pt-10">
                 <div className="grid grid-cols-2 gap-4">
                     {categories.map((cat) => (
