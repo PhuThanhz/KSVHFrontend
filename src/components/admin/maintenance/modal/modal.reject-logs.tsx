@@ -1,6 +1,6 @@
 import { Modal, Spin, Empty, Card, Typography } from "antd";
 import dayjs from "dayjs";
-import { useRejectLogsByRequestIdQuery } from "@/hooks/useMaintenanceRequests";
+import { useRejectLogsByRequestIdQuery } from "@/hooks/maintenance/useMaintenanceRequests";
 import "dayjs/locale/vi";
 
 const { Text } = Typography;

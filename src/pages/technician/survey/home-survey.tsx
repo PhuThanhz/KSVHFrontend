@@ -9,7 +9,7 @@ import {
     Image,
 } from "antd";
 import { FileAddOutlined, EyeOutlined } from "@ant-design/icons";
-import { useMaintenanceSurveysInProgressQuery } from "@/hooks/useMaintenanceSurveys";
+import { useMaintenanceSurveysInProgressQuery } from "@/hooks/maintenance/useMaintenanceSurveys";
 import ModalCreateSurvey from "./modal.create.survey";
 import ViewMaintenanceSurvey from "./view.survey";
 import queryString from "query-string";

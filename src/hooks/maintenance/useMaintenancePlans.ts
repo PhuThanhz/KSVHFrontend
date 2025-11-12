@@ -3,6 +3,7 @@ import {
     callFetchSurveyedMaintenanceRequests,
     callFetchSurveyedMaintenanceDetail,
     callCreateMaintenancePlan,
+    callReplanMaintenance
 } from "@/config/api";
 import type {
     IModelPaginate,
@@ -62,6 +63,33 @@ export const useCreateMaintenancePlanMutation = () => {
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi lập kế hoạch bảo trì");
+        },
+    });
+};
+/** ========================= Lập lại kế hoạch bảo trì (khi bị từ chối) ========================= */
+export const useReplanMaintenanceMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (params: { planId: string; payload: IReqMaintenancePlanDTO }) => {
+            const { planId, payload } = params;
+            const res = await callReplanMaintenance(planId, payload);
+            if (!res?.data)
+                throw new Error(res?.message || "Không thể lập lại kế hoạch bảo trì");
+            return res.data as IResMaintenancePlanCreateDTO;
+        },
+        onSuccess: (res) => {
+            notify.updated(
+                res?.maintenanceRequestCode
+                    ? `Đã lập lại kế hoạch cho phiếu ${res.maintenanceRequestCode}`
+                    : "Lập lại kế hoạch bảo trì thành công"
+            );
+            queryClient.invalidateQueries({
+                queryKey: ["surveyed-maintenance-requests"],
+            });
+        },
+        onError: (error: any) => {
+            notify.error(error.message || "Lỗi khi lập lại kế hoạch bảo trì");
         },
     });
 };

@@ -10,9 +10,9 @@ import ViewDetailUser from "@/components/admin/user/view.user";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { sfLike } from "spring-filter-query-builder";
-import { useUsersQuery } from "@/hooks/useUsers";
+import { useUsersQuery } from "@/hooks/user/useUsers";
 import DateRangeFilter from "@/components/common/DateRangeFilter";
-import { useRolesQuery } from "@/hooks/useRoles";
+import { useRolesQuery } from "@/hooks/user/useRoles";
 
 const UserPage = () => {
     const [openModal, setOpenModal] = useState(false);

@@ -53,6 +53,7 @@ import MaintenanceCausePage from './pages/admin/maintenance-cause';
 import ProtectedUIRoute from "components/share/ProtectedUIRoute";
 import HomePlanPage from "@/pages/technician/plan/home-plan";
 import LayoutTechnician from "@/components/technician/layout/layout.technician";
+import MaintenanceApprovalPage from "@/pages/admin/maintenance-approval";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -147,6 +148,16 @@ export default function App() {
               <MaintenancePage />
             </ProtectedRoute>
         },
+
+        {
+          path: PATHS.ADMIN.MAINTENANCE_APPROVAL,
+          element: (
+            <ProtectedRoute>
+              <MaintenanceApprovalPage />
+            </ProtectedRoute>
+          ),
+        },
+
         {
           path: PATHS.ADMIN.ISSUE_SKILL_MAPPING,
           element: (

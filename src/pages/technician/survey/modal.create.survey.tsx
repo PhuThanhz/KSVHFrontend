@@ -16,7 +16,7 @@ import {
     callFetchMaintenanceSurveyById,
     callFetchMaintenanceCause,
 } from "@/config/api";
-import { useCreateMaintenanceSurveyMutation } from "@/hooks/useMaintenanceSurveys";
+import { useCreateMaintenanceSurveyMutation } from "@/hooks/maintenance/useMaintenanceSurveys";
 import type { IReqMaintenanceSurveyDTO } from "@/types/backend";
 
 interface IProps {

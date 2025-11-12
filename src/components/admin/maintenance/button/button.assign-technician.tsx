@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Modal, Table, Button, Tag, Spin, Space, Typography, Popconfirm } from "antd";
 import { CheckCircleOutlined, CalendarOutlined } from "@ant-design/icons";
-import { useAssignTechnicianManualMutation } from "@/hooks/useMaintenanceRequests";
-import { useTechniciansQuery } from "@/hooks/useTechnicians";
+import { useAssignTechnicianManualMutation } from "@/hooks/maintenance/useMaintenanceRequests";
+import { useTechniciansQuery } from "@/hooks/user/useTechnicians";
 import ScheduleDrawer from "@/components/admin/maintenance/button/schedule-drawer";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";

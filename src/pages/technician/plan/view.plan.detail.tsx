@@ -11,7 +11,7 @@ import {
     Tag,
 } from "antd";
 import dayjs from "dayjs";
-import { useSurveyedRequestDetailQuery } from "@/hooks/useMaintenancePlans";
+import { useSurveyedRequestDetailQuery } from "@/hooks/maintenance/useMaintenancePlans";
 
 const { Title } = Typography;
 

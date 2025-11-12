@@ -6,7 +6,7 @@ import type { IMaintenanceCause } from "@/types/backend";
 import {
     useCreateMaintenanceCauseMutation,
     useUpdateMaintenanceCauseMutation,
-} from "@/hooks/useMaintenanceCause";
+} from "@/hooks/maintenance/useMaintenanceCause";
 
 interface IProps {
     openModal: boolean;

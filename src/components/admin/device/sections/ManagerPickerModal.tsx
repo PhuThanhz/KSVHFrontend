@@ -2,7 +2,7 @@ import { Modal, Input, Table, Spin, Empty } from "antd";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import queryString from "query-string";
 import { sfLike } from "spring-filter-query-builder";
-import { useUsersQuery } from "@/hooks/useUsers";
+import { useUsersQuery } from "@/hooks/user/useUsers";
 import type { IUser } from "@/types/backend";
 
 /** Props định nghĩa */

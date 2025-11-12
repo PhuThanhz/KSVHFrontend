@@ -14,7 +14,7 @@ import ViewDetailPermission from "@/components/admin/permission/view.permission"
 import {
     usePermissionsQuery,
     useDeletePermissionMutation,
-} from "@/hooks/usePermissions";
+} from "@/hooks/user/usePermissions";
 
 const PermissionPage = () => {
     const [openModal, setOpenModal] = useState(false);

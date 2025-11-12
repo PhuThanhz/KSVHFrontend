@@ -15,7 +15,7 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import queryString from "query-string";
-import { useEmployeesQuery } from "@/hooks/useEmployees";
+import { useEmployeesQuery } from "@/hooks/user/useEmployees";
 import ModalEmployee from "@/components/admin/employee/modal.employee";
 import ViewDetailEmployee from "@/components/admin/employee/view.employee";
 import { useCompaniesQuery } from "@/hooks/useCompanies";

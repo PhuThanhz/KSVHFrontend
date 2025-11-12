@@ -1,6 +1,6 @@
 import { Drawer, Descriptions, Typography, Badge, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
-import { useEmployeeByIdQuery } from "@/hooks/useEmployees";
+import { useEmployeeByIdQuery } from "@/hooks/user/useEmployees";
 
 const { Text, Title } = Typography;
 

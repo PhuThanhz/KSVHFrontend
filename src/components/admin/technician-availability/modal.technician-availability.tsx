@@ -18,7 +18,7 @@ import {
     useCreateTechnicianAvailabilityMutation,
     useUpdateTechnicianAvailabilityMutation,
 } from "@/hooks/useTechnicianAvailability";
-import { useTechniciansQuery } from "@/hooks/useTechnicians";
+import { useTechniciansQuery } from "@/hooks/user/useTechnicians";
 import { useShiftTemplatesQuery } from "@/hooks/useShiftTemplate";
 import { notify } from "@/components/common/notify";
 

@@ -16,7 +16,7 @@ import {
     Pagination,
 } from "antd";
 import dayjs from "dayjs";
-import { useMaintenanceRequestsQuery } from "@/hooks/useMaintenanceRequests";
+import { useMaintenanceRequestsQuery } from "@/hooks/maintenance/useMaintenanceRequests";
 import ViewMaintenanceDetail from "@/components/admin/maintenance/view/view.maintenance-detail";
 import ModalCreateMaintenance from "@/components/admin/maintenance/modal/modal.maintenance-create";
 import ButtonAssignTechnician from "@/components/admin/maintenance/button/button.assign-technician";

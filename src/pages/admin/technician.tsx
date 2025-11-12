@@ -12,7 +12,7 @@ import queryString from "query-string";
 import { sfLike } from "spring-filter-query-builder";
 import {
     useTechniciansQuery,
-} from "@/hooks/useTechnicians";
+} from "@/hooks/user/useTechnicians";
 import { useTechnicianSuppliersQuery } from "@/hooks/useTechnicianSuppliers";
 import { useSkillsQuery } from "@/hooks/useSkills";
 import ModalTechnician from "@/components/admin/technician/modal.technician";

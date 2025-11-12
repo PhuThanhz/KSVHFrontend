@@ -5,7 +5,7 @@ import type { ProColumns } from "@ant-design/pro-components";
 import { Button, Space, Tag } from "antd";
 import { useState } from "react";
 import queryString from "query-string";
-import { useCustomersQuery } from "@/hooks/useCustomers";
+import { useCustomersQuery } from "@/hooks/user/useCustomers";
 import ModalCustomer from "@/components/admin/customer/modal.customer";
 import ViewDetailCustomer from "@/components/admin/customer/view.customer";
 import { ALL_PERMISSIONS } from "@/config/permissions";

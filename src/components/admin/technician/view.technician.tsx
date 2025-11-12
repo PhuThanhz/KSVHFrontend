@@ -1,5 +1,5 @@
 import { Drawer, Descriptions, Divider, Spin, Empty, Badge, Typography } from "antd";
-import { useTechnicianByIdQuery } from "@/hooks/useTechnicians";
+import { useTechnicianByIdQuery } from "@/hooks/user/useTechnicians";
 import dayjs from "dayjs";
 import { formatCurrency } from "@/config/format";
 

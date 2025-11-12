@@ -5,7 +5,7 @@ import type { IEmployee } from "@/types/backend";
 import {
     useCreateEmployeeMutation,
     useUpdateEmployeeMutation,
-} from "@/hooks/useEmployees";
+} from "@/hooks/user/useEmployees";
 import {
     callFetchCompany,
     callFetchDepartment,

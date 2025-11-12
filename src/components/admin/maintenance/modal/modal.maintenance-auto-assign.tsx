@@ -1,5 +1,5 @@
 import { Modal, Typography, Button, Spin, Alert } from "antd";
-import { useAutoAssignAllMutation } from "@/hooks/useMaintenanceRequests";
+import { useAutoAssignAllMutation } from "@/hooks/maintenance/useMaintenanceRequests";
 
 const { Text } = Typography;
 

@@ -11,7 +11,7 @@ import type { ITechnician } from "@/types/backend";
 import {
     useCreateTechnicianMutation,
     useUpdateTechnicianMutation,
-} from "@/hooks/useTechnicians";
+} from "@/hooks/user/useTechnicians";
 import {
     callFetchTechnicianSupplier,
     callFetchSkill,

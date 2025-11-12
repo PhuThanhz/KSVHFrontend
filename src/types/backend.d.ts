@@ -963,12 +963,12 @@ export interface IResMaintenanceSurveyedListDTO {
     requestCode: string;
     priorityLevel: PriorityLevel;
     status: MaintenanceRequestStatus;
-
     device?: IResMaintenanceSurveyedListDeviceSimple;
-
     maintenanceTypeActual?: MaintenanceType | null;
     actualIssueDescription?: string | null;
-    damageLevel?: string | null; // backend trả string
+    damageLevel?: string | null;
+    /** ====== Thông tin từ chối kế hoạch (admin) ====== */
+    rejectInfo?: IResMaintenancePlanRejectDTO;
 }
 
 /** ---------- THIẾT BỊ TRONG DANH SÁCH KHẢO SÁT ---------- */
@@ -994,8 +994,19 @@ export interface IResMaintenanceSurveyedDetailDTO {
     device?: IResMaintenanceSurveyedDetailDeviceSimple;
     assignmentInfo?: IResMaintenanceAssignmentDTO;
     surveyInfo?: IResSurveyCommonDTO;
+
+    /** ====== Thông tin từ chối kế hoạch (admin) ====== */
+    rejectInfo?: IResMaintenancePlanRejectDTO;
+
+    /** ====== Thông tin kế hoạch (nếu có) ====== */
+    planInfo?: IResMaintenancePlanInfo;
 }
 
+/** ---------- THÔNG TIN KẾ HOẠCH ---------- */
+export interface IResMaintenancePlanInfo {
+    planId: string;
+    createdAt: string; // ISO-8601 format, từ Instant trong backend
+}
 /** ---------- THIẾT BỊ TRONG CHI TIẾT KHẢO SÁT ---------- */
 export interface IResMaintenanceSurveyedDetailDeviceSimple {
     deviceCode?: string;
@@ -1006,4 +1017,67 @@ export interface IResMaintenanceSurveyedDetailDeviceSimple {
     image3?: string | null;
     companyName?: string | null;
     departmentName?: string | null;
+}
+/** ==============================
+ *   MODULE MAINTENANCE APPROVAL
+ *  ============================== */
+
+export interface IReqRejectPlanDTO {
+    rejectReasonId: number;
+    note?: string;
+}
+
+export interface IResMaterialDTO {
+    partCode?: string;
+    partName?: string;
+    quantity?: number;
+    warehouseName?: string;
+    stock?: number;
+    isNewProposal?: boolean;
+    isShortage?: boolean;
+}
+
+export interface IResMaintenancePlanMaterialGroupDTO {
+    planId: string;
+    requestCode: string;
+    availableMaterials: IResMaterialDTO[];
+    shortageMaterials: IResMaterialDTO[];
+    newProposals: IResMaterialDTO[];
+}
+
+export interface IResMaintenancePlanApprovalDTO {
+    planId: string;
+    requestCode: string;
+    status: MaintenanceRequestStatus;
+    rejectReason?: string;
+    note?: string;
+    message: string;
+}
+export interface IResMaintenancePlanDetailDTO {
+    requestInfo: IResRequestCommonDTO;
+    surveyInfo?: IResSurveyCommonDTO;
+    planInfo: {
+        planId: string;
+        solutionName?: string;
+        useMaterial?: boolean;
+        note?: string;
+        createdAt?: string;
+        createdBy?: string;
+    };
+}
+export interface IResMaintenancePlanSimpleDTO {
+    planId: string;
+    requestCode: string;
+    deviceName?: string;
+    solutionName?: string;
+    priorityLevel?: string;
+    status?: MaintenanceRequestStatus;
+    createdAt?: string;
+}
+/** ---------- THÔNG TIN TỪ CHỐI KẾ HOẠCH (ADMIN) ---------- */
+export interface IResMaintenancePlanRejectDTO {
+    rejectedBy?: string;     // Người từ chối
+    reasonName?: string;     // Lý do từ chối
+    note?: string;           // Ghi chú chi tiết
+    rejectedAt?: string;     // Thời điểm từ chối
 }

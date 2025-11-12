@@ -16,7 +16,8 @@ import {
     ShopOutlined,
     LaptopOutlined,
     HistoryOutlined,
-    NodeIndexOutlined
+    NodeIndexOutlined,
+    CheckCircleOutlined
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
@@ -141,7 +142,15 @@ const SliderAdmin: React.FC<IProps> = ({
                         },
                     ]
                     : []),
-
+                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_APPROVAL?.GET_PAGINATE ?? {})
+                    ? [
+                        {
+                            label: <Link to="/admin/maintenance-approval">Phê duyệt kế hoạch bảo trì</Link>,
+                            key: "/admin/maintenance-approval",
+                            icon: <CheckCircleOutlined />,
+                        },
+                    ]
+                    : []),
                 // --- Issue Skill Mapping ---
                 ...(checkPermission(
                     ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE

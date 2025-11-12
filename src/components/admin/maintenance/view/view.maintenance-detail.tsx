@@ -1,5 +1,5 @@
 import { Descriptions, Tag, Divider, Typography, Spin, Image } from "antd";
-import { useMaintenanceRequestByIdQuery } from "@/hooks/useMaintenanceRequests";
+import { useMaintenanceRequestByIdQuery } from "@/hooks/maintenance/useMaintenanceRequests";
 import dayjs from "dayjs";
 
 const { Title } = Typography;

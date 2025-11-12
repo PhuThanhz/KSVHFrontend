@@ -10,7 +10,7 @@ import {
     Row,
     Col,
 } from "antd";
-import { useTechnicianAssignmentByIdQuery } from "@/hooks/useTechnicianAssignments";
+import { useTechnicianAssignmentByIdQuery } from "@/hooks/maintenance/useTechnicianAssignments";
 import dayjs from "dayjs";
 
 const { Title } = Typography;

@@ -1,7 +1,7 @@
 import type { IPermission } from "@/types/backend";
 import { Descriptions, Drawer, Spin } from "antd";
 import dayjs from "dayjs";
-import { usePermissionByIdQuery } from "@/hooks/usePermissions";
+import { usePermissionByIdQuery } from "@/hooks/user/usePermissions";
 
 interface IProps {
     onClose: (v: boolean) => void;

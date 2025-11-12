@@ -14,7 +14,7 @@ import {
 import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { PlusOutlined } from "@ant-design/icons";
 import { v4 as uuidv4 } from "uuid";
-import { useCreateCustomerMaintenanceRequestMutation } from "@/hooks/useMaintenanceRequests";
+import { useCreateCustomerMaintenanceRequestMutation } from "@/hooks/maintenance/useMaintenanceRequests";
 import type {
     IReqMaintenanceRequestCustomerDTO,
     PriorityLevel,

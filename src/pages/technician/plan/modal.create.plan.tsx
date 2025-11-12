@@ -9,12 +9,15 @@ import {
 import { Form, Spin } from "antd";
 import { useEffect, useState } from "react";
 import { isMobile } from "react-device-detect";
-import { useCreateMaintenancePlanMutation } from "@/hooks/useMaintenancePlans";
+import {
+    useCreateMaintenancePlanMutation,
+    useReplanMaintenanceMutation,
+} from "@/hooks/maintenance/useMaintenancePlans";
 import {
     callFetchSurveyedMaintenanceDetail,
     callFetchSolution,
 } from "@/config/api";
-import type { IReqMaintenancePlanDTO, ISolution } from "@/types/backend";
+import type { IReqMaintenancePlanDTO, ISolution, IResMaintenanceSurveyedDetailDTO } from "@/types/backend";
 
 interface IProps {
     openModal: boolean;
@@ -22,7 +25,6 @@ interface IProps {
     maintenanceRequestId?: string | null;
 }
 
-// ✅ mở rộng type cho form (thêm 2 field readonly)
 type MaintenancePlanFormValues = IReqMaintenancePlanDTO & {
     readonlyRequestCode?: string;
     readonlyDeviceCode?: string;
@@ -34,12 +36,15 @@ const ModalCreateMaintenancePlan = ({
     maintenanceRequestId,
 }: IProps) => {
     const [form] = Form.useForm<MaintenancePlanFormValues>();
-    const { mutate: createPlan, isPending } = useCreateMaintenancePlanMutation();
+    const { mutate: createPlan, isPending: creating } = useCreateMaintenancePlanMutation();
+    const { mutate: replan, isPending: replanning } = useReplanMaintenanceMutation();
+
     const [loading, setLoading] = useState(false);
     const [solutionOptions, setSolutionOptions] = useState<
         { label: string; value: number | string }[]
     >([]);
     const [useMaterial, setUseMaterial] = useState(false);
+    const [detail, setDetail] = useState<IResMaintenanceSurveyedDetailDTO | null>(null);
 
     const fetchSolutions = async () => {
         try {
@@ -63,12 +68,12 @@ const ModalCreateMaintenancePlan = ({
                 setLoading(true);
                 const res = await callFetchSurveyedMaintenanceDetail(maintenanceRequestId);
                 if (res?.data) {
+                    setDetail(res.data);
                     const { requestCode, device } = res.data;
                     form.setFieldsValue({
                         maintenanceRequestId,
                         note: "",
                     });
-                    // ✅ 2 field chỉ để hiển thị
                     form.setFieldValue("readonlyRequestCode", requestCode);
                     form.setFieldValue("readonlyDeviceCode", device?.deviceCode);
                 }
@@ -94,19 +99,37 @@ const ModalCreateMaintenancePlan = ({
             materials: values.useMaterial ? values.materials || [] : [],
         };
 
-        createPlan(payload, {
-            onSuccess: () => {
-                form.resetFields();
-                setUseMaterial(false);
-                setOpenModal(false);
-            },
-        });
+        // ✅ Nếu phiếu bị từ chối thì gọi replan, ngược lại gọi create
+        const isRejected = detail?.status === "TU_CHOI_PHE_DUYET";
+        const planId = detail?.planInfo?.planId;
+
+        if (isRejected && planId) {
+            replan({ planId, payload }, {
+                onSuccess: () => {
+                    form.resetFields();
+                    setUseMaterial(false);
+                    setOpenModal(false);
+                },
+            });
+        } else {
+            createPlan(payload, {
+                onSuccess: () => {
+                    form.resetFields();
+                    setUseMaterial(false);
+                    setOpenModal(false);
+                },
+            });
+        }
     };
 
     return (
         <ModalForm<MaintenancePlanFormValues>
             key={maintenanceRequestId}
-            title="Lập kế hoạch bảo trì"
+            title={
+                detail?.status === "TU_CHOI_PHE_DUYET"
+                    ? "Lập lại kế hoạch bảo trì"
+                    : "Lập kế hoạch bảo trì"
+            }
             open={openModal}
             form={form}
             layout="vertical"
@@ -115,7 +138,7 @@ const ModalCreateMaintenancePlan = ({
                 destroyOnClose: true,
                 maskClosable: false,
                 width: isMobile ? "100%" : 900,
-                confirmLoading: isPending,
+                confirmLoading: creating || replanning,
                 onCancel: () => setOpenModal(false),
                 okText: "Lưu kế hoạch",
                 cancelText: "Hủy",

@@ -209,28 +209,6 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/issue-skill-mappings", module: "ISSUE_SKILL_MAPPING" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/issue-skill-mappings/{id}", module: "ISSUE_SKILL_MAPPING" },
     },
-    TECHNICIAN_ASSIGNMENT: {
-        GET_PAGINATE: {
-            method: "GET",
-            apiPath: "/api/v1/technician/assignments",
-            module: "TECHNICIAN_ASSIGNMENT",
-        },
-        GET_BY_ID: {
-            method: "GET",
-            apiPath: "/api/v1/technician/assignments/{id}",
-            module: "TECHNICIAN_ASSIGNMENT",
-        },
-        ACCEPT: {
-            method: "POST",
-            apiPath: "/api/v1/technician/assignments/{id}/accept",
-            module: "TECHNICIAN_ASSIGNMENT",
-        },
-        REJECT: {
-            method: "POST",
-            apiPath: "/api/v1/technician/assignments/{id}/reject",
-            module: "TECHNICIAN_ASSIGNMENT",
-        },
-    },
     MAINTENANCE_CAUSE: {
         GET_PAGINATE: {
             method: "GET",
@@ -252,6 +230,13 @@ export const ALL_PERMISSIONS = {
             apiPath: "/api/v1/causes",
             module: "MAINTENANCE_CAUSE",
         },
+    },
+    MAINTENANCE_APPROVAL: {
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-approvals", module: "MAINTENANCE_APPROVAL" },
+        GET_DETAIL: { method: "GET", apiPath: "/api/v1/maintenance-approvals/{planId}/detail", module: "MAINTENANCE_APPROVAL" },
+        GET_MATERIALS: { method: "GET", apiPath: "/api/v1/maintenance-approvals/{planId}/materials", module: "MAINTENANCE_APPROVAL" },
+        APPROVE: { method: "PUT", apiPath: "/api/v1/maintenance-approvals/{planId}/approve", module: "MAINTENANCE_APPROVAL" },
+        REJECT: { method: "PUT", apiPath: "/api/v1/maintenance-approvals/{planId}/reject", module: "MAINTENANCE_APPROVAL" },
     },
 };
 
@@ -285,5 +270,6 @@ export const ALL_MODULES = {
     ISSUE_SKILL_MAPPING: "ISSUE_SKILL_MAPPING",
     TECHNICIAN_ASSIGNMENT: "TECHNICIAN_ASSIGNMENT",
     MAINTENANCE_CAUSE: "MAINTENANCE_CAUSE",
+    MAINTENANCE_APPROVAL: "MAINTENANCE_APPROVAL",
 
 };

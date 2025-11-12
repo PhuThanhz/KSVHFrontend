@@ -48,6 +48,12 @@ import type {
     IResMaintenancePlanCreateDTO,
     IResMaintenanceSurveyedListDTO,
     IResMaintenanceSurveyedDetailDTO,
+    IResMaintenancePlanSimpleDTO,
+    IResMaintenancePlanDetailDTO,
+    IResMaintenancePlanMaterialGroupDTO,
+    IResMaintenancePlanApprovalDTO,
+    IReqRejectPlanDTO,
+
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type { IMaintenanceCause, IMaintenanceCauseRequest } from "@/types/backend";
@@ -1114,25 +1120,69 @@ export const callFetchMaintenanceSurveysInProgress = (query: string) => {
     );
 };
 
-/** ===================== Lập kế hoạch bảo trì ===================== */
-
+/** ===================== Lập kế hoạch bảo trì (tạo mới) ===================== */
 export const callCreateMaintenancePlan = (payload: IReqMaintenancePlanDTO) => {
     return axios.post<IBackendRes<IResMaintenancePlanCreateDTO>>(
         `/api/v1/maintenance-plans`,
         payload,
-        { headers: { "Content-Type": "application/json" } }
+        {
+            headers: { "Content-Type": "application/json" },
+        }
     );
 };
+
+/** ===================== Lập lại kế hoạch bảo trì (sau khi bị từ chối) ===================== */
+export const callReplanMaintenance = (planId: string, payload: IReqMaintenancePlanDTO) => {
+    return axios.post<IBackendRes<IResMaintenancePlanCreateDTO>>(
+        `/api/v1/maintenance-plans/replan/${planId}`,
+        payload,
+        {
+            headers: { "Content-Type": "application/json" },
+        }
+    );
+};
+
 /** ===================== Danh sách phiếu đã khảo sát ===================== */
 export const callFetchSurveyedMaintenanceRequests = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResMaintenanceSurveyedListDTO>>>(
         `/api/v1/maintenance-plans/surveyed?${query}`
     );
 };
-/** ===================== Chi tiết phiếu đã khảo sát ===================== */
 
+/** ===================== Chi tiết phiếu đã khảo sát ===================== */
 export const callFetchSurveyedMaintenanceDetail = (id: string) => {
     return axios.get<IBackendRes<IResMaintenanceSurveyedDetailDTO>>(
         `/api/v1/maintenance-plans/surveyed/${id}`
+    );
+};
+
+/** ============================
+ *  MODULE: MAINTENANCE APPROVAL
+ *  ============================ */
+
+export const callFetchMaintenanceApprovals = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenancePlanSimpleDTO>>>(
+        `/api/v1/maintenance-approvals?${query}`
+    );
+};
+export const callFetchMaintenancePlanDetail = (planId: string) => {
+    return axios.get<IBackendRes<IResMaintenancePlanDetailDTO>>(
+        `/api/v1/maintenance-approvals/${planId}/detail`
+    );
+};
+export const callFetchMaintenancePlanMaterials = (planId: string) => {
+    return axios.get<IBackendRes<IResMaintenancePlanMaterialGroupDTO>>(
+        `/api/v1/maintenance-approvals/${planId}/materials`
+    );
+};
+export const callApproveMaintenancePlan = (planId: string) => {
+    return axios.put<IBackendRes<IResMaintenancePlanApprovalDTO>>(
+        `/api/v1/maintenance-approvals/${planId}/approve`
+    );
+};
+export const callRejectMaintenancePlan = (planId: string, data: IReqRejectPlanDTO) => {
+    return axios.put<IBackendRes<IResMaintenancePlanApprovalDTO>>(
+        `/api/v1/maintenance-approvals/${planId}/reject`,
+        data
     );
 };

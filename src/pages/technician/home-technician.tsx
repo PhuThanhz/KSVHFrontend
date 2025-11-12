@@ -10,9 +10,9 @@ import {
 } from "@ant-design/icons";
 import { Badge, Typography } from "antd";
 
-import { useTechnicianAssignmentsQuery, } from "@/hooks/useTechnicianAssignments";
-import { useMaintenanceSurveysInProgressQuery, } from "@/hooks/useMaintenanceSurveys";
-import { useSurveyedRequestsQuery, } from "@/hooks/useMaintenancePlans";
+import { useTechnicianAssignmentsQuery, } from "@/hooks/maintenance/useTechnicianAssignments";
+import { useMaintenanceSurveysInProgressQuery, } from "@/hooks/maintenance/useMaintenanceSurveys";
+import { useSurveyedRequestsQuery, } from "@/hooks/maintenance/useMaintenancePlans";
 
 const { Text } = Typography;
 

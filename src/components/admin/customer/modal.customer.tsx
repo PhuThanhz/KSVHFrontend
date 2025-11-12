@@ -6,7 +6,7 @@ import type { ICustomer } from "@/types/backend";
 import {
     useCreateCustomerMutation,
     useUpdateCustomerMutation,
-} from "@/hooks/useCustomers";
+} from "@/hooks/user/useCustomers";
 
 interface IProps {
     openModal: boolean;

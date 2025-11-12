@@ -1,5 +1,5 @@
 import { Modal, Descriptions, Typography, Badge, Divider, Image, Spin, Empty, Row, Col } from "antd";
-import { useMaintenanceSurveyByIdQuery } from "@/hooks/useMaintenanceSurveys";
+import { useMaintenanceSurveyByIdQuery } from "@/hooks/maintenance/useMaintenanceSurveys";
 import dayjs from "dayjs";
 
 const { Title } = Typography;

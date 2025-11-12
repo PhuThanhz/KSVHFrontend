@@ -5,7 +5,7 @@ import type { ProColumns } from "@ant-design/pro-components";
 import { Button, Space, Popconfirm, Tag } from "antd";
 import { useEffect, useState } from "react";
 import queryString from "query-string";
-import { useMaintenanceCausesQuery } from "@/hooks/useMaintenanceCause";
+import { useMaintenanceCausesQuery } from "@/hooks/maintenance/useMaintenanceCause";
 import ModalMaintenanceCause from "@/components/admin/maintenance-cause/modal.maintenance-cause";
 import ViewMaintenanceCause from "@/components/admin/maintenance-cause/view.maintenance-cause";
 import Access from "@/components/share/access";

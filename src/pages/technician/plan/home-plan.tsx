@@ -11,10 +11,15 @@ import {
     Image,
     Empty,
 } from "antd";
-import { FileAddOutlined, EyeOutlined } from "@ant-design/icons";
+import {
+    FileAddOutlined,
+    EyeOutlined,
+    StopOutlined,
+    ClockCircleOutlined,
+} from "@ant-design/icons";
 import queryString from "query-string";
 import dayjs from "dayjs";
-import { useSurveyedRequestsQuery } from "@/hooks/useMaintenancePlans";
+import { useSurveyedRequestsQuery } from "@/hooks/maintenance/useMaintenancePlans";
 import ModalCreateMaintenancePlan from "./modal.create.plan";
 import ViewPlanDetail from "./view.plan.detail";
 
@@ -56,6 +61,11 @@ const HomePlan = () => {
                         const device = item.device || {};
                         const deviceImages = [device.image1, device.image2, device.image3].filter(Boolean);
 
+                        // Kiểm tra trạng thái từ chối
+                        const isRejected = item.status === "TU_CHOI_PHE_DUYET";
+                        const cardBg = isRejected ? "#fff2f0" : "#ffffff"; // nền đỏ nhạt nếu bị từ chối
+                        const borderColor = isRejected ? "#ffccc7" : "#f0f0f0";
+
                         return (
                             <Card
                                 key={item.requestId}
@@ -65,6 +75,8 @@ const HomePlan = () => {
                                     borderRadius: 12,
                                     padding: 16,
                                     boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                                    backgroundColor: cardBg,
+                                    border: `1px solid ${borderColor}`,
                                 }}
                                 bodyStyle={{ padding: 0 }}
                             >
@@ -110,7 +122,7 @@ const HomePlan = () => {
                                         <div style={{ padding: "10px 0" }}>
                                             <Space size="small" wrap>
                                                 <Tag color="blue">{item.requestCode}</Tag>
-                                                <Tag color="orange">{item.status}</Tag>
+                                                <Tag color={isRejected ? "red" : "orange"}>{item.status}</Tag>
                                                 <Tag color="gold">{item.priorityLevel}</Tag>
                                                 {item.maintenanceTypeActual && (
                                                     <Tag color="green">{item.maintenanceTypeActual}</Tag>
@@ -136,18 +148,59 @@ const HomePlan = () => {
                                                 </Col>
                                             </Row>
 
+                                            {/* Hiển thị lý do từ chối nếu có */}
+                                            {isRejected && item.rejectInfo && (
+                                                <>
+                                                    <Divider style={{ margin: "10px 0" }} />
+                                                    <div
+                                                        style={{
+                                                            backgroundColor: "#fff1f0",
+                                                            border: "1px solid #ffa39e",
+                                                            borderRadius: 8,
+                                                            padding: "12px 16px",
+                                                        }}
+                                                    >
+                                                        <Space direction="vertical" size={4}>
+                                                            <Text strong style={{ color: "#cf1322" }}>
+                                                                <StopOutlined /> Phiếu bị từ chối
+                                                            </Text>
+                                                            <Text>
+                                                                <strong>Lý do:</strong>{" "}
+                                                                {item.rejectInfo.reasonName || "-"}
+                                                            </Text>
+                                                            <Text>
+                                                                <strong>Ghi chú:</strong>{" "}
+                                                                {item.rejectInfo.note || "-"}
+                                                            </Text>
+                                                            <Text type="secondary" style={{ fontSize: 13 }}>
+                                                                <ClockCircleOutlined />{" "}
+                                                                {item.rejectInfo.rejectedAt
+                                                                    ? dayjs(item.rejectInfo.rejectedAt).format(
+                                                                        "DD/MM/YYYY HH:mm"
+                                                                    )
+                                                                    : ""}
+                                                                {" • "}
+                                                                Người từ chối:{" "}
+                                                                {item.rejectInfo.rejectedBy || "-"}
+                                                            </Text>
+                                                        </Space>
+                                                    </div>
+                                                </>
+                                            )}
+
                                             <Divider style={{ margin: "10px 0" }} />
 
                                             <Space>
                                                 <Button
                                                     icon={<FileAddOutlined />}
                                                     type="primary"
+                                                    danger={isRejected}
                                                     onClick={() => {
                                                         setSelectedRequestId(item.requestId!);
                                                         setOpenCreateModal(true);
                                                     }}
                                                 >
-                                                    Lập kế hoạch
+                                                    {isRejected ? "Lập kế hoạch lại" : "Lập kế hoạch"}
                                                 </Button>
                                                 <Button
                                                     icon={<EyeOutlined />}

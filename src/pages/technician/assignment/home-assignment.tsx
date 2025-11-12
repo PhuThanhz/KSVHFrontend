@@ -19,7 +19,7 @@ import {
 import {
     useTechnicianAssignmentsQuery,
     useAcceptTechnicianAssignmentMutation,
-} from "@/hooks/useTechnicianAssignments";
+} from "@/hooks/maintenance/useTechnicianAssignments";
 import ModalRejectAssignment from "./modal.technician.assignment";
 import ViewTechnicianAssignment from "./view.technician.assignment";
 import queryString from "query-string";

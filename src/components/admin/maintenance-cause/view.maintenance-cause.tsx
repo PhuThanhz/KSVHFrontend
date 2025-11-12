@@ -1,5 +1,5 @@
 import { Drawer, Descriptions, Typography, Spin, Empty, Divider } from "antd";
-import { useMaintenanceCauseByIdQuery } from "@/hooks/useMaintenanceCause";
+import { useMaintenanceCauseByIdQuery } from "@/hooks/maintenance/useMaintenanceCause";
 import dayjs from "dayjs";
 
 const { Text, Title } = Typography;

@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import {
     useCreatePermissionMutation,
     useUpdatePermissionMutation,
-} from "@/hooks/usePermissions";
+} from "@/hooks/user/usePermissions";
 
 interface IProps {
     openModal: boolean;

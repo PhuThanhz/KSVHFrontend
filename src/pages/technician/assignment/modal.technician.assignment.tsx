@@ -2,7 +2,7 @@ import { ModalForm, ProFormSelect, ProFormTextArea } from "@ant-design/pro-compo
 import { Form } from "antd";
 import { isMobile } from "react-device-detect";
 import { useState } from "react";
-import { useRejectTechnicianAssignmentMutation } from "@/hooks/useTechnicianAssignments";
+import { useRejectTechnicianAssignmentMutation } from "@/hooks/maintenance/useTechnicianAssignments";
 import { callFetchRejectReason } from "@/config/api";
 import type { IReqRejectAssignmentDTO } from "@/types/backend";
 

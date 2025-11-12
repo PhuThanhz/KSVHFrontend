@@ -11,8 +11,8 @@ import { ALL_PERMISSIONS } from "@/config/permissions";
 import Access from "@/components/share/access";
 import { sfLike } from "spring-filter-query-builder";
 import { groupByPermission } from "@/config/utils";
-import { usePermissionsQuery } from "@/hooks/usePermissions";
-import { useRolesQuery, useDeleteRoleMutation } from "@/hooks/useRoles";
+import { usePermissionsQuery } from "@/hooks/user/usePermissions";
+import { useRolesQuery, useDeleteRoleMutation } from "@/hooks/user/useRoles";
 
 const RolePage = () => {
     const [openModal, setOpenModal] = useState<boolean>(false);

@@ -35,6 +35,8 @@ export const PATHS = {
         MAINTENANCE: "/admin/maintenance",
         ISSUE_SKILL_MAPPING: "/admin/issue-skill-mapping",
         MAINTENANCE_CAUSE: "/admin/maintenance-cause",
+        MAINTENANCE_APPROVAL: "/admin/maintenance-approval",
+
     },
 
     CLIENT: {
@@ -54,6 +56,7 @@ export const PATHS = {
         NOTIFICATIONS: "/technician/notifications",    // Thông báo
         PROFILE: "/technician/profile",                // Hồ sơ cá nhân
         PROGRESS: "/technician/progress",              // Cập nhật tiến độ công việc
+
     },
 
 };

@@ -25,7 +25,7 @@ import {
     callFetchDevice,
     callFetchIssue,
 } from "@/config/api";
-import { useCreateInternalMaintenanceRequestMutation } from "@/hooks/useMaintenanceRequests";
+import { useCreateInternalMaintenanceRequestMutation } from "@/hooks/maintenance/useMaintenanceRequests";
 import type {
     IReqMaintenanceRequestInternalDTO,
     PriorityLevel,

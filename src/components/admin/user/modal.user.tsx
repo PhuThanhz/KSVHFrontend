@@ -4,7 +4,7 @@ import { isMobile } from "react-device-detect";
 import { useEffect, useState } from "react";
 import type { IUser } from "@/types/backend";
 import { DebounceSelect } from "../debouce.select";
-import { useCreateUserMutation, useUpdateUserMutation } from "@/hooks/useUsers";
+import { useCreateUserMutation, useUpdateUserMutation } from "@/hooks/user/useUsers";
 import { callFetchRole } from "@/config/api";
 
 interface IProps {
