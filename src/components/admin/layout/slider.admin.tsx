@@ -119,6 +119,7 @@ const SliderAdmin: React.FC<IProps> = ({
                     checkPermission(ALL_PERMISSIONS.MAINTENANCE_CAUSE?.GET_PAGINATE ?? {}) ||
                     checkPermission(ALL_PERMISSIONS.SOLUTION?.GET_PAGINATE ?? {}) ||
                     checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_EXECUTION_ADMIN?.GET_PAGINATE ?? {}) ||
                     checkPermission(ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE)
                     ? [{
                         label: "Quản lý bảo trì",
@@ -137,6 +138,13 @@ const SliderAdmin: React.FC<IProps> = ({
                                     key: "/admin/maintenance-approval",
                                     icon: <CheckCircleOutlined />,
                                 }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_EXECUTION_ADMIN?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/maintenance-execution">Theo dõi thi công (Admin)</Link>,
+                                    key: "/admin/maintenance-execution",
+                                    icon: <SolutionOutlined />,
+                                }]
+                                : []),
                             ...(checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE)
                                 ? [{
                                     label: <Link to="/admin/issue">Quản lý vấn đề</Link>,

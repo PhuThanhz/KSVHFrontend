@@ -122,7 +122,7 @@ const HomeExecution = () => {
 
             <Space direction="vertical" size={20} style={{ width: "100%" }}>
                 {executions.map((item) => {
-                    const deviceImages = [item.attachment1, item.attachment2, item.attachment3].filter(
+                    const deviceImages = [item.deviceImage1, item.deviceImage2, item.deviceImage3].filter(
                         Boolean
                     );
                     return (
@@ -154,7 +154,7 @@ const HomeExecution = () => {
                                                         key={idx}
                                                         width={110}
                                                         height={110}
-                                                        src={`${backendURL}/storage/MAINTENANCE_REQUEST/${img}`}
+                                                        src={`${backendURL}/storage/DEVICE/${img}`}
                                                         alt={`device-${idx}`}
                                                         style={{
                                                             borderRadius: 8,
@@ -162,6 +162,7 @@ const HomeExecution = () => {
                                                             border: "1px solid #eee",
                                                         }}
                                                     />
+
                                                 ))}
                                             </div>
                                         </Image.PreviewGroup>

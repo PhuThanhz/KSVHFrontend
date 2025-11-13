@@ -36,6 +36,8 @@ export const PATHS = {
         ISSUE_SKILL_MAPPING: "/admin/issue-skill-mapping",
         MAINTENANCE_CAUSE: "/admin/maintenance-cause",
         MAINTENANCE_APPROVAL: "/admin/maintenance-approval",
+        MAINTENANCE_EXECUTION: "/admin/maintenance-execution",
+
 
     },
 

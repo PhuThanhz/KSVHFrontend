@@ -238,6 +238,19 @@ export const ALL_PERMISSIONS = {
         APPROVE: { method: "PUT", apiPath: "/api/v1/maintenance-approvals/{planId}/approve", module: "MAINTENANCE_APPROVAL" },
         REJECT: { method: "PUT", apiPath: "/api/v1/maintenance-approvals/{planId}/reject", module: "MAINTENANCE_APPROVAL" },
     },
+
+    MAINTENANCE_EXECUTION_ADMIN: {
+        GET_PAGINATE: {
+            method: "GET",
+            apiPath: "/api/v1/admin/maintenance-executions",
+            module: "MAINTENANCE_EXECUTION_ADMIN",
+        },
+        GET_DETAIL: {
+            method: "GET",
+            apiPath: "/api/v1/admin/maintenance-executions/{requestId}/detail",
+            module: "MAINTENANCE_EXECUTION_ADMIN",
+        },
+    },
 };
 
 export const ALL_MODULES = {
@@ -271,5 +284,5 @@ export const ALL_MODULES = {
     TECHNICIAN_ASSIGNMENT: "TECHNICIAN_ASSIGNMENT",
     MAINTENANCE_CAUSE: "MAINTENANCE_CAUSE",
     MAINTENANCE_APPROVAL: "MAINTENANCE_APPROVAL",
-
+    MAINTENANCE_EXECUTION_ADMIN: "MAINTENANCE_EXECUTION_ADMIN",
 };

@@ -4,17 +4,16 @@ import {
     Divider,
     Typography,
     Spin,
-    Tag,
     Empty,
-    Row,
-    Col,
+    Tabs,
+    Tag,
     Image,
     Progress,
-    Tabs,
+    Row,
+    Col,
 } from "antd";
 import dayjs from "dayjs";
-import { useExecutionDetailQuery } from "@/hooks/maintenance/useMaintenanceExecutions";
-import type { IResMaterialDTO } from "@/types/backend";
+import { useAdminExecutionDetailQuery } from "@/hooks/useAdminExecutions";
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -25,78 +24,44 @@ interface IProps {
     requestId?: string | null;
 }
 
-/** ===================== Modal Xem Chi Tiết Thi Công ===================== */
-const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
-    const { data, isLoading, isError } = useExecutionDetailQuery(requestId || undefined);
-    const backendURL = import.meta.env.VITE_BACKEND_URL;
+const ViewAdminExecutionDetail = ({ open, onClose, requestId }: IProps) => {
+    const { data, isLoading, isError } = useAdminExecutionDetailQuery(
+        requestId || undefined
+    );
 
     const requestInfo = data?.requestInfo;
     const surveyInfo = data?.surveyInfo;
     const planInfo = data?.planInfo;
-    const materials = data?.materials;
     const progress = data?.progress;
+
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
+
     const device = requestInfo?.device;
 
-    const deviceImages = [device?.image1, device?.image2, device?.image3].filter(Boolean);
+    const deviceImages = [
+        device?.image1,
+        device?.image2,
+        device?.image3,
+    ].filter(Boolean);
+
+    const surveyImages = [
+        surveyInfo?.attachment1,
+        surveyInfo?.attachment2,
+        surveyInfo?.attachment3,
+    ].filter(Boolean);
+
     const progressImages = [
         progress?.image1,
         progress?.image2,
         progress?.image3,
     ].filter(Boolean);
-    const surveyImages = [
-        surveyInfo?.attachment1,
-        surveyInfo?.attachment2,
-        surveyInfo?.attachment3,
-    ].filter((f): f is string => Boolean(f));
 
-    /** Bảng vật tư **/
-    const renderMaterialTable = (list: IResMaterialDTO[]) => (
-        <table
-            style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                border: "1px solid #f0f0f0",
-                marginBottom: 12,
-            }}
-        >
-            <thead style={{ background: "#fafafa" }}>
-                <tr>
-                    <th style={{ border: "1px solid #f0f0f0", padding: 8 }}>Mã vật tư</th>
-                    <th style={{ border: "1px solid #f0f0f0", padding: 8 }}>Tên vật tư</th>
-                    <th style={{ border: "1px solid #f0f0f0", padding: 8 }}>Số lượng</th>
-                    <th style={{ border: "1px solid #f0f0f0", padding: 8 }}>Kho</th>
-                    <th style={{ border: "1px solid #f0f0f0", padding: 8 }}>Ghi chú</th>
-                </tr>
-            </thead>
-            <tbody>
-                {list.map((m: IResMaterialDTO, idx: number) => (
-                    <tr key={idx}>
-                        <td style={{ border: "1px solid #f0f0f0", padding: 8 }}>{m.partCode}</td>
-                        <td style={{ border: "1px solid #f0f0f0", padding: 8 }}>{m.partName}</td>
-                        <td style={{ border: "1px solid #f0f0f0", padding: 8 }}>{m.quantity}</td>
-                        <td style={{ border: "1px solid #f0f0f0", padding: 8 }}>
-                            {m.warehouseName || "-"}
-                        </td>
-                        <td style={{ border: "1px solid #f0f0f0", padding: 8 }}>
-                            {m.isNewProposal
-                                ? "Đề xuất mới"
-                                : m.isShortage
-                                    ? "Thiếu vật tư"
-                                    : "-"}
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    );
-
-    /** Tab nội dung */
     const renderTabs = () => (
         <Tabs defaultActiveKey="1">
-            {/* Tab 1 - Thông tin phiếu */}
+
+            {/* === TAB 1: THÔNG TIN PHIẾU === */}
             <TabPane tab="Thông tin phiếu" key="1">
-                {/* ========================= Thông tin chung ========================= */}
-                <Descriptions bordered size="small" column={2} layout="vertical">
+                <Descriptions bordered size="small" column={2}>
                     <Descriptions.Item label="Mã phiếu">
                         {requestInfo?.requestCode}
                     </Descriptions.Item>
@@ -125,14 +90,6 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                         {device?.departmentName || "-"}
                     </Descriptions.Item>
 
-                    <Descriptions.Item label="Loại bảo trì">
-                        {requestInfo?.maintenanceType || "-"}
-                    </Descriptions.Item>
-
-                    <Descriptions.Item label="Mức độ ưu tiên">
-                        {requestInfo?.priorityLevel || "-"}
-                    </Descriptions.Item>
-
                     <Descriptions.Item label="Ngày tạo phiếu">
                         {requestInfo?.createdAt
                             ? dayjs(requestInfo.createdAt).format("DD/MM/YYYY HH:mm")
@@ -142,16 +99,10 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
 
                 <Divider />
 
-                {/* ========================= Ảnh thiết bị ========================= */}
+                {/* === Ảnh thiết bị === */}
                 <Title level={5}>Ảnh thiết bị</Title>
                 {deviceImages.length > 0 ? (
-                    <div
-                        style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 10,
-                        }}
-                    >
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                         {deviceImages.map((img, idx) => (
                             <Image
                                 key={idx}
@@ -169,50 +120,7 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                 ) : (
                     <Empty description="Không có ảnh thiết bị" />
                 )}
-
-                <Divider />
-
-                {/* ========================= Ảnh phiếu (attachment1/2/3) ========================= */}
-                <Title level={5}>Ảnh phiếu yêu cầu</Title>
-
-                {[
-                    requestInfo?.attachment1,
-                    requestInfo?.attachment2,
-                    requestInfo?.attachment3,
-                ].filter(Boolean).length > 0 ? (
-                    <div
-                        style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 10,
-                        }}
-                    >
-                        {[
-                            requestInfo?.attachment1,
-                            requestInfo?.attachment2,
-                            requestInfo?.attachment3,
-                        ]
-                            .filter(Boolean)
-                            .map((img, idx) => (
-                                <Image
-                                    key={idx}
-                                    width={120}
-                                    height={120}
-                                    src={`${backendURL}/storage/MAINTENANCE_REQUEST/${img}`}
-                                    style={{
-                                        borderRadius: 8,
-                                        objectFit: "cover",
-                                        border: "1px solid #f0f0f0",
-                                    }}
-                                />
-                            ))}
-                    </div>
-                ) : (
-                    <Empty description="Không có ảnh phiếu yêu cầu" />
-                )}
-
             </TabPane>
-
 
             {/* Tab 2 - Thông tin khảo sát */}
             <TabPane tab="Khảo sát" key="2">
@@ -224,7 +132,7 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                             </Descriptions.Item>
                             <Descriptions.Item label="Ngày khảo sát">
                                 {surveyInfo.surveyDate
-                                    ? dayjs(surveyInfo.surveyDate).format("DD/MM/YYYY")
+                                    ? dayjs(surveyInfo.surveyDate).format("DD/MM/YYYY HH:mm")
                                     : "-"}
                             </Descriptions.Item>
                             <Descriptions.Item label="Nguyên nhân">
@@ -244,19 +152,21 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                         <Divider />
 
                         <Title level={5}>Ảnh / Video khảo sát</Title>
+
                         {surveyImages.length > 0 ? (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                                 {surveyImages.map((file, idx) => {
-                                    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file);
-                                    const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(file);
+                                    const f = file as string; // ép TS hiểu là string 100%
+
+                                    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(f);
+                                    const isVideo = /\.(mp4|mov|avi|mkv|webm)$/i.test(f);
 
                                     return isImage ? (
                                         <Image
                                             key={idx}
                                             width={120}
                                             height={120}
-                                            src={`${backendURL}/storage/survey_attachment/${file}`}
-                                            alt={`survey-${idx + 1}`}
+                                            src={`${backendURL}/storage/survey_attachment/${f}`}
                                             style={{
                                                 borderRadius: 8,
                                                 objectFit: "cover",
@@ -266,7 +176,7 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                                     ) : isVideo ? (
                                         <video
                                             key={idx}
-                                            src={`${backendURL}/storage/survey_attachment/${file}`}
+                                            src={`${backendURL}/storage/survey_attachment/${f}`}
                                             controls
                                             style={{
                                                 width: 120,
@@ -282,74 +192,48 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                         ) : (
                             <Empty description="Không có hình ảnh hoặc video khảo sát" />
                         )}
-
                     </>
                 ) : (
                     <Empty description="Không có thông tin khảo sát" />
                 )}
             </TabPane>
 
-            {/* Tab 3 - Thông tin kế hoạch */}
+            {/* === TAB 3: KẾ HOẠCH === */}
             <TabPane tab="Kế hoạch" key="3">
                 {planInfo ? (
                     <Descriptions bordered size="small" column={2}>
                         <Descriptions.Item label="Phương án">
                             {planInfo.solutionName || "-"}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Người tạo">
-                            {planInfo.createdBy || "-"}
-                        </Descriptions.Item>
+
                         <Descriptions.Item label="Ngày tạo">
                             {planInfo.createdAt
                                 ? dayjs(planInfo.createdAt).format("DD/MM/YYYY HH:mm")
                                 : "-"}
                         </Descriptions.Item>
+
+                        <Descriptions.Item label="Vật tư">
+                            {planInfo.useMaterial ? "Có" : "Không"}
+                        </Descriptions.Item>
+
                         <Descriptions.Item label="Ghi chú">
                             {planInfo.note || "-"}
                         </Descriptions.Item>
                     </Descriptions>
                 ) : (
-                    <Empty description="Không có thông tin kế hoạch" />
+                    <Empty description="Không có kế hoạch" />
                 )}
             </TabPane>
 
-            {/* Tab 4 - Vật tư */}
-            <TabPane tab="Vật tư" key="4">
-                {materials ? (
-                    <>
-                        {materials.providedMaterials?.length > 0 && (
-                            <>
-                                <Title level={5}>Vật tư được cấp</Title>
-                                {renderMaterialTable(materials.providedMaterials)}
-                            </>
-                        )}
-                        {materials.pendingMaterials?.length > 0 && (
-                            <>
-                                <Title level={5}>Vật tư đang chờ</Title>
-                                {renderMaterialTable(materials.pendingMaterials)}
-                            </>
-                        )}
-                        {!materials.providedMaterials?.length &&
-                            !materials.pendingMaterials?.length && (
-                                <Empty description="Không có vật tư trong thi công" />
-                            )}
-                    </>
-                ) : (
-                    <Empty description="Không có thông tin vật tư" />
-                )}
-            </TabPane>
-
-            {/* Tab 5 - Tiến độ thi công */}
-            <TabPane tab="Tiến độ thi công" key="5">
+            {/* === TAB 4: TIẾN ĐỘ === */}
+            <TabPane tab="Tiến độ" key="4">
                 {progress ? (
                     <>
                         <Progress
                             percent={progress.progressPercent || 0}
                             status={progress.progressPercent === 100 ? "success" : "active"}
-                            style={{ maxWidth: 300, marginBottom: 8 }}
+                            style={{ maxWidth: 300 }}
                         />
-                        <Text strong>Ghi chú:</Text>{" "}
-                        <Text>{progress.currentNote || "-"}</Text>
 
                         <Divider />
 
@@ -357,13 +241,7 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                             <Col span={12}>
                                 <Title level={5}>Ảnh tiến độ</Title>
                                 {progressImages.length > 0 ? (
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            flexWrap: "wrap",
-                                            gap: 10,
-                                        }}
-                                    >
+                                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                                         {progressImages.map((img, idx) => (
                                             <Image
                                                 key={idx}
@@ -382,51 +260,32 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                                     <Empty description="Không có ảnh tiến độ" />
                                 )}
                             </Col>
-
-                            <Col span={12}>
-                                <Title level={5}>Ảnh thiết bị</Title>
-                                {deviceImages.length > 0 ? (
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            flexWrap: "wrap",
-                                            gap: 10,
-                                        }}
-                                    >
-                                        {deviceImages.map((img, idx) => (
-                                            <Image
-                                                key={idx}
-                                                width={120}
-                                                height={120}
-                                                src={`${backendURL}/storage/DEVICE/${img}`}
-                                                style={{
-                                                    borderRadius: 8,
-                                                    objectFit: "cover",
-                                                    border: "1px solid #f0f0f0",
-                                                }}
-                                            />
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <Empty description="Không có ảnh thiết bị" />
-                                )}
-                            </Col>
                         </Row>
 
                         {progress.video && (
-                            <div style={{ marginTop: 20 }}>
+                            <>
+                                <Divider />
                                 <Title level={5}>Video thi công</Title>
                                 <video
                                     src={`${backendURL}/storage/execution_progress/${progress.video}`}
                                     controls
                                     style={{ width: "100%", borderRadius: 8 }}
                                 />
-                            </div>
+                            </>
                         )}
                     </>
                 ) : (
-                    <Empty description="Chưa có thông tin tiến độ" />
+                    <Empty description="Không có tiến độ" />
                 )}
+            </TabPane>
+
+            {/* === TAB 5: KTV === */}
+            <TabPane tab="Kỹ thuật viên" key="5">
+                <Descriptions bordered size="small" column={1}>
+                    <Descriptions.Item label="Tên KTV">
+                        {data?.technicianName || "-"}
+                    </Descriptions.Item>
+                </Descriptions>
             </TabPane>
         </Tabs>
     );
@@ -436,15 +295,15 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
             open={open}
             onCancel={() => onClose(false)}
             footer={null}
-            width={1000}
-            title={<Title level={4}>Chi tiết thi công bảo trì</Title>}
+            width={950}
+            title={<Title level={4}>Chi tiết thi công (Admin)</Title>}
         >
             {isLoading ? (
-                <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
                     <Spin size="large" />
                 </div>
             ) : isError || !data ? (
-                <Empty description="Không tìm thấy thông tin thi công" />
+                <Empty description="Không tìm thấy dữ liệu" />
             ) : (
                 renderTabs()
             )}
@@ -452,4 +311,4 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
     );
 };
 
-export default ViewExecutionDetail;
+export default ViewAdminExecutionDetail;

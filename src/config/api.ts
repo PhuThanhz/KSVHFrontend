@@ -56,7 +56,8 @@ import type {
     IResExecutionCardDTO,
     IResExecutionDetailDTO,
     IReqUpdateProgressDTO,
-
+    IResAdminExecutionCardDTO,
+    IResAdminExecutionDetailDTO
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type { IMaintenanceCause, IMaintenanceCauseRequest } from "@/types/backend";
@@ -1249,4 +1250,19 @@ export const callCompleteExecution = (requestId: string) => {
     return axios.put<IBackendRes<IResExecutionDetailDTO>>(
         `/api/v1/maintenance-executions/${requestId}/complete`
     );
+};
+
+
+/* ========================   MODULE: MAINTENANCE EXECUTION ADMIN========================*/
+
+export const callFetchAdminExecutions = (query: string) => {
+    return axios.get<
+        IBackendRes<IModelPaginate<IResAdminExecutionCardDTO>>
+    >(`/api/v1/admin/maintenance-executions?${query}`);
+};
+
+export const callFetchAdminExecutionDetail = (requestId: string) => {
+    return axios.get<
+        IBackendRes<IResAdminExecutionDetailDTO>
+    >(`/api/v1/admin/maintenance-executions/${requestId}/detail`);
 };

@@ -1152,9 +1152,7 @@ export interface IResPlanCommonDTO {
     createdBy?: string | null;
 }
 
-/** Thẻ danh sách thi công (ResExecutionCardDTO) */
 export interface IResExecutionCardDTO {
-    // Thông tin phiếu bảo trì
     requestId: string;
     requestCode: string;
     deviceCode?: string | null;
@@ -1163,22 +1161,54 @@ export interface IResExecutionCardDTO {
     companyName?: string | null;
     departmentName?: string | null;
     status: MaintenanceRequestStatus;
-    attachment1?: string | null;
-    attachment2?: string | null;
-    attachment3?: string | null;
     createdAt?: string | null;
     completedAt?: string | null;
 
+    // Ảnh thiết bị (mới, đúng chuẩn)
+    deviceImage1?: string | null;
+    deviceImage2?: string | null;
+    deviceImage3?: string | null;
     // Khảo sát và kế hoạch
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
 }
 
-/** Chi tiết thi công (ResExecutionDetailDTO) */
 export interface IResExecutionDetailDTO {
     requestInfo: IResRequestCommonDTO;
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
     materials?: IResExecutionMaterialGroupDTO | null;
     progress?: IResExecutionProgressDTO | null;
+}
+
+
+export interface IResAdminExecutionCardDTO {
+    requestId: string;
+    requestCode: string;
+    status: MaintenanceRequestStatus;
+    createdAt?: string;
+
+    deviceCode?: string;
+    deviceName?: string;
+    deviceImage1?: string | null;
+    deviceImage2?: string | null;
+    deviceImage3?: string | null;
+
+    technicianName?: string;
+
+    progressPercent?: number | null;
+    startAt?: string | null;
+    endAt?: string | null;
+
+    actualIssueDescription?: string | null;
+    causeName?: string | null;
+    surveyDate?: string | null;
+}
+
+export interface IResAdminExecutionDetailDTO {
+    requestInfo: IResRequestCommonDTO;
+    surveyInfo?: IResSurveyCommonDTO | null;
+    planInfo?: IResPlanCommonDTO | null;
+    progress?: IResExecutionProgressDTO | null;
+    technicianName?: string | null;
 }

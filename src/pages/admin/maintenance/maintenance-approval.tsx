@@ -383,11 +383,8 @@ export default function MaintenanceApprovalPage() {
                                                         hideChildren
                                                     >
                                                         <Button
-                                                            onClick={() => setShowDetail(plan.planId)}
-                                                            style={{
-                                                                backgroundColor: "#0091EA",
-                                                                color: "white",
-                                                            }}
+                                                            type="primary"
+                                                            onClick={() => setShowDetail(item.requestId)}
                                                         >
                                                             Xem chi tiết
                                                         </Button>

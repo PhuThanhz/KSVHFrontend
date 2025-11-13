@@ -54,7 +54,8 @@ import ProtectedUIRoute from "components/share/ProtectedUIRoute";
 import HomePlanPage from "@/pages/technician/plan/home-plan";
 import HomeExecutionPage from "@/pages/technician/execution/home-execution";
 import LayoutTechnician from "@/components/technician/layout/layout.technician";
-import MaintenanceApprovalPage from "@/pages/admin/maintenance-approval";
+import MaintenanceApprovalPage from "@/pages/admin/maintenance/maintenance-approval";
+import MaintenanceExecutionAdminPage from "./pages/admin/maintenance/maintenance-execution-admin";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -159,7 +160,14 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
-
+        {
+          path: PATHS.ADMIN.MAINTENANCE_EXECUTION,
+          element: (
+            <ProtectedRoute>
+              <MaintenanceExecutionAdminPage />
+            </ProtectedRoute>
+          ),
+        },
         {
           path: PATHS.ADMIN.ISSUE_SKILL_MAPPING,
           element: (
