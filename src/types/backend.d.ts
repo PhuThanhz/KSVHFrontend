@@ -28,6 +28,7 @@ export interface IAccount {
         email: string;
         name: string;
         avatar?: string;
+        address?: string;
         role: {
             id: string;
             name: string;

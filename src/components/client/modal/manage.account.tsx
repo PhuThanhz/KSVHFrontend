@@ -16,50 +16,76 @@ const UserUpdateInfo = ({ onClose }: { onClose: (v: boolean) => void }) => {
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.account.user);
     const [form] = Form.useForm();
-    const [avatar, setAvatar] = useState(user?.avatar || "");
-    const [uploading, setUploading] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    const handleUpload = async ({ file }: any) => {
-        try {
-            setUploading(true);
-            const res = await callUploadSingleFile(file, "avatar");
-            if (res?.data?.length) {
-                setAvatar(res.data[0].fileName);
-                message.success("Tải ảnh lên thành công!");
-            }
-        } catch {
-            message.error("Tải ảnh thất bại!");
-        } finally {
-            setUploading(false);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string>("");
+
+    const [submitting, setSubmitting] = useState(false);
+
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
+    const currentAvatar = user?.avatar
+        ? `${backendURL}/storage/avatar/${user.avatar}`
+        : "";
+
+    const handleFileSelect = (file: File) => {
+        if (!file.type.startsWith("image/")) {
+            message.error("Vui lòng chọn file ảnh!");
+            return false;
         }
+        if (file.size > 5 * 1024 * 1024) {
+            message.error("Kích thước file không vượt quá 5MB!");
+            return false;
+        }
+
+        setAvatarFile(file);
+
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+
+        return false;
     };
 
     const handleSubmit = async (values: any) => {
         setSubmitting(true);
-        const payload: IReqUpdateProfileDTO = {
-            name: values.name,
-            address: values.address,
-            avatar,
-        };
 
         try {
+            let finalAvatar = user?.avatar || "";
+
+            if (avatarFile) {
+                const uploadRes = await callUploadSingleFile(avatarFile, "avatar");
+                if (uploadRes?.data?.length) {
+                    finalAvatar = uploadRes.data[0].fileName;
+                }
+            }
+
+            const payload: IReqUpdateProfileDTO = {
+                name: values.name,
+                address: values.address || "",
+                avatar: finalAvatar
+            };
+
             const res = await callUpdateProfile(payload);
+
             if (res?.data?.user) {
                 dispatch(updateUserProfile({
                     ...res.data.user,
                     address: payload.address,
                 }));
+
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+
                 message.success("Cập nhật thông tin thành công!");
                 onClose(false);
             }
-        } catch (err) {
-            message.error("Đã xảy ra lỗi khi cập nhật!");
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || "Đã xảy ra lỗi!";
+            message.error(msg);
         } finally {
             setSubmitting(false);
         }
     };
+
+    const displayAvatar = previewUrl || currentAvatar;
 
     return (
         <Form
@@ -76,24 +102,34 @@ const UserUpdateInfo = ({ onClose }: { onClose: (v: boolean) => void }) => {
             <div style={{ textAlign: "center", marginBottom: 20 }}>
                 <Avatar
                     size={100}
-                    src={avatar ? `${backendURL}/storage/avatar/${avatar}` : undefined}
+                    src={displayAvatar || undefined}
                     icon={<UserOutlined />}
                 />
+
                 <div className="mt-2">
                     <Upload
                         showUploadList={false}
-                        customRequest={handleUpload}
+                        beforeUpload={handleFileSelect}
                         accept="image/*"
+                        multiple={false}
                     >
                         <Button
                             icon={<UploadOutlined />}
                             size="small"
-                            loading={uploading}
+                            disabled={submitting}
                         >
-                            Upload Avatar
+                            Chọn Avatar
                         </Button>
                     </Upload>
                 </div>
+
+                {avatarFile && (
+                    <div className="mt-1 text-xs text-gray-500">
+                        Đã chọn: {avatarFile.name} ({(avatarFile.size / 1024).toFixed(1)}KB)
+                        <br />
+                        Ảnh sẽ được upload khi lưu thay đổi
+                    </div>
+                )}
             </div>
 
             <Form.Item
@@ -101,7 +137,7 @@ const UserUpdateInfo = ({ onClose }: { onClose: (v: boolean) => void }) => {
                 name="name"
                 rules={[{ required: true, message: "Vui lòng nhập họ và tên!" }]}
             >
-                <Input placeholder="Nhập họ và tên" />
+                <Input placeholder="Nhập họ và tên" disabled={submitting} />
             </Form.Item>
 
             <Form.Item label="Email" name="email">
@@ -109,7 +145,7 @@ const UserUpdateInfo = ({ onClose }: { onClose: (v: boolean) => void }) => {
             </Form.Item>
 
             <Form.Item label="Địa chỉ" name="address">
-                <Input placeholder="Nhập địa chỉ" />
+                <Input placeholder="Nhập địa chỉ" disabled={submitting} />
             </Form.Item>
 
             <div className="text-right">
@@ -132,9 +168,9 @@ const ManageAccount = ({ open, onClose }: IProps) => {
             title="Quản lý tài khoản"
             open={open}
             onCancel={() => onClose(false)}
-            maskClosable={false}
             footer={null}
             destroyOnClose
+            maskClosable={false}
             width={isMobile ? "100%" : "600px"}
             className="rounded-lg"
         >
