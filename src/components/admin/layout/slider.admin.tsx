@@ -140,7 +140,7 @@ const SliderAdmin: React.FC<IProps> = ({
                                 }] : []),
                             ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_EXECUTION_ADMIN?.GET_PAGINATE ?? {})
                                 ? [{
-                                    label: <Link to="/admin/maintenance-execution">Theo dõi thi công (Admin)</Link>,
+                                    label: <Link to="/admin/maintenance-execution">Theo dõi thi công </Link>,
                                     key: "/admin/maintenance-execution",
                                     icon: <SolutionOutlined />,
                                 }]

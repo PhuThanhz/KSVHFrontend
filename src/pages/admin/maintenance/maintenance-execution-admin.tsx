@@ -29,13 +29,16 @@ export default function MaintenanceExecutionAdminPage() {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [query, setQuery] = useState(`page=1&pageSize=10`);
+
     const [openDetailModal, setOpenDetailModal] = useState(false);
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-    const [showDetail, setShowDetail] = useState<string | null>(null);
+
     const [openFilter, setOpenFilter] = useState(false);
 
     const { data, isLoading } = useAdminExecutionsQuery(query);
     const list = data?.result || [];
+
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
     const handlePageChange = (newPage: number, newSize?: number) => {
         setPage(newPage);
@@ -62,7 +65,7 @@ export default function MaintenanceExecutionAdminPage() {
                 <Button onClick={() => setOpenFilter(true)}>Lọc</Button>
             </div>
 
-            {/* BỘ LỌC NHANH */}
+            {/* SEARCH + DATE FILTER */}
             <div
                 style={{
                     display: "flex",
@@ -76,9 +79,7 @@ export default function MaintenanceExecutionAdminPage() {
                     placeholder="Mã phiếu / mã thiết bị / tên KTV"
                     onSearch={(value) =>
                         setQuery(
-                            `page=1&pageSize=${pageSize}&requestCode=${encodeURIComponent(
-                                value
-                            )}`
+                            `page=1&pageSize=${pageSize}&keyword=${encodeURIComponent(value)}`
                         )
                     }
                     style={{ width: 260 }}
@@ -87,19 +88,20 @@ export default function MaintenanceExecutionAdminPage() {
 
                 <RangePicker
                     onChange={(dates) => {
-                        if (dates && dates[0] && dates[1]) {
-                            const from = dates[0].toISOString();
-                            const to = dates[1].toISOString();
-                            setQuery(
-                                `page=1&pageSize=${pageSize}&createdFrom=${from}&createdTo=${to}`
-                            );
-                            setPage(1);
-                        }
+                        if (!dates || !dates[0] || !dates[1]) return;
+
+                        const from = dates[0].toISOString();
+                        const to = dates[1].toISOString();
+
+                        setQuery(
+                            `page=1&pageSize=${pageSize}&createdFrom=${from}&createdTo=${to}`
+                        );
+                        setPage(1);
                     }}
                 />
             </div>
 
-            {/* DANH SÁCH THI CÔNG */}
+            {/* LIST */}
             {isLoading ? (
                 <div style={{ textAlign: "center", marginTop: 50 }}>
                     <Spin size="large" />
@@ -108,42 +110,35 @@ export default function MaintenanceExecutionAdminPage() {
                 <Empty description="Không có phiếu thi công nào" />
             ) : (
                 <>
+                    {/* LIST ITEMS */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                         {list.map((item) => {
-                            const deviceImages = [
+                            const imgs = [
                                 item.deviceImage1,
                                 item.deviceImage2,
                                 item.deviceImage3,
                             ].filter(Boolean);
 
-                            const hasImages = deviceImages.length > 0;
+                            const total = item.totalTasks ?? 0;
+                            const done = item.completedTasks ?? 0;
+
+                            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
                             return (
                                 <Card
                                     key={item.requestId}
                                     bordered
-                                    hoverable
                                     bodyStyle={{ padding: 16 }}
-                                    style={{
-                                        borderRadius: 8,
-                                        border: "1px solid #e8e8e8",
-                                    }}
+                                    style={{ borderRadius: 8 }}
                                 >
-                                    <Row gutter={[12, 12]} align="middle">
+                                    <Row gutter={[12, 12]}>
 
-                                        {/* ẢNH THIẾT BỊ */}
+                                        {/* IMAGE BLOCK */}
                                         <Col xs={24} sm={6} md={5}>
-                                            {hasImages ? (
-                                                <div
-                                                    style={{
-                                                        display: "flex",
-                                                        flexDirection: "column",
-                                                        alignItems: "center",
-                                                        gap: 8,
-                                                    }}
-                                                >
+                                            {imgs.length > 0 ? (
+                                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                                     <Image
-                                                        src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${deviceImages[0]}`}
+                                                        src={`${backendURL}/storage/DEVICE/${imgs[0]}`}
                                                         width="100%"
                                                         height={120}
                                                         style={{
@@ -153,19 +148,12 @@ export default function MaintenanceExecutionAdminPage() {
                                                         }}
                                                     />
 
-                                                    {deviceImages.length > 1 && (
-                                                        <div
-                                                            style={{
-                                                                display: "flex",
-                                                                justifyContent: "center",
-                                                                gap: 8,
-                                                                width: "100%",
-                                                            }}
-                                                        >
-                                                            {deviceImages.slice(1).map((img, idx) => (
+                                                    {imgs.length > 1 && (
+                                                        <div style={{ display: "flex", gap: 8 }}>
+                                                            {imgs.slice(1).map((img, idx) => (
                                                                 <Image
                                                                     key={idx}
-                                                                    src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${img}`}
+                                                                    src={`${backendURL}/storage/DEVICE/${img}`}
                                                                     width="48%"
                                                                     height={80}
                                                                     style={{
@@ -197,68 +185,56 @@ export default function MaintenanceExecutionAdminPage() {
                                             )}
                                         </Col>
 
-                                        {/* THÔNG TIN CHI TIẾT */}
+                                        {/* INFO BLOCK */}
                                         <Col xs={24} sm={18} md={19}>
                                             <div
                                                 style={{
                                                     display: "flex",
                                                     justifyContent: "space-between",
                                                     flexWrap: "wrap",
+                                                    gap: 8,
                                                 }}
                                             >
-                                                {/* LEFT CONTENT */}
+                                                {/* left side */}
                                                 <div>
-                                                    <div style={{ display: "flex", gap: 8 }}>
-                                                        <Text strong style={{ fontSize: 16 }}>
-                                                            {item.deviceName}
-                                                        </Text>
-                                                        <Text type="secondary">
-                                                            ({item.deviceCode})
-                                                        </Text>
-                                                    </div>
+                                                    <Text strong style={{ fontSize: 16 }}>
+                                                        {item.deviceName}
+                                                    </Text>{" "}
+                                                    <Text type="secondary">({item.deviceCode})</Text>
 
-                                                    <div
-                                                        style={{
-                                                            marginTop: 6,
-                                                            fontSize: 13,
-                                                            lineHeight: 1.6,
-                                                        }}
-                                                    >
+                                                    <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.6 }}>
                                                         <p>
                                                             <Text type="secondary">Mã phiếu: </Text>
                                                             <Text strong>{item.requestCode}</Text>
                                                         </p>
+
                                                         <p>
-                                                            <Text type="secondary">Trạng thái: </Text>
+                                                            <Text type="secondary">Trạng thái phiếu: </Text>
                                                             <Tag color="gold">{item.status}</Tag>
                                                         </p>
+
                                                         <p>
-                                                            <Text type="secondary">Tiến độ: </Text>
+                                                            <Text type="secondary">Tiến độ công việc: </Text>
                                                             <Tag color="blue">
-                                                                {item.progressPercent ?? 0}%
+                                                                {done}/{total} ({percent}%)
                                                             </Tag>
                                                         </p>
+
                                                         <p>
-                                                            <Text type="secondary">KTV: </Text>
+                                                            <Text type="secondary">Kỹ thuật viên thực hiện: </Text>
                                                             {item.technicianName || "—"}
                                                         </p>
-                                                        <p
-                                                            style={{
-                                                                fontSize: 12,
-                                                                color: "#888",
-                                                            }}
-                                                        >
+
+                                                        <p style={{ fontSize: 12, color: "#888" }}>
                                                             Tạo lúc:{" "}
                                                             {item.createdAt
-                                                                ? dayjs(item.createdAt).format(
-                                                                    "DD/MM/YYYY HH:mm"
-                                                                )
+                                                                ? dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")
                                                                 : "-"}
                                                         </p>
                                                     </div>
                                                 </div>
 
-                                                {/* HÀNH ĐỘNG */}
+                                                {/* ACTIONS */}
                                                 <div
                                                     style={{
                                                         display: "flex",
@@ -293,27 +269,20 @@ export default function MaintenanceExecutionAdminPage() {
                     </div>
 
                     {/* PAGINATION */}
-                    {data?.meta && (
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "center",
-                                marginTop: 24,
-                            }}
-                        >
-                            <Pagination
-                                current={data.meta.page}
-                                total={data.meta.total}
-                                pageSize={data.meta.pageSize}
-                                showSizeChanger
-                                onChange={handlePageChange}
-                                onShowSizeChange={handlePageChange}
-                            />
-                        </div>
-                    )}
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+                        <Pagination
+                            current={data?.meta.page}
+                            total={data?.meta.total}
+                            pageSize={data?.meta.pageSize}
+                            showSizeChanger
+                            onChange={handlePageChange}
+                            onShowSizeChange={handlePageChange}
+                        />
+                    </div>
                 </>
             )}
 
+            {/* DETAIL MODAL */}
             {openDetailModal && (
                 <ViewAdminExecutionDetail
                     open={openDetailModal}

@@ -127,7 +127,6 @@ const UserUpdateInfo = ({ onClose }: { onClose: (v: boolean) => void }) => {
                     <div className="mt-1 text-xs text-gray-500">
                         Đã chọn: {avatarFile.name} ({(avatarFile.size / 1024).toFixed(1)}KB)
                         <br />
-                        Ảnh sẽ được upload khi lưu thay đổi
                     </div>
                 )}
             </div>

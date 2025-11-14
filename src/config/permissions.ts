@@ -240,16 +240,15 @@ export const ALL_PERMISSIONS = {
     },
 
     MAINTENANCE_EXECUTION_ADMIN: {
-        GET_PAGINATE: {
-            method: "GET",
-            apiPath: "/api/v1/admin/maintenance-executions",
-            module: "MAINTENANCE_EXECUTION_ADMIN",
-        },
-        GET_DETAIL: {
-            method: "GET",
-            apiPath: "/api/v1/admin/maintenance-executions/{requestId}/detail",
-            module: "MAINTENANCE_EXECUTION_ADMIN",
-        },
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/admin/maintenance-executions", module: "MAINTENANCE_EXECUTION_ADMIN", },
+        GET_DETAIL: { method: "GET", apiPath: "/api/v1/admin/maintenance-executions/{requestId}/detail", module: "MAINTENANCE_EXECUTION_ADMIN", },
+    },
+    MAINTENANCE_ACCEPTANCE: {
+        GET_PENDING: { method: "GET", apiPath: "/api/v1/maintenance-acceptances/pending", module: "MAINTENANCE_ACCEPTANCE", },
+        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-acceptances", module: "MAINTENANCE_ACCEPTANCE", },
+        GET_BY_ID: { method: "GET", apiPath: "/api/v1/maintenance-acceptances/{requestId}", module: "MAINTENANCE_ACCEPTANCE", },
+        APPROVE: { method: "PUT", apiPath: "/api/v1/maintenance-acceptances/{requestId}/approve", module: "MAINTENANCE_ACCEPTANCE", },
+        REJECT: { method: "PUT", apiPath: "/api/v1/maintenance-acceptances/{requestId}/reject", module: "MAINTENANCE_ACCEPTANCE", },
     },
 };
 
@@ -285,4 +284,6 @@ export const ALL_MODULES = {
     MAINTENANCE_CAUSE: "MAINTENANCE_CAUSE",
     MAINTENANCE_APPROVAL: "MAINTENANCE_APPROVAL",
     MAINTENANCE_EXECUTION_ADMIN: "MAINTENANCE_EXECUTION_ADMIN",
+    MAINTENANCE_ACCEPTANCE: "MAINTENANCE_ACCEPTANCE",
+
 };

@@ -55,9 +55,9 @@ import type {
     IReqRejectPlanDTO,
     IResExecutionCardDTO,
     IResExecutionDetailDTO,
-    IReqUpdateProgressDTO,
     IResAdminExecutionCardDTO,
-    IResAdminExecutionDetailDTO
+    IResAdminExecutionDetailDTO,
+    IReqUpdateTaskDTO
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type { IMaintenanceCause, IMaintenanceCauseRequest } from "@/types/backend";
@@ -1233,17 +1233,15 @@ export const callStartExecution = (requestId: string) => {
     );
 };
 
-/** 5 Kỹ thuật viên cập nhật tiến độ (gửi ảnh, video, note, %) */
-export const callUpdateExecutionProgress = (
-    requestId: string,
-    data: IReqUpdateProgressDTO
-) => {
-    return axios.put<IBackendRes<IResExecutionDetailDTO>>(
-        `/api/v1/maintenance-executions/${requestId}/progress`,
+/** Kỹ thuật viên cập nhật 1 task thi công */
+export const callUpdateExecutionTask = (taskId: string, data: IReqUpdateTaskDTO) => {
+    return axios.put<IBackendRes<any>>(
+        `/api/v1/maintenance-executions/tasks/${taskId}`,
         data,
         { headers: { "Content-Type": "application/json" } }
     );
 };
+
 
 /** 6 Kỹ thuật viên bấm “Hoàn thành công việc thi công” */
 export const callCompleteExecution = (requestId: string) => {

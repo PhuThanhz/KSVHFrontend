@@ -808,6 +808,16 @@ export interface IResSurveyCommonDTO {
     attachment2?: string;
     attachment3?: string;
 }
+/** ==================== Thông tin kế hoạch (chung) ===================== */
+export interface IResPlanCommonDTO {
+    planId?: string | null;
+    solutionName?: string | null;
+    useMaterial?: boolean | null;
+    note?: string | null;
+    createdAt?: string | null;
+    createdBy?: string | null;
+}
+
 
 /** ================== Thông tin phân công kỹ thuật viên ===================== */
 export interface IResMaintenanceAssignmentDTO {
@@ -1013,16 +1023,6 @@ export interface IResMaintenanceSurveyedDetailDTO {
 
 
 
-
-
-
-
-
-
-
-
-
-
 /** ==============================
  *   MODULE MAINTENANCE APPROVAL
  *  ============================== */
@@ -1103,100 +1103,104 @@ export interface IResMaintenancePlanRejectDTO {
 
 
 
-
-
-
-
-
-
 /** ==============================
- *   MODULE MAINTENANCE EXECUTION (KỸ THUẬT VIÊN THI CÔNG)
+ *   MODULE MAINTENANCE EXECUTION
  *  ============================== */
 
 
-/** KTV cập nhật tiến độ thi công */
-export interface IReqUpdateProgressDTO {
-    progressPercent?: number;
+
+export interface IReqUpdateTaskDTO {
+    done?: boolean | null;
     note?: string | null;
+
     image1?: string | null;
     image2?: string | null;
     image3?: string | null;
     video?: string | null;
 }
 
-/** Vật tư trong thi công (dựa theo IResMaterialDTO trong module approval) */
+
+export interface IResExecutionTaskDTO {
+    id: string;
+    content: string;
+
+    done: boolean | null;
+    doneBy: string | null;
+    doneAt: string | null;
+
+    note: string | null;
+    image1: string | null;
+    image2: string | null;
+    image3: string | null;
+    video: string | null;
+}
+
+
+
 export interface IResExecutionMaterialGroupDTO {
     providedMaterials: IResMaterialDTO[];
     pendingMaterials: IResMaterialDTO[];
 }
 
-/** Tiến độ thi công (ResExecutionProgressDTO) */
-export interface IResExecutionProgressDTO {
-    progressPercent?: number;
-    currentNote?: string | null;
-    image1?: string | null;
-    image2?: string | null;
-    image3?: string | null;
-    video?: string | null;
-    startAt?: string | null;
-    endAt?: string | null;
-}
 
-/** Thông tin kế hoạch (rút gọn cho thi công) */
-export interface IResPlanCommonDTO {
-    planId?: string;
-    solutionName?: string | null;
-    useMaterial?: boolean | null;
-    note?: string | null;
-    createdAt?: string | null;
-    createdBy?: string | null;
-}
+
 
 export interface IResExecutionCardDTO {
     requestId: string;
     requestCode: string;
+
     deviceCode?: string | null;
     deviceName?: string | null;
+
     locationDetail?: string | null;
     companyName?: string | null;
     departmentName?: string | null;
+
     status: MaintenanceRequestStatus;
     createdAt?: string | null;
     completedAt?: string | null;
 
-    // Ảnh thiết bị (mới, đúng chuẩn)
     deviceImage1?: string | null;
     deviceImage2?: string | null;
     deviceImage3?: string | null;
-    // Khảo sát và kế hoạch
+
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
 }
 
+
+
 export interface IResExecutionDetailDTO {
     requestInfo: IResRequestCommonDTO;
+
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
+
     materials?: IResExecutionMaterialGroupDTO | null;
-    progress?: IResExecutionProgressDTO | null;
+
+    tasks?: IResExecutionTaskDTO[] | null;
 }
+
 
 
 export interface IResAdminExecutionCardDTO {
     requestId: string;
     requestCode: string;
     status: MaintenanceRequestStatus;
-    createdAt?: string;
+    createdAt?: string | null;
 
-    deviceCode?: string;
-    deviceName?: string;
+    deviceCode?: string | null;
+    deviceName?: string | null;
     deviceImage1?: string | null;
     deviceImage2?: string | null;
     deviceImage3?: string | null;
 
-    technicianName?: string;
+    technicianName?: string | null;
 
+    totalTasks?: number | null;
+    completedTasks?: number | null;
     progressPercent?: number | null;
+
     startAt?: string | null;
     endAt?: string | null;
 
@@ -1205,10 +1209,88 @@ export interface IResAdminExecutionCardDTO {
     surveyDate?: string | null;
 }
 
+
+
+
 export interface IResAdminExecutionDetailDTO {
     requestInfo: IResRequestCommonDTO;
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
-    progress?: IResExecutionProgressDTO | null;
     technicianName?: string | null;
+    tasks?: IResExecutionTaskDTO[] | null;
+}
+
+
+
+
+
+
+
+
+
+/** ==============================
+ *   MODULE MAINTENANCE ACCEPTANCE
+ *  ============================== */
+
+export interface IReqAcceptanceApproveDTO {
+    rating: number;           // 1–5 sao
+    isOnTime: boolean;
+    isProfessional: boolean;
+    isDeviceWorking: boolean;
+    comment?: string;         // góp ý thêm
+}
+
+export interface IReqAcceptanceRejectDTO {
+    rejectReasonId: number | string;
+    note?: string;
+}
+
+export interface IResAcceptanceCardDTO {
+    requestId: string;
+    requestCode: string;
+
+    deviceCode?: string | null;
+    deviceName?: string | null;
+
+    companyName?: string | null;
+    departmentName?: string | null;
+    locationDetail?: string | null;
+
+    status: MaintenanceRequestStatus;
+    maintenanceType: MaintenanceType;
+    priorityLevel: PriorityLevel;
+
+    attachment1?: string | null;
+    attachment2?: string | null;
+    attachment3?: string | null;
+
+    createdAt?: string | null;
+    completedAt?: string | null;
+
+    surveyInfo?: IResSurveyCommonDTO | null;
+    planInfo?: IResPlanCommonDTO | null;
+}
+
+export interface IResAcceptanceDetailDTO {
+    requestInfo: IResRequestCommonDTO;
+    surveyInfo?: IResSurveyCommonDTO | null;
+    planInfo?: IResPlanCommonDTO | null;
+    tasks?: IResExecutionTaskDTO[] | null;
+}
+
+export interface IResAcceptanceDTO {
+    id?: string;
+    deviceName?: string | null;
+    status: MaintenanceRequestStatus;
+    acceptedAt?: string | null;
+    rating?: number | null;
+    comment?: string | null;
+}
+export interface IResEvaluationDTO {
+    rating?: number | null;
+    isOnTime?: boolean | null;
+    isProfessional?: boolean | null;
+    isDeviceWorking?: boolean | null;
+    comment?: string | null;
+    evaluatedAt?: string | null;
 }

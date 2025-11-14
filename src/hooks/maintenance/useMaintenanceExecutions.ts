@@ -4,14 +4,14 @@ import {
     callFetchApprovedExecutions,
     callGetExecutionDetail,
     callStartExecution,
-    callUpdateExecutionProgress,
     callCompleteExecution,
+    callUpdateExecutionTask
 } from "@/config/api";
 import type {
     IModelPaginate,
     IResExecutionCardDTO,
     IResExecutionDetailDTO,
-    IReqUpdateProgressDTO,
+    IReqUpdateTaskDTO
 } from "@/types/backend";
 import { notify } from "@/components/common/notify";
 
@@ -72,28 +72,38 @@ export const useStartExecutionMutation = () => {
         },
     });
 };
-
-/** ========================= Cập nhật tiến độ thi công ========================= */
-export const useUpdateExecutionProgressMutation = () => {
+/** ========================= Cập nhật 1 task thi công ========================= */
+export const useUpdateExecutionTaskMutation = () => {
     const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: async (params: { id: string; payload: IReqUpdateProgressDTO }) => {
-            const { id, payload } = params;
-            const res = await callUpdateExecutionProgress(id, payload);
+        mutationFn: async ({ taskId, payload }: { taskId: string; payload: IReqUpdateTaskDTO }) => {
+            const res = await callUpdateExecutionTask(taskId, payload);
             if (!res?.data)
-                throw new Error(res?.message || "Không thể cập nhật tiến độ thi công");
+                throw new Error(res?.message || "Không thể cập nhật task thi công");
             return res.data as IResExecutionDetailDTO;
         },
+
         onSuccess: (res) => {
-            notify.updated("Cập nhật tiến độ thành công");
-            queryClient.invalidateQueries({ queryKey: ["maintenance-execution-detail", res.requestInfo.requestId] });
-            queryClient.invalidateQueries({ queryKey: ["maintenance-executions-approved"] });
+            notify.success("Cập nhật task thành công");
+
+            // invalidate detail của phiếu
+            queryClient.invalidateQueries({
+                queryKey: ["maintenance-execution-detail", res.requestInfo.requestId],
+            });
+
+            // invalidate list phiếu (có thể task hoàn thành → % thay đổi)
+            queryClient.invalidateQueries({
+                queryKey: ["maintenance-executions-approved"],
+            });
         },
-        onError: (error: any) => {
-            notify.error(error.message || "Lỗi khi cập nhật tiến độ thi công");
+
+        onError: (err: any) => {
+            notify.error(err?.message || "Lỗi khi cập nhật task");
         },
     });
 };
+
 
 /** ========================= Hoàn thành thi công ========================= */
 export const useCompleteExecutionMutation = () => {
