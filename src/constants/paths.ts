@@ -37,7 +37,8 @@ export const PATHS = {
         MAINTENANCE_CAUSE: "/admin/maintenance-cause",
         MAINTENANCE_APPROVAL: "/admin/maintenance-approval",
         MAINTENANCE_EXECUTION: "/admin/maintenance-execution",
-
+        MAINTENANCE_ACCEPTANCE: "/admin/maintenance-acceptance",
+        MAINTENANCE_HISTORY: "/admin/maintenance-history",
 
     },
 
@@ -51,14 +52,14 @@ export const PATHS = {
 
     TECHNICIAN: {
         ROOT: "/technician",
-        ASSIGNMENT: "/technician/assignment",          // Công việc được giao
-        SCHEDULE: "/technician/schedule",              // Lịch làm việc
-        SURVEY: "/technician/survey",                  // Khảo sát
-        PLAN: "/technician/plan",                      // Kế hoạch làm việc
-        EXECUTION: "/technician/execution",            // Thi công bảo trì
-        NOTIFICATIONS: "/technician/notifications",    // Thông báo
-        PROFILE: "/technician/profile",                // Hồ sơ cá nhân
-        PROGRESS: "/technician/progress",              // Cập nhật tiến độ công việc
+        ASSIGNMENT: "/technician/assignment",
+        SCHEDULE: "/technician/schedule",
+        SURVEY: "/technician/survey",
+        PLAN: "/technician/plan",
+        EXECUTION: "/technician/execution",
+        NOTIFICATIONS: "/technician/notifications",
+        PROFILE: "/technician/profile",
+        PROGRESS: "/technician/progress",
     },
 
 

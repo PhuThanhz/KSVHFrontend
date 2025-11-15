@@ -57,7 +57,15 @@ import type {
     IResExecutionDetailDTO,
     IResAdminExecutionCardDTO,
     IResAdminExecutionDetailDTO,
-    IReqUpdateTaskDTO
+    IReqUpdateTaskDTO,
+    IReqAcceptanceApproveDTO,
+    IReqAcceptanceRejectDTO,
+    IResAcceptanceDTO,
+    IResAcceptanceCardDTO,
+    IResAcceptanceDetailDTO,
+    IResMaintenanceHistoryCardDTO,
+    IResMaintenanceHistoryDetailDTO
+
 } from '@/types/backend';
 import axios from 'config/axios-customize';
 import type { IMaintenanceCause, IMaintenanceCauseRequest } from "@/types/backend";
@@ -386,6 +394,7 @@ export const callCreateEmployee = (data: {
     departmentId: number;
     positionId: number;
     companyId: number;
+    supervisorId?: string | null;
 }) => {
     const payload = {
         employeeCode: data.employeeCode,
@@ -395,6 +404,7 @@ export const callCreateEmployee = (data: {
         departmentId: data.departmentId,
         positionId: data.positionId,
         companyId: data.companyId,
+        supervisorId: data.supervisorId ?? null,
     };
 
     return axios.post<IBackendRes<IEmployee>>(`/api/v1/employees`, payload, {
@@ -411,6 +421,7 @@ export const callUpdateEmployee = (data: {
     departmentId: number;
     positionId: number;
     companyId: number;
+    supervisorId?: string | null;
 }) => {
     const payload = {
         id: data.id,
@@ -421,12 +432,14 @@ export const callUpdateEmployee = (data: {
         departmentId: data.departmentId,
         positionId: data.positionId,
         companyId: data.companyId,
+        supervisorId: data.supervisorId ?? null,
     };
 
     return axios.put<IBackendRes<IEmployee>>(`/api/v1/employees`, payload, {
         headers: { "Content-Type": "application/json" },
     });
 };
+
 
 
 
@@ -1263,4 +1276,61 @@ export const callFetchAdminExecutionDetail = (requestId: string) => {
     return axios.get<
         IBackendRes<IResAdminExecutionDetailDTO>
     >(`/api/v1/admin/maintenance-executions/${requestId}/detail`);
+};
+
+
+/* ========================   MODULE: MAINTENANCE Acceptance ADMIN========================*/
+export const callFetchAcceptancePending = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResAcceptanceCardDTO>>>(
+        `/api/v1/maintenance-acceptances/pending?${query}`
+    );
+};
+export const callFetchAcceptancePaginate = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResAcceptanceCardDTO>>>(
+        `/api/v1/maintenance-acceptances?${query}`
+    );
+};
+export const callFetchAcceptanceRejected = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResAcceptanceCardDTO>>>(
+        `/api/v1/maintenance-acceptances/rejected?${query}`
+    );
+};
+
+export const callFetchAcceptanceDetail = (requestId: string) => {
+    return axios.get<IBackendRes<IResAcceptanceDetailDTO>>(
+        `/api/v1/maintenance-acceptances/${requestId}`
+    );
+};
+
+export const callApproveAcceptance = (
+    requestId: string,
+    payload: IReqAcceptanceApproveDTO
+) => {
+    return axios.put<IBackendRes<IResAcceptanceDTO>>(
+        `/api/v1/maintenance-acceptances/${requestId}/approve`,
+        payload
+    );
+};
+
+export const callRejectAcceptance = (
+    requestId: string,
+    payload: IReqAcceptanceRejectDTO
+) => {
+    return axios.put<IBackendRes<IResAcceptanceDTO>>(
+        `/api/v1/maintenance-acceptances/${requestId}/reject`,
+        payload
+    );
+};
+
+
+
+export const callFetchMaintenanceHistories = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceHistoryCardDTO>>>(
+        `/api/v1/maintenance-histories?${query}`
+    );
+};
+export const callFetchMaintenanceHistoryDetail = (requestId: string) => {
+    return axios.get<IBackendRes<IResMaintenanceHistoryDetailDTO>>(
+        `/api/v1/maintenance-histories/${requestId}`
+    );
 };

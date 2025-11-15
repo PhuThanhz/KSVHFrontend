@@ -56,6 +56,9 @@ import HomeExecutionPage from "@/pages/technician/execution/home-execution";
 import LayoutTechnician from "@/components/technician/layout/layout.technician";
 import MaintenanceApprovalPage from "@/pages/admin/maintenance/maintenance-approval";
 import MaintenanceExecutionAdminPage from "./pages/admin/maintenance/maintenance-execution-admin";
+import MaintenanceAcceptancePage from "./pages/admin/maintenance/maintenance-acceptance";
+
+import MaintenanceHistoryPage from "./pages/admin/maintenance/maintenance-histories";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -165,6 +168,22 @@ export default function App() {
           element: (
             <ProtectedRoute>
               <MaintenanceExecutionAdminPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_ACCEPTANCE,
+          element: (
+            <ProtectedRoute>
+              <MaintenanceAcceptancePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_HISTORY,
+          element: (
+            <ProtectedRoute>
+              < MaintenanceHistoryPage />
             </ProtectedRoute>
           ),
         },

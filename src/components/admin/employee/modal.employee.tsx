@@ -10,6 +10,7 @@ import {
     callFetchCompany,
     callFetchDepartment,
     callFetchPosition,
+    callFetchEmployee,
 } from "@/config/api";
 import { DebounceSelect } from "../debouce.select";
 import { useState } from "react";
@@ -50,6 +51,7 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
             companyId: Number(values.company?.value),
             departmentId: Number(values.department?.value),
             positionId: Number(values.position?.value),
+            supervisorId: values.supervisor?.value ?? null,      // ← THÊM VÀO ĐÂY
         };
 
         if (isEdit && dataInit?.id) {
@@ -105,6 +107,20 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
         );
     }
 
+    /** ==================== Fetch Supervisor ==================== */
+    async function fetchSupervisorList(name: string): Promise<ISelectItem[]> {
+        const res = await callFetchEmployee(`page=1&size=100&fullName=/${name}/i`);
+
+        return (
+            res?.data?.result
+                ?.filter((emp: any) => emp.id !== dataInit?.id) // không cho tự chọn chính mình
+                ?.map((item: any) => ({
+                    label: item.fullName,
+                    value: item.id,
+                })) || []
+        );
+    }
+
     /** ==================== Khi chọn công ty ==================== */
     const handleCompanyChange = (value: any) => {
         const companyId = value?.value ? Number(value.value) : null;
@@ -129,6 +145,12 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
             position: dataInit?.position
                 ? { label: dataInit.position.name, value: dataInit.position.id }
                 : undefined,
+            supervisor: dataInit?.supervisor
+                ? {
+                    label: dataInit.supervisor.fullName,
+                    value: dataInit.supervisor.id,
+                }
+                : undefined,                                  // ← THÊM INITIAL VALUES
         }
         : {};
 
@@ -209,7 +231,7 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                     </ProForm.Item>
                 </Col>
 
-                {/* Chọn phòng ban (lọc theo công ty) */}
+                {/* Chọn phòng ban */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="department"
@@ -244,6 +266,22 @@ const ModalEmployee = ({ openModal, setOpenModal, dataInit, setDataInit }: IProp
                             showSearch
                             placeholder="Chọn chức vụ"
                             fetchOptions={fetchPositionList}
+                            style={{ width: "100%" }}
+                        />
+                    </ProForm.Item>
+                </Col>
+
+                {/* Người quản lý */}
+                <Col lg={24} md={24} sm={24} xs={24}>
+                    <ProForm.Item
+                        name="supervisor"
+                        label="Người quản lý"
+                    >
+                        <DebounceSelect
+                            allowClear
+                            showSearch
+                            placeholder="Chọn người quản lý"
+                            fetchOptions={fetchSupervisorList}
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>

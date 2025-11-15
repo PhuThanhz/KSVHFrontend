@@ -217,7 +217,6 @@ export default function MaintenanceApprovalPage() {
                                     }}
                                 >
                                     <Row gutter={[12, 12]} align="middle">
-                                        {/* Hình ảnh thiết bị */}
                                         <Col xs={24} sm={6} md={5}>
                                             {hasImages ? (
                                                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

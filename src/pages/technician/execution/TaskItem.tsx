@@ -31,8 +31,8 @@ interface Props {
 const TaskItem = ({ task, onUpdated }: Props) => {
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    const [note, setNote] = useState(task.note || "");
-    const [done, setDone] = useState(task.done || false);
+    const [note, setNote] = useState("");
+    const [done, setDone] = useState(false);
 
     const [imageList, setImageList] = useState<UploadFile[]>([]);
     const [videoList, setVideoList] = useState<UploadFile[]>([]);
@@ -42,15 +42,21 @@ const TaskItem = ({ task, onUpdated }: Props) => {
 
     const { mutate: updateTask, isPending } = useUpdateExecutionTaskMutation();
 
-    /** Prefill images */
+    // ============================================================
+    // PREFILL TASK DATA MỖI KHI BACKEND TRẢ VỀ DỮ LIỆU MỚI
+    // ============================================================
     useEffect(() => {
+        setNote(task.note || "");
+        setDone(task.done || false);
+
         const imgs = [task.image1, task.image2, task.image3].filter(Boolean);
+
         setImageList(
             imgs.map((img) => ({
                 uid: uuidv4(),
                 name: img!,
                 status: "done",
-                url: `${backendURL}/storage/execution_task/${img}`,
+                url: `${backendURL}/storage/execution_task/${img}`
             }))
         );
 
@@ -60,20 +66,26 @@ const TaskItem = ({ task, onUpdated }: Props) => {
                     uid: uuidv4(),
                     name: task.video,
                     status: "done",
-                    url: `${backendURL}/storage/execution_task/${task.video}`,
+                    url: `${backendURL}/storage/execution_task/${task.video}`
                 }
             ]);
+        } else {
+            setVideoList([]);
         }
-    }, []);
+    }, [task]);
 
-    /** Preview */
+    // ============================================================
+    // PREVIEW
+    // ============================================================
     const handlePreview = async (file: UploadFile) => {
         setPreviewImage(file.url || (file.preview as string));
         setPreviewTitle(file.name);
         setPreviewOpen(true);
     };
 
-    /** Upload ảnh */
+    // ============================================================
+    // UPLOAD IMAGE
+    // ============================================================
     const uploadImageProps: UploadProps = {
         listType: "picture-card",
         fileList: imageList,
@@ -107,7 +119,9 @@ const TaskItem = ({ task, onUpdated }: Props) => {
         }
     };
 
-    /** Upload video */
+    // ============================================================
+    // UPLOAD VIDEO
+    // ============================================================
     const uploadVideoProps: UploadProps = {
         listType: "text",
         maxCount: 1,
@@ -125,7 +139,7 @@ const TaskItem = ({ task, onUpdated }: Props) => {
                     uid: uuidv4(),
                     name: f.fileName,
                     status: "done",
-                    url: `${backendURL}/storage/execution_task/${f.fileName}`,
+                    url: `${backendURL}/storage/execution_task/${f.fileName}`
                 };
 
                 setVideoList([newVideo]);
@@ -141,7 +155,9 @@ const TaskItem = ({ task, onUpdated }: Props) => {
         }
     };
 
-    /** Save task */
+    // ============================================================
+    // SAVE TASK
+    // ============================================================
     const handleSave = () => {
         const images = imageList.map((f) => f.name);
 
@@ -165,30 +181,30 @@ const TaskItem = ({ task, onUpdated }: Props) => {
         );
     };
 
-    /** Check từng phần */
-    const isNoteDone = note && note.trim().length > 0;
-    const isImageDone = imageList.length > 0;
-    const isVideoDone = videoList.length > 0;
-
+    // ============================================================
     return (
         <Card style={{ marginBottom: 14, borderRadius: 10, background: "#f8f8f8" }}>
-            {/* --- HEADER + DONE CHECKBOX + STATUS TAG --- */}
             <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
                 <Row align="middle">
                     <Checkbox checked={done} onChange={(e) => setDone(e.target.checked)} />
                     <span style={{ marginLeft: 10, fontWeight: 600 }}>{task.content}</span>
                 </Row>
 
-                {/* STATUS TICKS */}
                 <Space>
-                    {done && <Tag icon={<CheckCircleTwoTone twoToneColor="#52c41a" />} color="success">Hoàn thành</Tag>}
-                    {isNoteDone && <Tag color="blue">Đã ghi chú</Tag>}
-                    {isImageDone && <Tag color="purple">Có ảnh</Tag>}
-                    {isVideoDone && <Tag color="orange">Có video</Tag>}
+                    {done && (
+                        <Tag
+                            icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}
+                            color="success"
+                        >
+                            Hoàn thành
+                        </Tag>
+                    )}
+                    {note.trim() && <Tag color="blue">Đã ghi chú</Tag>}
+                    {imageList.length > 0 && <Tag color="purple">Có ảnh</Tag>}
+                    {videoList.length > 0 && <Tag color="orange">Có video</Tag>}
                 </Space>
             </Row>
 
-            {/* GHI CHÚ */}
             <Input.TextArea
                 rows={2}
                 placeholder="Ghi chú công việc..."
@@ -198,7 +214,6 @@ const TaskItem = ({ task, onUpdated }: Props) => {
 
             <Divider />
 
-            {/* UPLOAD MEDIA */}
             <Row gutter={16}>
                 <Col span={16}>
                     <Upload {...uploadImageProps}>

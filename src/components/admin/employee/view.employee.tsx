@@ -1,4 +1,13 @@
-import { Drawer, Descriptions, Typography, Badge, Divider, Spin, Empty } from "antd";
+import {
+    Drawer,
+    Descriptions,
+    Typography,
+    Badge,
+    Divider,
+    Spin,
+    Empty,
+    List
+} from "antd";
 import dayjs from "dayjs";
 import { useEmployeeByIdQuery } from "@/hooks/user/useEmployees";
 
@@ -66,6 +75,19 @@ const ViewDetailEmployee = ({ onClose, open, employeeId }: IProps) => {
                             <Badge status="success" text={data.position?.name ?? "-"} />
                         </Descriptions.Item>
 
+                        {/* ======================= Cấp trên trực tiếp ======================= */}
+                        <Descriptions.Item label="Cấp trên trực tiếp">
+                            {data.supervisor ? (
+                                <Badge
+                                    status="processing"
+                                    text={`${data.supervisor.fullName} (${data.supervisor.positionName ?? "-"})`}
+                                />
+                            ) : (
+                                <Badge status="default" text="Không có (Top-level)" />
+                            )}
+                        </Descriptions.Item>
+
+
                         {/* Trạng thái hoạt động */}
                         <Descriptions.Item label="Trạng thái">
                             {data.active ? (
@@ -92,6 +114,35 @@ const ViewDetailEmployee = ({ onClose, open, employeeId }: IProps) => {
                         </Descriptions.Item>
                     </Descriptions>
 
+                    {/* ======================= Danh sách cấp dưới ======================= */}
+                    <Divider />
+                    <Title level={5} style={{ marginBottom: 10 }}>
+                        Nhân viên cấp dưới
+                    </Title>
+
+                    {data.subordinates && data.subordinates.length > 0 ? (
+                        <List
+                            bordered
+                            dataSource={data.subordinates}
+                            renderItem={(item) => (
+                                <List.Item>
+                                    <div>
+                                        <Text strong>{item.fullName}</Text>{" "}
+                                        <Text type="secondary">
+                                            ({item.positionName ?? "-"})
+                                        </Text>
+                                        <br />
+                                        <Text>Mã NV: {item.employeeCode}</Text> <br />
+                                        <Text>Phòng ban: {item.departmentName}</Text>
+                                    </div>
+                                </List.Item>
+                            )}
+                        />
+                    ) : (
+                        <Empty description="Không có nhân viên cấp dưới" />
+                    )}
+
+                    {/* ======================= Người tạo + cập nhật ======================= */}
                     <Divider />
                     <div style={{ textAlign: "right", marginTop: 10 }}>
                         <Text type="secondary">

@@ -120,7 +120,9 @@ const SliderAdmin: React.FC<IProps> = ({
                     checkPermission(ALL_PERMISSIONS.SOLUTION?.GET_PAGINATE ?? {}) ||
                     checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.MAINTENANCE_EXECUTION_ADMIN?.GET_PAGINATE ?? {}) ||
-                    checkPermission(ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE)
+                    checkPermission(ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_HISTORY.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE?.GET_PAGINATE ?? {})
                     ? [{
                         label: "Quản lý bảo trì",
                         key: "/admin/maintenance-group",
@@ -145,6 +147,19 @@ const SliderAdmin: React.FC<IProps> = ({
                                     icon: <SolutionOutlined />,
                                 }]
                                 : []),
+                            ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/maintenance-acceptance">Nghiệm thu</Link>,
+                                    key: "/admin/maintenance-acceptance",
+                                    icon: <CheckCircleOutlined />,
+                                }] : []),
+                            ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_HISTORY?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to="/admin/maintenance-history">lịch sử bảo trì</Link>,
+                                    key: "/admin/maintenance-history",
+                                    icon: <CheckCircleOutlined />,
+                                }] : []),
+
                             ...(checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE)
                                 ? [{
                                     label: <Link to="/admin/issue">Quản lý vấn đề</Link>,

@@ -83,6 +83,7 @@ const HomeExecution = () => {
             case "DANG_BAO_TRI":
                 return 1;
             case "CHO_NGHIEM_THU":
+            case "TU_CHOI_NGHIEM_THU":
                 return 2;
             case "HOAN_THANH":
                 return 3;
@@ -102,6 +103,8 @@ const HomeExecution = () => {
                 return "gold";
             case "HOAN_THANH":
                 return "green";
+            case "TU_CHOI_NGHIEM_THU":
+                return "red";
             default:
                 return "default";
         }
@@ -142,6 +145,7 @@ const HomeExecution = () => {
                             bodyStyle={{ padding: 20 }}
                         >
                             <Row gutter={16} align="top">
+                                {/* ==== HÌNH ẢNH ==== */}
                                 <Col xs={24} md={7} style={{ textAlign: "center" }}>
                                     {deviceImages.length > 0 ? (
                                         <Image.PreviewGroup>
@@ -174,10 +178,13 @@ const HomeExecution = () => {
                                 </Col>
 
                                 <Col xs={24} md={17}>
+                                    {/* ==== TAG ==== */}
                                     <Space size="small" wrap>
                                         <Tag color="blue">{item.requestCode}</Tag>
                                         <Tag color={getStatusColor(item.status)}>
-                                            {item.status}
+                                            {item.status === "TU_CHOI_NGHIEM_THU"
+                                                ? "Bị từ chối nghiệm thu"
+                                                : item.status}
                                         </Tag>
                                         <Tag color="gold">
                                             {item.createdAt
@@ -205,37 +212,103 @@ const HomeExecution = () => {
                                         </Col>
                                     </Row>
 
+                                    {/* ==== TIẾN ĐỘ ==== */}
+                                    {typeof item.totalTasks === "number" && typeof item.completedTasks === "number" && (
+                                        <div style={{ marginTop: 10 }}>
+                                            <Text strong>Tiến độ công việc: </Text>
+                                            <Tag color="blue">
+                                                {item.completedTasks}/{item.totalTasks} (
+                                                {item.totalTasks > 0
+                                                    ? Math.round((item.completedTasks / item.totalTasks) * 100)
+                                                    : 0}
+                                                %)
+                                            </Tag>
+                                        </div>
+                                    )}
+
                                     <Divider style={{ margin: "10px 0" }} />
 
+
+                                    {/* ==== STEPS ==== */}
                                     <Steps
                                         size="small"
                                         current={getStepIndex(item.status)}
                                         items={[
                                             { title: "Chờ thi công" },
                                             { title: "Đang bảo trì" },
-                                            { title: "Chờ nghiệm thu" },
+                                            {
+                                                title:
+                                                    item.status === "TU_CHOI_NGHIEM_THU"
+                                                        ? "Bị từ chối - Làm lại"
+                                                        : "Chờ nghiệm thu",
+                                            },
                                             { title: "Hoàn thành" },
                                         ]}
                                     />
 
+                                    {/* ==== BOX RED WHEN REJECTED ==== */}
+                                    {item.rejectInfo && (
+                                        <div
+                                            style={{
+                                                marginTop: 15,
+                                                border: "1px solid #ffccc7",
+                                                background: "#fff1f0",
+                                                padding: 12,
+                                                borderRadius: 8,
+                                            }}
+                                        >
+                                            <Text strong style={{ color: "#cf1322" }}>
+                                                Phiếu bị từ chối nghiệm thu
+                                            </Text>
+
+                                            <div style={{ marginTop: 6 }}>
+                                                <p>
+                                                    <Text strong>Lý do:</Text>{" "}
+                                                    {item.rejectInfo.reasonName}
+                                                </p>
+                                                <p>
+                                                    <Text strong>Ghi chú:</Text>{" "}
+                                                    {item.rejectInfo.note || "-"}
+                                                </p>
+
+                                                <p
+                                                    style={{
+                                                        marginTop: 6,
+                                                        color: "#999",
+                                                        fontSize: 13,
+                                                    }}
+                                                >
+                                                    {dayjs(item.rejectInfo.rejectedAt).format(
+                                                        "DD/MM/YYYY HH:mm"
+                                                    )}{" "}
+                                                    – Người từ chối: {item.rejectInfo.rejectedBy}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <Divider style={{ margin: "10px 0" }} />
 
+                                    {/* ==== NÚT HÀNH ĐỘNG ==== */}
                                     <Space wrap>
-                                        {item.status === "DA_PHE_DUYET" && (
-                                            <Button
-                                                type="primary"
-                                                icon={<PlayCircleOutlined />}
-                                                onClick={() =>
-                                                    handleOpenModal(
-                                                        "start",
-                                                        item.requestId,
-                                                        item.requestCode
-                                                    )
-                                                }
-                                            >
-                                                Bắt đầu thi công
-                                            </Button>
-                                        )}
+                                        {(item.status === "DA_PHE_DUYET" ||
+                                            item.status === "TU_CHOI_NGHIEM_THU") && (
+                                                <Button
+                                                    type="primary"
+                                                    icon={<PlayCircleOutlined />}
+                                                    onClick={() =>
+                                                        handleOpenModal(
+                                                            "start",
+                                                            item.requestId,
+                                                            item.requestCode
+                                                        )
+                                                    }
+                                                >
+                                                    {item.status === "TU_CHOI_NGHIEM_THU"
+                                                        ? "Làm lại thi công"
+                                                        : "Bắt đầu thi công"}
+                                                </Button>
+                                            )}
 
                                         {item.status === "DANG_BAO_TRI" && (
                                             <>
@@ -281,8 +354,6 @@ const HomeExecution = () => {
                                             Xem chi tiết
                                         </Button>
                                     </Space>
-
-
                                 </Col>
                             </Row>
                         </Card>

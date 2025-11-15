@@ -8,6 +8,7 @@ import {
     Empty,
     Row,
     Col,
+    Space,
     Image,
     Tabs,
 } from "antd";
@@ -33,6 +34,7 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
     const surveyInfo = data?.surveyInfo;
     const planInfo = data?.planInfo;
     const materials = data?.materials;
+    const rejectHistory = data?.rejectHistory || [];
     const device = requestInfo?.device;
 
     // Hình ảnh thiết bị
@@ -86,10 +88,12 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
         </table>
     );
 
-    /** Tabs */
+    /** ======================= TABs ======================= */
     const renderTabs = () => (
         <Tabs defaultActiveKey="1">
-            {/* Tab 1: Thông tin phiếu */}
+            {/* ============================================================
+                TAB 1 — Thông tin phiếu
+            ============================================================ */}
             <TabPane tab="Thông tin phiếu" key="1">
                 <Descriptions bordered size="small" column={2} layout="vertical">
                     <Descriptions.Item label="Mã phiếu">
@@ -161,13 +165,10 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
 
                 <Divider />
 
-                {/* Ảnh phiếu */}
+                {/* Ảnh phiếu yêu cầu */}
                 <Title level={5}>Ảnh phiếu yêu cầu</Title>
-                {[
-                    requestInfo?.attachment1,
-                    requestInfo?.attachment2,
-                    requestInfo?.attachment3,
-                ].filter(Boolean).length > 0 ? (
+                {[requestInfo?.attachment1, requestInfo?.attachment2, requestInfo?.attachment3]
+                    .filter(Boolean).length > 0 ? (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                         {[requestInfo?.attachment1, requestInfo?.attachment2, requestInfo?.attachment3]
                             .filter(Boolean)
@@ -190,7 +191,9 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                 )}
             </TabPane>
 
-            {/* Tab 2: Khảo sát */}
+            {/* ============================================================
+                TAB 2 — Khảo sát
+            ============================================================ */}
             <TabPane tab="Khảo sát" key="2">
                 {surveyInfo ? (
                     <>
@@ -219,6 +222,7 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
 
                         <Divider />
 
+                        {/* Ảnh khảo sát */}
                         <Title level={5}>Ảnh khảo sát</Title>
                         {surveyImages.length > 0 ? (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
@@ -245,7 +249,9 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                 )}
             </TabPane>
 
-            {/* Tab 3: Kế hoạch */}
+            {/* ============================================================
+                TAB 3 — Kế hoạch
+            ============================================================ */}
             <TabPane tab="Kế hoạch" key="3">
                 {planInfo ? (
                     <Descriptions bordered size="small" column={2}>
@@ -269,7 +275,9 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                 )}
             </TabPane>
 
-            {/* Tab 4: Vật tư */}
+            {/* ============================================================
+                TAB 4 — Vật tư
+            ============================================================ */}
             <TabPane tab="Vật tư" key="4">
                 {materials ? (
                     <>
@@ -294,6 +302,52 @@ const ViewExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                     </>
                 ) : (
                     <Empty description="Không có thông tin vật tư" />
+                )}
+            </TabPane>
+
+            {/* ============================================================
+                TAB 5 — Lịch sử từ chối
+            ============================================================ */}
+            <TabPane tab="Lịch sử từ chối" key="5">
+                {rejectHistory.length > 0 ? (
+                    <Space direction="vertical" style={{ width: "100%" }} size="middle">
+                        {rejectHistory.map((item, idx) => (
+                            <div
+                                key={idx}
+                                style={{
+                                    border: "1px solid #ffccc7",
+                                    background: "#fff1f0",
+                                    padding: 12,
+                                    borderRadius: 8,
+                                }}
+                            >
+                                <Text strong style={{ color: "#cf1322" }}>
+                                    Lần từ chối #{idx + 1}
+                                </Text>
+
+                                <p style={{ marginTop: 6 }}>
+                                    <Text strong>Lý do:</Text> {item.reasonName}
+                                </p>
+
+                                <p>
+                                    <Text strong>Ghi chú:</Text> {item.note || "-"}
+                                </p>
+
+                                <p
+                                    style={{
+                                        marginTop: 6,
+                                        color: "#999",
+                                        fontSize: 13,
+                                    }}
+                                >
+                                    {dayjs(item.rejectedAt).format("DD/MM/YYYY HH:mm")} – Người từ
+                                    chối: {item.rejectedBy}
+                                </p>
+                            </div>
+                        ))}
+                    </Space>
+                ) : (
+                    <Empty description="Không có lịch sử từ chối" />
                 )}
             </TabPane>
         </Tabs>

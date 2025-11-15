@@ -161,7 +161,6 @@ export interface IDepartment {
     createdBy?: string | null;
     updatedBy?: string | null;
 }
-
 /** ==============================
  *   EMPLOYEE MODULE
  *  ============================== */
@@ -172,23 +171,43 @@ export interface IEmployee {
     phone?: string | null;
     email?: string | null;
     active?: boolean;
+
     company: {
         id: number | string;
         name?: string;
     };
+
     department: {
         id: number | string;
         name?: string;
     };
+
     position: {
         id: number | string;
         name?: string;
     };
+
+    supervisor?: {
+        id: string;
+        fullName: string;
+        positionName?: string;
+    } | null;
+
+    subordinates?: {
+        id: string;
+        fullName: string;
+        employeeCode: string;
+        positionName?: string;
+        departmentName?: string;
+    }[];
+
     createdAt?: string;
     updatedAt?: string;
     createdBy?: string;
     updatedBy?: string;
 }
+
+
 /** ==============================
  *   MODULE POSITION 
  *  ============================== */
@@ -1166,7 +1185,20 @@ export interface IResExecutionCardDTO {
 
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
+
+    // ===== TIẾN ĐỘ =====
+    totalTasks: number;
+    completedTasks: number;
+
+    // ===== NEW =====
+    rejectInfo?: {
+        reasonName: string;
+        note: string;
+        rejectedAt: string;
+        rejectedBy: string;
+    } | null;
 }
+
 
 
 
@@ -1179,6 +1211,14 @@ export interface IResExecutionDetailDTO {
     materials?: IResExecutionMaterialGroupDTO | null;
 
     tasks?: IResExecutionTaskDTO[] | null;
+
+    // ===== NEW =====
+    rejectHistory?: {
+        reasonName: string;
+        note: string;
+        rejectedBy: string;
+        rejectedAt: string;
+    }[] | null;
 }
 
 
@@ -1233,11 +1273,11 @@ export interface IResAdminExecutionDetailDTO {
  *  ============================== */
 
 export interface IReqAcceptanceApproveDTO {
-    rating: number;           // 1–5 sao
+    rating: number;            // 1–5 saoResRequestCommonDTO
     isOnTime: boolean;
     isProfessional: boolean;
     isDeviceWorking: boolean;
-    comment?: string;         // góp ý thêm
+    comment?: string;          // góp ý thêm
 }
 
 export interface IReqAcceptanceRejectDTO {
@@ -1245,47 +1285,87 @@ export interface IReqAcceptanceRejectDTO {
     note?: string;
 }
 
+
 export interface IResAcceptanceCardDTO {
+    // ======= Thông tin cơ bản của phiếu =======
+    acceptanceId?: string | null;
     requestId: string;
     requestCode: string;
-
-    deviceCode?: string | null;
-    deviceName?: string | null;
-
-    companyName?: string | null;
-    departmentName?: string | null;
-    locationDetail?: string | null;
-
-    status: MaintenanceRequestStatus;
-    maintenanceType: MaintenanceType;
     priorityLevel: PriorityLevel;
-
-    attachment1?: string | null;
-    attachment2?: string | null;
-    attachment3?: string | null;
-
+    status: MaintenanceRequestStatus;
     createdAt?: string | null;
     completedAt?: string | null;
 
+    // ======= Thông tin khảo sát / kế hoạch =======
+    maintenanceTypeActual?: MaintenanceType | null;
+    actualIssueDescription?: string | null;
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
+
+    // ======= Thiết bị =======
+    device: {
+        deviceCode?: string | null;
+        deviceName?: string | null;
+        image1?: string | null;
+        image2?: string | null;
+        image3?: string | null;
+        companyName?: string | null;
+        departmentName?: string | null;
+        locationDetail?: string | null;
+    };
+
+    // ======= Lý do từ chối nghiệm thu gần nhất =======
+    rejectInfo?: {
+        reasonName: string;
+        note?: string | null;
+        rejectedBy?: string | null;
+        rejectedAt: string;
+    } | null;
 }
+
+
 
 export interface IResAcceptanceDetailDTO {
     requestInfo: IResRequestCommonDTO;
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
     tasks?: IResExecutionTaskDTO[] | null;
+    rejectHistory?: {
+        reasonName: string;
+        note?: string | null;
+        rejectedBy?: string | null;
+        rejectedAt: string;
+    }[] | null;
 }
 
+
 export interface IResAcceptanceDTO {
-    id?: string;
-    deviceName?: string | null;
-    status: MaintenanceRequestStatus;
+    id?: string | null;
+
     acceptedAt?: string | null;
     rating?: number | null;
     comment?: string | null;
+
+    requestId?: string | null;
+    requestCode?: string | null;
+    status: MaintenanceRequestStatus;
+
+    priorityLevel?: PriorityLevel | null;
+    maintenanceType?: MaintenanceType | null;
+    createdAt?: string | null;
+
+    device?: {
+        deviceCode?: string | null;
+        deviceName?: string | null;
+        image1?: string | null;
+        image2?: string | null;
+        image3?: string | null;
+        companyName?: string | null;
+        departmentName?: string | null;
+        locationDetail?: string | null;
+    } | null;
 }
+
 export interface IResEvaluationDTO {
     rating?: number | null;
     isOnTime?: boolean | null;
@@ -1293,4 +1373,34 @@ export interface IResEvaluationDTO {
     isDeviceWorking?: boolean | null;
     comment?: string | null;
     evaluatedAt?: string | null;
+}
+
+
+
+// IResMaintenanceHistoryCardDTO
+export interface IResMaintenanceHistoryCardDTO {
+    requestInfo: IResRequestCommonDTO;
+    solutionName: string | null;
+    technicianName: string | null;
+    createdAt: string;
+    completedAt: string | null;
+}
+
+// IResMaintenanceHistoryDetailDTO
+export interface IResMaintenanceHistoryDetailDTO {
+    requestInfo: IResRequestCommonDTO;
+    surveyInfo: IResSurveyCommonDTO | null;
+    planInfo: IResPlanCommonDTO | null;
+    tasks: IResExecutionTaskDTO[];
+    rejectHistory: IRejectHistoryItem[];
+    rejectInfo: IResMaintenanceRejectDTO | null;
+    rejectLogs: IResMaintenancePlanRejectDTO[];
+    workResultInfo: IResWorkResultCommonDTO | null;
+}
+
+export interface IRejectHistoryItem {
+    reasonName: string;
+    note: string;
+    rejectedBy: string;
+    rejectedAt: string;
 }

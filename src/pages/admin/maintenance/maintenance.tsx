@@ -49,10 +49,16 @@ const MaintenancePage = () => {
             : requests.filter((r) => r.requestInfo.status === "CHO_PHAN_CONG");
 
     const handlePageChange = (newPage: number, newSize?: number) => {
+        const size = newSize || pageSize;
         setPage(newPage);
-        setPageSize(newSize || pageSize);
-        setQuery(`page=${newPage}&pageSize=${newSize || pageSize}`);
+        setPageSize(size);
+
+        const base = new URLSearchParams(query);
+        base.set("page", newPage.toString());
+        base.set("pageSize", size.toString());
+        setQuery(base.toString());
     };
+
 
     return (
         <div style={{ padding: 24 }}>
@@ -95,7 +101,8 @@ const MaintenancePage = () => {
                         key: "ALL",
                         label: (
                             <>
-                                Danh sách yêu cầu <Tag color="blue">{requests.length || 0}</Tag>
+                                Danh sách yêu cầu <Tag color="blue">{data?.meta?.total || 0}</Tag>
+
                             </>
                         ),
                     },
@@ -105,10 +112,9 @@ const MaintenancePage = () => {
                             <>
                                 Yêu cầu chờ phân công{" "}
                                 <Tag color="red">
-                                    {requests.filter(
-                                        (r) => r.requestInfo.status === "CHO_PHAN_CONG"
-                                    ).length || 0}
+                                    {requests.filter(r => r.requestInfo.status === "CHO_PHAN_CONG").length}
                                 </Tag>
+
                             </>
                         ),
                     },
@@ -127,11 +133,14 @@ const MaintenancePage = () => {
             >
                 <Input.Search
                     placeholder="Mã phiếu hoặc tên thiết bị"
-                    onSearch={(value) =>
-                        setQuery(
-                            `page=1&pageSize=${pageSize}&search=${encodeURIComponent(value)}`
-                        )
-                    }
+                    onSearch={(value) => {
+                        const params = new URLSearchParams(query);
+                        params.set("page", "1");
+                        params.set("pageSize", pageSize.toString());
+                        params.set("search", encodeURIComponent(value));
+                        setQuery(params.toString());
+                    }}
+
                     style={{ width: 260 }}
                     allowClear
                 />
