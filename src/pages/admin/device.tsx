@@ -1,23 +1,30 @@
 import { lazy, Suspense, useCallback, useMemo, useReducer, useState } from "react";
-import { Button, Popconfirm, Select, Space, Tag, Tabs } from "antd";
-import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Select, Space, Tag, Tabs } from "antd";
+import {
+    EditOutlined,
+    EyeOutlined,
+    PlusOutlined,
+    ToolOutlined,
+} from "@ant-design/icons";
 import queryString from "query-string";
 import { sfLike } from "spring-filter-query-builder";
 
 import DataTable from "@/components/admin/data-table";
-import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import { useDevicesQuery, useDeleteDeviceMutation } from "@/hooks/useDevices";
+import Access from "@/components/share/access";
+import { useDevicesQuery } from "@/hooks/useDevices";
 import { useDepartmentsQuery } from "@/hooks/useDepartments";
 import { useCompaniesQuery } from "@/hooks/useCompanies";
 import DateRangeFilter from "@/components/common/DateRangeFilter";
-import type { IDevice, IDeviceList } from "@/types/backend";
+import type { IDeviceList } from "@/types/backend";
 import type { ProColumns } from "@ant-design/pro-components";
 
 // Lazy load modals
-const CreateDeviceModal = lazy(() => import("@/components/admin/device/CreateDeviceModal"));
-const UpdateDeviceModal = lazy(() => import("@/components/admin/device/UpdateDeviceModal"));
+const DeviceModal = lazy(() => import("@/components/admin/device/DeviceModal"));
 const ViewDevice = lazy(() => import("@/components/admin/device/view.device"));
+const DevicePartModal = lazy(() =>
+    import("@/components/admin/device/DevicePartModal")
+);
 
 /* ===================== State reducer cho filters ===================== */
 type FilterState = {
@@ -34,74 +41,123 @@ function filterReducer(state: FilterState, action: Partial<FilterState>) {
 
 const DevicePage = () => {
     /** ===================== Modal & Tab state ===================== */
-    const [openCreate, setOpenCreate] = useState(false);
-    const [openEdit, setOpenEdit] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
     const [openView, setOpenView] = useState(false);
-    const [dataInit, setDataInit] = useState<IDevice | null>(null);
+    const [openParts, setOpenParts] = useState(false);
+
+    const [dataInit, setDataInit] = useState<{ id?: string | number | null } | null>(
+        null
+    );
+
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [partsDeviceId, setPartsDeviceId] = useState<string | null>(null);
+
     const [activeTab, setActiveTab] = useState<"INTERNAL" | "CUSTOMER">("INTERNAL");
 
-    /** ===================== Filters & query cho từng tab ===================== */
+    /** ===================== Filters & queries ===================== */
     const [internalFilters, dispatchInternalFilters] = useReducer(filterReducer, {});
     const [customerFilters, dispatchCustomerFilters] = useReducer(filterReducer, {});
 
     const [internalQuery, setInternalQuery] = useState(() =>
-        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc", filter: "ownershipType='INTERNAL'" }, { encode: false })
+        queryString.stringify(
+            {
+                page: 1,
+                size: 10,
+                sort: "createdAt,desc",
+                filter: "ownershipType='INTERNAL'",
+            },
+            { encode: false }
+        )
     );
+
     const [customerQuery, setCustomerQuery] = useState(() =>
-        queryString.stringify({ page: 1, size: 10, sort: "createdAt,desc", filter: "ownershipType='CUSTOMER'" }, { encode: false })
+        queryString.stringify(
+            {
+                page: 1,
+                size: 10,
+                sort: "createdAt,desc",
+                filter: "ownershipType='CUSTOMER'",
+            },
+            { encode: false }
+        )
     );
 
     /** ===================== Hooks ===================== */
-    const { data: internalData, isFetching: isInternalFetching } = useDevicesQuery(internalQuery);
-    const { data: customerData, isFetching: isCustomerFetching } = useDevicesQuery(customerQuery);
-    const { mutate: deleteDevice, isPending: isDeleting } = useDeleteDeviceMutation();
+    const { data: internalData, isFetching: isInternalFetching } =
+        useDevicesQuery(internalQuery);
+
+    const { data: customerData, isFetching: isCustomerFetching } =
+        useDevicesQuery(customerQuery);
+
     const { data: companiesData } = useCompaniesQuery("page=1&size=100");
     const { data: departmentsData } = useDepartmentsQuery("page=1&size=100");
 
     /** ===================== Select options ===================== */
     const companyOptions = useMemo(
-        () => companiesData?.result?.map((c) => ({ label: c.name, value: c.name })) ?? [],
+        () =>
+            companiesData?.result?.map((c) => ({ label: c.name, value: c.name })) ??
+            [],
         [companiesData]
     );
 
     const departmentOptions = useMemo(
-        () => departmentsData?.result?.map((d) => ({ label: d.name, value: d.name })) ?? [],
+        () =>
+            departmentsData?.result?.map((d) => ({ label: d.name, value: d.name })) ??
+            [],
         [departmentsData]
     );
 
-    /** ===================== Build Query ===================== */
+    /** ===================== Handlers ===================== */
+    const handleCreate = useCallback(() => {
+        setDataInit(null);
+        setOpenModal(true);
+    }, []);
+
+    const handleEdit = useCallback((device: IDeviceList) => {
+        setDataInit({ id: device.id });
+        setOpenModal(true);
+    }, []);
+
+    const handleView = useCallback((deviceId: string) => {
+        setSelectedId(deviceId);
+        setOpenView(true);
+    }, []);
+
+    const handleManageParts = useCallback((deviceId: string) => {
+        setPartsDeviceId(deviceId);
+        setOpenParts(true);
+    }, []);
+
+    /** ===================== Build query ===================== */
     const buildQuery = useCallback(
-        (params: any, sort: any, ownershipType: "INTERNAL" | "CUSTOMER", filters: FilterState) => {
+        (
+            params: any,
+            sort: any,
+            ownershipType: "INTERNAL" | "CUSTOMER",
+            filters: FilterState
+        ) => {
             const q: any = { page: params.current || 1, size: 10 };
             let filter = `ownershipType='${ownershipType}'`;
 
             if (params.deviceName)
                 filter += ` and ${sfLike("deviceName", params.deviceName)}`;
-
             if (params.deviceCode)
                 filter += ` and ${sfLike("deviceCode", params.deviceCode)}`;
-
-            if (filters.company)
-                filter += ` and company.name='${filters.company}'`;
-
+            if (filters.company) filter += ` and company.name='${filters.company}'`;
             if (filters.department)
                 filter += ` and department.name='${filters.department}'`;
-
-            if (filters.status)
-                filter += ` and status='${filters.status}'`;
-
-            if (filters.createdAt)
-                filter += ` and ${filters.createdAt}`;
+            if (filters.status) filter += ` and status='${filters.status}'`;
+            if (filters.createdAt) filter += ` and ${filters.createdAt}`;
 
             q.filter = filter;
 
-            // sort
             let sortBy = "sort=createdAt,desc";
             if (sort?.deviceName)
-                sortBy = `sort=deviceName,${sort.deviceName === "ascend" ? "asc" : "desc"}`;
+                sortBy = `sort=deviceName,${sort.deviceName === "ascend" ? "asc" : "desc"
+                    }`;
             else if (sort?.deviceCode)
-                sortBy = `sort=deviceCode,${sort.deviceCode === "ascend" ? "asc" : "desc"}`;
+                sortBy = `sort=deviceCode,${sort.deviceCode === "ascend" ? "asc" : "desc"
+                    }`;
 
             return `${queryString.stringify(q, { encode: false })}&${sortBy}`;
         },
@@ -109,95 +165,108 @@ const DevicePage = () => {
     );
 
     /** ===================== Table columns ===================== */
-    const getColumns = useCallback((data: any): ProColumns<IDeviceList>[] => [
-        {
-            title: "STT",
-            key: "index",
-            width: 60,
-            align: "center",
-            render: (_: any, __: any, index: number) =>
-                index + 1 + ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
-        },
-        { title: "Mã thiết bị", dataIndex: "deviceCode", sorter: true },
-        { title: "Tên thiết bị", dataIndex: "deviceName", sorter: true },
-        {
-            title: "Loại thiết bị",
-            dataIndex: "deviceTypeName",
-            render: (t: any) => (t ? <Tag color="blue">{t}</Tag> : "-"),
-        },
-        {
-            title: "Phòng ban / Nhà hàng",
-            dataIndex: "departmentName",
-            render: (t: any) => (t ? <Tag color="purple">{t}</Tag> : "-"),
-        },
-        {
-            title: "Nhà cung cấp",
-            dataIndex: "supplierName",
-            render: (t: any) => (t ? <Tag color="geekblue">{t}</Tag> : "-"),
-        },
-        {
-            title: "Công ty",
-            dataIndex: "companyName",
-            render: (t: any) => (t ? <Tag color="cyan">{t}</Tag> : "-"),
-        },
-        {
-            title: "Trạng thái",
-            dataIndex: "status",
-            render: (v: any) => {
-                const map: Record<string, { text: string; color: string }> = {
-                    NEW: { text: "Thêm Mới", color: "blue" },
-                    IN_USE: { text: "Đang sử dụng", color: "green" },
-                    IN_STORAGE: { text: "Trong kho", color: "gold" },
-                    NOT_IN_USE: { text: "Ngưng sử dụng", color: "volcano" },
-                    LIQUIDATED: { text: "Đã thanh lý", color: "red" },
-                };
-                const item = map[v];
-                return item ? <Tag color={item.color}>{item.text}</Tag> : <Tag>-</Tag>;
+    const getColumns = useCallback(
+        (data: any): ProColumns<IDeviceList>[] => [
+            {
+                title: "STT",
+                key: "index",
+                width: 60,
+                align: "center",
+                render: (_: any, __: any, index: number) =>
+                    index +
+                    1 +
+                    ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
             },
-        },
-        {
-            title: "Hành động",
-            width: 150,
-            align: "center",
-            render: (_: any, entity: IDeviceList) => (
-                <Space size="middle">
-                    <Access permission={ALL_PERMISSIONS.DEVICE.GET_BY_ID} hideChildren>
-                        <EyeOutlined
-                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-                            onClick={() => {
-                                setSelectedId(String(entity.id));
-                                setOpenView(true);
-                            }}
-                        />
-                    </Access>
-                    <Access permission={ALL_PERMISSIONS.DEVICE.UPDATE} hideChildren>
-                        <EditOutlined
-                            style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
-                            onClick={() => {
-                                setDataInit(entity as IDevice);
-                                setOpenEdit(true);
-                            }}
-                        />
-                    </Access>
-                    <Access permission={ALL_PERMISSIONS.DEVICE.DELETE} hideChildren>
-                        <Popconfirm
-                            title="Xác nhận xóa thiết bị?"
-                            okText="Xóa"
-                            cancelText="Hủy"
-                            okButtonProps={{ danger: true, loading: isDeleting }}
-                            onConfirm={() => entity.id && deleteDevice(entity.id)}
-                        >
-                            <DeleteOutlined
-                                style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
-                            />
-                        </Popconfirm>
-                    </Access>
-                </Space>
-            ),
-        },
-    ], [deleteDevice, isDeleting]);
+            { title: "Mã thiết bị", dataIndex: "deviceCode", sorter: true },
+            { title: "Tên thiết bị", dataIndex: "deviceName", sorter: true },
+            {
+                title: "Loại thiết bị",
+                dataIndex: "deviceTypeName",
+                render: (t: any) => (t ? <Tag color="blue">{t}</Tag> : "-"),
+            },
+            {
+                title: "Phòng ban / Nhà hàng",
+                dataIndex: "departmentName",
+                render: (t: any) => (t ? <Tag color="purple">{t}</Tag> : "-"),
+            },
+            {
+                title: "Nhà cung cấp",
+                dataIndex: "supplierName",
+                render: (t: any) => (t ? <Tag color="geekblue">{t}</Tag> : "-"),
+            },
+            {
+                title: "Công ty",
+                dataIndex: "companyName",
+                render: (t: any) => (t ? <Tag color="cyan">{t}</Tag> : "-"),
+            },
+            {
+                title: "Trạng thái",
+                dataIndex: "status",
+                render: (v: any) => {
+                    const map: Record<
+                        string,
+                        { text: string; color: string }
+                    > = {
+                        NEW: { text: "Thêm Mới", color: "blue" },
+                        IN_USE: { text: "Đang sử dụng", color: "green" },
+                        IN_STORAGE: { text: "Trong kho", color: "gold" },
+                        NOT_IN_USE: { text: "Ngưng sử dụng", color: "volcano" },
+                        LIQUIDATED: { text: "Đã thanh lý", color: "red" },
+                    };
+                    const item = map[v];
+                    return item ? (
+                        <Tag color={item.color}>{item.text}</Tag>
+                    ) : (
+                        <Tag>-</Tag>
+                    );
+                },
+            },
+            {
+                title: "Hành động",
+                width: 280,
+                align: "center",
+                render: (_: any, entity: IDeviceList) => (
+                    <Space>
 
-    /** ===================== Render Device Table ===================== */
+                        <Access permission={ALL_PERMISSIONS.DEVICE.GET_BY_ID} hideChildren>
+                            <Button
+                                type="default"
+                                onClick={() => handleView(String(entity.id))}
+                                icon={<EyeOutlined />}
+                            >
+                                Xem
+                            </Button>
+                        </Access>
+
+                        <Access permission={ALL_PERMISSIONS.DEVICE.UPDATE} hideChildren>
+                            <Button
+                                type="primary"
+                                onClick={() => handleEdit(entity)}
+                                icon={<EditOutlined />}
+                            >
+                                Sửa
+                            </Button>
+                        </Access>
+
+                        <Access permission={ALL_PERMISSIONS.DEVICE_PART.GET_BY_DEVICE} hideChildren>
+                            <Button
+                                type="dashed"
+                                onClick={() => handleManageParts(String(entity.id))}
+                                icon={<ToolOutlined />}
+                            >
+                                Linh kiện
+                            </Button>
+                        </Access>
+
+                    </Space>
+                ),
+            },
+
+        ],
+        [handleView, handleEdit, handleManageParts]
+    );
+
+    /** ===================== Render table ===================== */
     const renderDeviceTable = (
         ownershipType: "INTERNAL" | "CUSTOMER",
         data: any,
@@ -207,7 +276,9 @@ const DevicePage = () => {
         query: string,
         setQuery: (q: string) => void
     ) => {
-        const title = ownershipType === "INTERNAL" ? "Thiết bị nội bộ" : "Thiết bị khách hàng";
+        const title =
+            ownershipType === "INTERNAL" ? "Thiết bị nội bộ" : "Thiết bị khách hàng";
+
         const columns = getColumns(data);
 
         return (
@@ -230,31 +301,23 @@ const DevicePage = () => {
                     defaultPageSize: 10,
                     current: data?.meta?.page,
                     pageSize: data?.meta?.pageSize,
-                    showSizeChanger: true,
-                    total: data?.meta?.total,
-                    showQuickJumper: true,
-                    size: "default",
                     showTotal: (total, range) => (
                         <div style={{ fontSize: 13, color: "#595959" }}>
                             <span style={{ fontWeight: 500, color: "#000" }}>
                                 {range[0]}–{range[1]}
                             </span>{" "}
                             trên{" "}
-                            <span style={{ fontWeight: 600, color: "#1677ff" }}>
+                            <span
+                                style={{
+                                    fontWeight: 600,
+                                    color: "#1677ff",
+                                }}
+                            >
                                 {total.toLocaleString()}
                             </span>{" "}
                             thiết bị
                         </div>
                     ),
-                    style: {
-                        marginTop: 16,
-                        padding: "12px 24px",
-                        background: "#fff",
-                        borderRadius: 8,
-                        borderTop: "1px solid #f0f0f0",
-                        display: "flex",
-                        justifyContent: "flex-end",
-                    },
                 }}
                 toolBarRender={() => [
                     <Space key="filters" size={12} align="center" wrap>
@@ -272,7 +335,9 @@ const DevicePage = () => {
                             style={{ width: 180 }}
                             options={departmentOptions}
                             value={filters.department}
-                            onChange={(v) => dispatchFilters({ department: v || null })}
+                            onChange={(v) =>
+                                dispatchFilters({ department: v || null })
+                            }
                         />
                         <Select
                             placeholder="Trạng thái"
@@ -293,93 +358,106 @@ const DevicePage = () => {
                             fieldName="createdAt"
                             size="middle"
                             width={320}
-                            onChange={(filterStr) => dispatchFilters({ createdAt: filterStr })}
+                            onChange={(filterStr) =>
+                                dispatchFilters({ createdAt: filterStr })
+                            }
                         />
-                        <Access permission={ALL_PERMISSIONS.DEVICE.CREATE} hideChildren>
-                            <Button
-                                icon={<PlusOutlined />}
-                                type="primary"
-                                onClick={() => {
-                                    setDataInit(null);
-                                    setOpenCreate(true);
-                                }}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Access>
+                        <Button
+                            icon={<PlusOutlined />}
+                            type="primary"
+                            onClick={handleCreate}
+                        >
+                            Thêm mới
+                        </Button>
                     </Space>,
                 ]}
             />
         );
     };
 
-    /** ===================== Main Render ===================== */
+    /** ===================== Main render ===================== */
     return (
         <div>
-            <Access permission={ALL_PERMISSIONS.DEVICE.GET_PAGINATE}>
-                <Tabs
-                    activeKey={activeTab}
-                    onChange={(key) => setActiveTab(key as "INTERNAL" | "CUSTOMER")}
-                    items={[
-                        {
-                            key: "INTERNAL",
-                            label: (
-                                <span style={{ fontSize: 15, fontWeight: 500 }}>
-                                    Thiết bị nội bộ
-                                    {internalData?.meta?.total !== undefined && (
-                                        <Tag color="green" style={{ marginLeft: 8 }}>
-                                            {internalData.meta.total}
-                                        </Tag>
-                                    )}
-                                </span>
-                            ),
-                            children: renderDeviceTable(
-                                "INTERNAL",
-                                internalData,
-                                isInternalFetching,
-                                internalFilters,
-                                dispatchInternalFilters,
-                                internalQuery,
-                                setInternalQuery
-                            ),
-                        },
-                        {
-                            key: "CUSTOMER",
-                            label: (
-                                <span style={{ fontSize: 15, fontWeight: 500 }}>
-                                    Thiết bị khách hàng
-                                    {customerData?.meta?.total !== undefined && (
-                                        <Tag color="orange" style={{ marginLeft: 8 }}>
-                                            {customerData.meta.total}
-                                        </Tag>
-                                    )}
-                                </span>
-                            ),
-                            children: renderDeviceTable(
-                                "CUSTOMER",
-                                customerData,
-                                isCustomerFetching,
-                                customerFilters,
-                                dispatchCustomerFilters,
-                                customerQuery,
-                                setCustomerQuery
-                            ),
-                        },
-                    ]}
-                    size="large"
-                    style={{ background: "#fff", padding: "0 24px", borderRadius: 8 }}
-                />
-            </Access>
+            <Tabs
+                activeKey={activeTab}
+                onChange={(key) =>
+                    setActiveTab(key as "INTERNAL" | "CUSTOMER")
+                }
+                items={[
+                    {
+                        key: "INTERNAL",
+                        label: (
+                            <span style={{ fontSize: 15, fontWeight: 500 }}>
+                                Thiết bị nội bộ
+                                {internalData?.meta?.total !== undefined && (
+                                    <Tag color="green" style={{ marginLeft: 8 }}>
+                                        {internalData.meta.total}
+                                    </Tag>
+                                )}
+                            </span>
+                        ),
+                        children: renderDeviceTable(
+                            "INTERNAL",
+                            internalData,
+                            isInternalFetching,
+                            internalFilters,
+                            dispatchInternalFilters,
+                            internalQuery,
+                            setInternalQuery
+                        ),
+                    },
+                    {
+                        key: "CUSTOMER",
+                        label: (
+                            <span style={{ fontSize: 15, fontWeight: 500 }}>
+                                Thiết bị khách hàng
+                                {customerData?.meta?.total !== undefined && (
+                                    <Tag color="orange" style={{ marginLeft: 8 }}>
+                                        {customerData.meta.total}
+                                    </Tag>
+                                )}
+                            </span>
+                        ),
+                        children: renderDeviceTable(
+                            "CUSTOMER",
+                            customerData,
+                            isCustomerFetching,
+                            customerFilters,
+                            dispatchCustomerFilters,
+                            customerQuery,
+                            setCustomerQuery
+                        ),
+                    },
+                ]}
+                size="large"
+                style={{
+                    background: "#fff",
+                    padding: "0 24px",
+                    borderRadius: 8,
+                }}
+            />
 
             <Suspense fallback={null}>
-                <CreateDeviceModal openModal={openCreate} setOpenModal={setOpenCreate} />
-                <UpdateDeviceModal
-                    openModal={openEdit}
-                    setOpenModal={setOpenEdit}
+                <DeviceModal
+                    openModal={openModal}
+                    setOpenModal={setOpenModal}
                     dataInit={dataInit}
                     setDataInit={setDataInit}
                 />
-                <ViewDevice open={openView} onClose={setOpenView} deviceId={selectedId} />
+
+                <ViewDevice
+                    open={openView}
+                    onClose={setOpenView}
+                    deviceId={selectedId}
+                />
+                {openParts && partsDeviceId && (
+                    <DevicePartModal
+                        open={openParts}
+                        onClose={() => setOpenParts(false)}
+                        deviceId={partsDeviceId}
+                    />
+                )}
+
             </Suspense>
         </div>
     );

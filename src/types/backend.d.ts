@@ -485,23 +485,53 @@ export interface IInventoryItem {
 }
 
 
-/** ========================== ENUM TYPES ========================== */
+/* ============================================================
+   ENUMS THIẾT BỊ
+   ============================================================ */
 export type TimeUnitType = "DAY" | "WEEK" | "MONTH" | "QUARTER" | "YEAR";
-export type DeviceStatus = "NEW" | "IN_USE" | "IN_STORAGE" | "NOT_IN_USE" | "LIQUIDATED";
+
+export type DeviceStatus =
+    | "NEW"
+    | "IN_USE"
+    | "IN_STORAGE"
+    | "NOT_IN_USE"
+    | "LIQUIDATED";
+
 export type DeviceOwnershipType = "INTERNAL" | "CUSTOMER";
 
-/** ========================== INTERFACE: DEVICE PART ========================== */
+/* ============================================================
+   DEVICE PART
+   ============================================================ */
+
+export type DevicePartStatus =
+    | "WORKING"
+    | "BROKEN"
+    | "REPLACED"
+    | "REMOVED";
+
 export interface IDevicePart {
-    id?: number | string;
+    id: string;
     partCode: string;
     partName: string;
     quantity: number;
-    deviceId?: string;
-    status?: 'WORKING' | 'BROKEN' | 'REPLACED' | 'UNDER_MAINTENANCE';
-    lastReplacedAt?: string;
+    status: DevicePartStatus;
 }
 
-/** ========================== LIST ITEM ========================== */
+
+export interface ICreatePartRequest {
+    partCode: string;
+    partName: string;
+    quantity: number;
+}
+
+export interface IUpdatePartStatusRequest {
+    status: DevicePartStatus;
+}
+
+
+/* ============================================================
+   LIST ITEM
+   ============================================================ */
 export interface IDeviceList {
     id?: string;
     deviceCode: string;
@@ -516,11 +546,14 @@ export interface IDeviceList {
     status?: DeviceStatus;
 }
 
-/** ========================== DEVICE DETAIL ========================== */
+/* ============================================================
+   DEVICE DETAIL (SHOW)
+   ============================================================ */
 export interface IDevice {
     id?: string;
+
     deviceCode: string;
-    accountingCode?: string;
+    accountingCode?: string | null;
     deviceName: string;
 
     company?: { id?: number | string; name?: string };
@@ -532,9 +565,9 @@ export interface IDevice {
 
     customer?: { id?: string; name?: string; customerCode?: string };
 
-    brand?: string;
-    modelDesc?: string;
-    powerCapacity?: string;
+    brand?: string | null;
+    modelDesc?: string | null;
+    powerCapacity?: string | null;
 
     length?: number | null;
     width?: number | null;
@@ -544,7 +577,7 @@ export interface IDevice {
     image2?: string | null;
     image3?: string | null;
 
-    unitPrice?: string | number | null;
+    unitPrice?: number | string | null;
     ownershipType?: DeviceOwnershipType;
 
     startDate?: string | null;
@@ -559,10 +592,8 @@ export interface IDevice {
     maintenanceDayOfMonth?: number | null;
     maintenanceMonth?: number | null;
 
-    note?: string;
+    note?: string | null;
     status?: DeviceStatus | null;
-
-    parts?: IDevicePart[];
 
     createdAt?: string | null;
     updatedAt?: string | null;
@@ -570,7 +601,9 @@ export interface IDevice {
     updatedBy?: string | null;
 }
 
-/** ========================== REQUEST: CREATE ========================== */
+/* ============================================================
+   CREATE DEVICE REQUEST
+   ============================================================ */
 export interface ICreateDeviceRequest {
     deviceCode: string;
     accountingCode?: string;
@@ -588,38 +621,64 @@ export interface ICreateDeviceRequest {
     powerCapacity?: string;
     ownershipType?: DeviceOwnershipType;
 
-    customerId?: string;
+    length?: number | null;
+    width?: number | null;
+    height?: number | null;
 
-    length?: number;
-    width?: number;
-    height?: number;
+    image1?: string | null;
+    image2?: string | null;
+    image3?: string | null;
 
-    image1?: string;
-    image2?: string;
-    image3?: string;
-
-    unitPrice?: string | number;
+    unitPrice?: number | string | null;
 
     startDate?: string | null;
     warrantyExpiryDate?: string | null;
-
-    depreciationPeriodValue?: number;
-    depreciationPeriodUnit?: TimeUnitType;
+    depreciationPeriodValue?: number | null;
+    depreciationPeriodUnit?: TimeUnitType | null;
     depreciationEndDate?: string | null;
-
-    maintenanceFrequencyValue?: number;
-    maintenanceFrequencyUnit?: TimeUnitType;
-    maintenanceDayOfMonth?: number;
-    maintenanceMonth?: number;
-
+    maintenanceFrequencyValue?: number | null;
+    maintenanceFrequencyUnit?: TimeUnitType | null;
+    maintenanceDayOfMonth?: number | null;
+    maintenanceMonth?: number | null;
     note?: string;
-    status?: DeviceStatus;
-
-    parts?: IDevicePart[];
+    status?: DeviceStatus | null;
+    customerId?: string | null;
 }
 
-/** ========================== REQUEST: UPDATE ========================== */
-export interface IUpdateDeviceRequest extends Partial<ICreateDeviceRequest> { }
+/* ============================================================
+   UPDATE DEVICE REQUEST
+   ============================================================ */
+export interface IUpdateDeviceRequest {
+    companyId?: number;
+    departmentId?: number;
+    supplierId?: number;
+    managerUserId?: string;
+    unitId?: number;
+    brand?: string;
+    modelDesc?: string;
+    powerCapacity?: string;
+    length?: number | null;
+    width?: number | null;
+    height?: number | null;
+    unitPrice?: number | string | null;
+    startDate?: string | null;
+    image1?: string | null;
+    image2?: string | null;
+    image3?: string | null;
+    note?: string;
+    status?: DeviceStatus | null;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 /** ==============================
  *   MODULE SHIFT TEMPLATE

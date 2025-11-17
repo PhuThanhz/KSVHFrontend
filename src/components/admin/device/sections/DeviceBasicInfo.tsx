@@ -38,14 +38,11 @@ const DeviceBasicInfo = ({
     initialOwnershipType,
     initialCustomer,
 }: DeviceBasicInfoProps) => {
-
     const [ownershipType, setOwnershipType] = useState<DeviceOwnershipType>("INTERNAL");
     const [selectedCustomer, setSelectedCustomer] = useState<ISelectItem | null>(null);
 
     useEffect(() => {
-        if (initialOwnershipType) {
-            setOwnershipType(initialOwnershipType);
-        }
+        if (initialOwnershipType) setOwnershipType(initialOwnershipType);
         if (initialCustomer) {
             setSelectedCustomer(initialCustomer);
             form.setFieldValue("customer", initialCustomer);
@@ -53,15 +50,10 @@ const DeviceBasicInfo = ({
             setSelectedCustomer(null);
             form.setFieldValue("customer", null);
         }
-    }, [initialOwnershipType, initialCustomer]);
+    }, [initialOwnershipType, initialCustomer, form]);
 
     return (
-        <Card
-            size="small"
-            title="Thông tin cơ bản"
-            bordered={false}
-            style={{ background: "#fafafa" }}
-        >
+        <Card size="small" title="Thông tin cơ bản" bordered={false} style={{ background: "#fafafa" }}>
             <Row gutter={[16, 8]}>
                 <Col lg={8} md={12} sm={24} xs={24}>
                     <ProFormText
@@ -71,11 +63,9 @@ const DeviceBasicInfo = ({
                         placeholder="Nhập mã thiết bị"
                     />
                 </Col>
-
                 <Col lg={8} md={12} sm={24} xs={24}>
                     <ProFormText label="Mã kế toán" name="accountingCode" placeholder="Nhập mã kế toán" />
                 </Col>
-
                 <Col lg={8} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="ownershipType"
@@ -86,7 +76,6 @@ const DeviceBasicInfo = ({
                             optionType="button"
                             buttonStyle="solid"
                             value={ownershipType}
-                            // disabled={isEdit}
                             onChange={(e) => {
                                 setOwnershipType(e.target.value);
                                 if (e.target.value === "INTERNAL") {
@@ -94,12 +83,9 @@ const DeviceBasicInfo = ({
                                     form.setFieldValue("customer", null);
                                 }
                             }}
-
                         >
                             {OWNERSHIP_OPTIONS.map((o) => (
-                                <Radio.Button key={o.value} value={o.value}>
-                                    {o.label}
-                                </Radio.Button>
+                                <Radio.Button key={o.value} value={o.value}>{o.label}</Radio.Button>
                             ))}
                         </Radio.Group>
                     </ProForm.Item>
@@ -120,7 +106,6 @@ const DeviceBasicInfo = ({
                                 value={selectedCustomer}
                                 onChange={(v: any) => setSelectedCustomer(v as ISelectItem)}
                                 style={{ width: "100%" }}
-                            // disabled={isEdit}
                             />
                         </ProForm.Item>
                     </Col>
@@ -134,7 +119,6 @@ const DeviceBasicInfo = ({
                         placeholder="Nhập tên thiết bị"
                     />
                 </Col>
-
                 <Col lg={6} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="deviceType"
@@ -152,7 +136,6 @@ const DeviceBasicInfo = ({
                         />
                     </ProForm.Item>
                 </Col>
-
                 <Col lg={6} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="unit"
@@ -174,4 +157,7 @@ const DeviceBasicInfo = ({
         </Card>
     );
 };
+
 export default DeviceBasicInfo;
+
+

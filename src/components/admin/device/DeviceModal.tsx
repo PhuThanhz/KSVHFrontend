@@ -1,16 +1,23 @@
 import { ModalForm } from "@ant-design/pro-components";
-import { Col, Form, Row, message, Typography } from "antd";
+import { Col, Form, Row, message, Typography, Card } from "antd";
 import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { isMobile } from "react-device-detect";
 import { callUploadMultipleFiles } from "@/config/api";
 import { v4 as uuidv4 } from "uuid";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
 import type {
+    ICreateDeviceRequest,
     IUpdateDeviceRequest,
     TimeUnitType,
-    DeviceOwnershipType,
 } from "@/types/backend";
-import { useDeviceByIdQuery, useUpdateDeviceMutation } from "@/hooks/useDevices";
+
+import {
+    useDeviceByIdQuery,
+    useUpdateDeviceMutation,
+    useCreateDeviceMutation,
+} from "@/hooks/useDevices";
+
 import {
     callFetchDeviceType,
     callFetchUnit,
@@ -22,28 +29,24 @@ import {
 } from "@/config/api";
 
 import DeviceBasicInfo from "./sections/DeviceBasicInfo";
-import DevicePartsUpdateSection from "./sections/DevicePartsUpdateSection";
 import DeviceSpecsAndManagement from "./sections/DeviceSpecsAndManagement";
+import DeviceWarrantyAndMaintenance from "./sections/DeviceWarrantyAndMaintenance";
 import DeviceImagesAndNotes from "./sections/DeviceImagesAndNotes";
-import MaintenanceFrequencySection from "./sections/MaintenanceFrequencySection";
+
 import type { ISelectItem } from "./sections/types";
 
 const { Text } = Typography;
 
-/* ===================== Helpers ===================== */
 const toSelect = (label?: string | null, value?: string | number | null): ISelectItem | null =>
     label && value ? { label: String(label), value } : null;
 
-const extractFileNameFromUrl = (url: string): string => {
+const extractFileName = (url: string): string => {
     if (!url) return "";
     const mark = "/storage/device/";
     const idx = url.indexOf(mark);
-    if (idx >= 0) return url.slice(idx + mark.length);
-    const last = url.split("/").pop() || "";
-    return last;
+    return idx >= 0 ? url.slice(idx + mark.length) : url.split("/").pop() || "";
 };
 
-/* ===================== Component ===================== */
 interface IProps {
     openModal: boolean;
     setOpenModal: (v: boolean) => void;
@@ -51,10 +54,15 @@ interface IProps {
     setDataInit?: (v: any) => void;
 }
 
-const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) => {
+const DeviceModal = ({
+    openModal,
+    setOpenModal,
+    dataInit,
+    setDataInit,
+}: IProps) => {
     const [form] = Form.useForm();
+    const isEdit = Boolean(dataInit?.id);
 
-    // === UI states ===
     const [selectedDeviceType, setSelectedDeviceType] = useState<ISelectItem | null>(null);
     const [selectedUnit, setSelectedUnit] = useState<ISelectItem | null>(null);
     const [selectedSupplier, setSelectedSupplier] = useState<ISelectItem | null>(null);
@@ -64,16 +72,15 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
 
     const [fileList, setFileList] = useState<UploadFile[]>([]);
     const [loadingUpload, setLoadingUpload] = useState(false);
+
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState("");
     const [previewTitle, setPreviewTitle] = useState("");
 
-    const [maintenanceFrequencyValue, setMaintenanceFrequencyValue] = useState<number | "">("");
-    const [maintenanceFrequencyUnit, setMaintenanceFrequencyUnit] = useState<TimeUnitType | "">("");
-    const [maintenanceDayOfMonth, setMaintenanceDayOfMonth] = useState<number | "">("");
-    const [maintenanceMonth, setMaintenanceMonth] = useState<number | "">("");
+    const [freqUnit, setFreqUnit] = useState<TimeUnitType>("MONTH");
 
     const { mutate: updateDevice, isPending: isUpdating } = useUpdateDeviceMutation();
+    const { mutate: createDevice, isPending: isCreating } = useCreateDeviceMutation();
 
     const deviceId = useMemo(
         () => (openModal && dataInit?.id ? String(dataInit.id) : ""),
@@ -82,44 +89,28 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
 
     const { data: detail, isFetching } = useDeviceByIdQuery(deviceId || undefined);
 
-    /* ===================== Prefill dữ liệu ===================== */
+    /** Load dữ liệu khi EDIT */
     useEffect(() => {
-        if (!openModal || !detail) return;
-
-        form.resetFields();
-
-        const mappedParts =
-            Array.isArray(detail.parts) && detail.parts.length > 0
-                ? detail.parts.map((p) => ({
-                    partCode: p.partCode || "",
-                    partName: p.partName || "",
-                    quantity: Number(p.quantity || 1),
-                    status: p.status || "WORKING",
-                }))
-                : [{ partCode: "", partName: "", quantity: 1, status: "WORKING" }];
-
+        if (!openModal || !isEdit || !detail) return;
 
         form.setFieldsValue({
-            ...detail,
-            parts: mappedParts,
-            deviceType: toSelect(detail.deviceType?.typeName, detail.deviceType?.id),
             unit: toSelect(detail.unit?.name, detail.unit?.id),
             supplier: toSelect(detail.supplier?.supplierName, detail.supplier?.id),
             company: toSelect(detail.company?.name, detail.company?.id),
             department: toSelect(detail.department?.name, detail.department?.id),
             manager: toSelect(detail.manager?.name, detail.manager?.id),
+            brand: detail.brand,
+            modelDesc: detail.modelDesc,
+            powerCapacity: detail.powerCapacity,
+            length: detail.length,
+            width: detail.width,
+            height: detail.height,
+            unitPrice: detail.unitPrice,
             startDate: detail.startDate || null,
-            warrantyExpiryDate: detail.warrantyExpiryDate || null,
+            note: detail.note,
+            status: detail.status,
         });
 
-        if (detail.ownershipType === "CUSTOMER" && detail.customer) {
-            form.setFieldValue(
-                "customer",
-                toSelect(detail.customer.name, detail.customer.id)
-            );
-        }
-
-        setSelectedDeviceType(toSelect(detail.deviceType?.typeName, detail.deviceType?.id));
         setSelectedUnit(toSelect(detail.unit?.name, detail.unit?.id));
         setSelectedSupplier(toSelect(detail.supplier?.supplierName, detail.supplier?.id));
         setSelectedCompany(toSelect(detail.company?.name, detail.company?.id));
@@ -133,19 +124,15 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                 : `${import.meta.env.VITE_BACKEND_URL}/storage/device/${raw}`;
             return {
                 uid: uuidv4(),
-                name: extractFileNameFromUrl(fullUrl),
-                status: "done" as const,
+                name: extractFileName(fullUrl),
+                status: "done",
                 url: fullUrl,
             };
         });
         setFileList(normalized.slice(0, 3));
-        setMaintenanceFrequencyValue(detail.maintenanceFrequencyValue ?? "");
-        setMaintenanceFrequencyUnit(detail.maintenanceFrequencyUnit ?? "");
-        setMaintenanceDayOfMonth(detail.maintenanceDayOfMonth ?? "");
-        setMaintenanceMonth(detail.maintenanceMonth ?? "");
-    }, [openModal, detail]);
+    }, [openModal, isEdit, detail, form]);
 
-    /* ===================== Fetch Options ===================== */
+    /** Debounce fetch dropdown */
     const fetchList = useCallback(async (api: any, key: string, name: string, extra?: string) => {
         const res = await api(`page=1&size=50&${key}=/${name}/i${extra ? `&${extra}` : ""}`);
         return (
@@ -156,11 +143,12 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         );
     }, []);
 
-    const fetchDeviceTypeList = useCallback((n: string) => fetchList(callFetchDeviceType, "typeName", n), []);
-    const fetchCustomerList = useCallback((n: string) => fetchList(callFetchCustomer, "name", n), []);
-    const fetchUnitList = useCallback((n: string) => fetchList(callFetchUnit, "name", n), []);
-    const fetchSupplierList = useCallback((n: string) => fetchList(callFetchMaterialSupplier, "supplierName", n), []);
-    const fetchCompanyList = useCallback((n: string) => fetchList(callFetchCompany, "name", n), []);
+    const fetchDeviceTypeList = useCallback((n: string) => fetchList(callFetchDeviceType, "typeName", n), [fetchList]);
+    const fetchCustomerList = useCallback((n: string) => fetchList(callFetchCustomer, "name", n), [fetchList]);
+    const fetchUnitList = useCallback((n: string) => fetchList(callFetchUnit, "name", n), [fetchList]);
+    const fetchSupplierList = useCallback((n: string) => fetchList(callFetchMaterialSupplier, "supplierName", n), [fetchList]);
+    const fetchCompanyList = useCallback((n: string) => fetchList(callFetchCompany, "name", n), [fetchList]);
+
     const fetchDepartmentList = useCallback(
         async (n: string): Promise<ISelectItem[]> => {
             if (!selectedCompany?.value) return [];
@@ -171,6 +159,7 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         },
         [selectedCompany]
     );
+
     const fetchManagerList = useCallback(async (n: string): Promise<ISelectItem[]> => {
         const res = await callFetchUser(
             `page=1&size=50&name=/${n}/i&filter=role.name='EMPLOYEE'`
@@ -178,23 +167,24 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
     }, []);
 
-    /* ===================== Upload ===================== */
+    /** Preview */
     const handlePreview = useCallback((file: any) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            setPreviewImage(reader.result as string);
+        const show = (src: string) => {
+            setPreviewImage(src);
             setPreviewOpen(true);
             setPreviewTitle(file.name);
         };
-        if (file.originFileObj) reader.readAsDataURL(file.originFileObj);
-        else {
-            setPreviewImage(file.url || "");
-            setPreviewOpen(true);
-            setPreviewTitle(file.name);
+
+        if (!file.url && !file.preview) {
+            const reader = new FileReader();
+            reader.onload = () => show(reader.result as string);
+            reader.readAsDataURL(file.originFileObj as File);
+        } else {
+            show(file.url || file.preview);
         }
-        return () => reader.abort();
     }, []);
 
+    /** Upload */
     const uploadProps = useMemo<UploadProps>(
         () => ({
             listType: "picture-card",
@@ -209,18 +199,20 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                         onError?.(new Error("File quá lớn"));
                         return;
                     }
+
                     setLoadingUpload(true);
                     const res = await callUploadMultipleFiles([file as File], "device");
-                    if (Array.isArray(res?.data)) {
-                        const next: UploadFile[] = res.data.map((f) => ({
-                            uid: uuidv4(),
-                            name: f.fileName,
-                            status: "done",
-                            url: `${import.meta.env.VITE_BACKEND_URL}/storage/device/${f.fileName}`,
-                        }));
-                        setFileList((prev) => [...prev, ...next].slice(0, 3));
-                        onSuccess?.("ok");
-                    } else throw new Error("Upload thất bại");
+                    if (!Array.isArray(res?.data)) throw new Error("Upload thất bại");
+
+                    const uploaded: UploadFile[] = res.data.map((f) => ({
+                        uid: uuidv4(),
+                        name: f.fileName,
+                        status: "done",
+                        url: `${import.meta.env.VITE_BACKEND_URL}/storage/device/${f.fileName}`,
+                    }));
+
+                    setFileList((prev) => [...prev, ...uploaded].slice(0, 3));
+                    onSuccess?.("ok");
                 } catch (err: any) {
                     message.error(err?.message || "Không thể upload ảnh");
                     onError?.(err);
@@ -228,13 +220,14 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                     setLoadingUpload(false);
                 }
             },
-            onRemove: (file) => setFileList((prev) => prev.filter((f) => f.uid !== file.uid)),
+            onRemove: (file) =>
+                setFileList((prev) => prev.filter((f) => f.uid !== file.uid)),
             onPreview: handlePreview,
         }),
         [fileList, handlePreview]
     );
 
-    /* ===================== Reset ===================== */
+    /** Reset modal */
     const handleReset = useCallback(() => {
         form.resetFields();
         setOpenModal(false);
@@ -245,94 +238,116 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
         setSelectedDepartment(null);
         setSelectedManager(null);
         setFileList([]);
+        setFreqUnit("MONTH");
         setDataInit?.(null);
-        setMaintenanceFrequencyValue("");
-        setMaintenanceFrequencyUnit("");
-        setMaintenanceDayOfMonth("");
-        setMaintenanceMonth("");
-    }, [form, setOpenModal, setDataInit]);
+    }, []);
 
-    /* ===================== Submit ===================== */
+    /** Company change */
+    const handleCompanyChange = useCallback(
+        (value: ISelectItem | null) => {
+            setSelectedCompany(value);
+            setSelectedDepartment(null);
+            form.setFieldsValue({ department: undefined });
+        },
+        [form]
+    );
+
+    /** Build payload */
     const buildPayload = useCallback(
-        (values: any): IUpdateDeviceRequest => {
+        (values: any): ICreateDeviceRequest | IUpdateDeviceRequest => {
             const [image1, image2, image3] = fileList
-                .map((f) => f.name || extractFileNameFromUrl(String(f.url || "")))
+                .map((f) => f.name || extractFileName(String(f.url || "")))
                 .slice(0, 3);
 
+            const common = {
+                companyId: values.company?.value,
+                departmentId: values.department?.value,
+                supplierId: values.supplier?.value,
+                managerUserId: values.manager?.value,
+                unitId: values.unit?.value,
+                brand: values.brand,
+                modelDesc: values.modelDesc,
+                powerCapacity: values.powerCapacity,
+                length: values.length ? Number(values.length) : undefined,
+                width: values.width ? Number(values.width) : undefined,
+                height: values.height ? Number(values.height) : undefined,
+                unitPrice: values.unitPrice ? Number(values.unitPrice) : undefined,
+                startDate: values.startDate,
+                image1,
+                image2,
+                image3,
+                note: values.note,
+            };
+
+            if (isEdit) {
+                return {
+                    ...common,
+                    status: values.status,
+                } as IUpdateDeviceRequest;
+            }
+
             return {
+                ...common,
                 deviceCode: values.deviceCode,
                 accountingCode: values.accountingCode,
                 deviceName: values.deviceName,
                 deviceTypeId: values.deviceType?.value,
-                unitId: values.unit?.value,
-                supplierId: values.supplier?.value,
-                companyId: values.company?.value,
-                departmentId: values.department?.value,
-                managerUserId: values.manager?.value,
                 customerId: values.customer?.value,
-                brand: values.brand,
-                modelDesc: values.modelDesc,
-                powerCapacity: values.powerCapacity,
-                length: Number(values.length) || undefined,
-                width: Number(values.width) || undefined,
-                height: Number(values.height) || undefined,
-                unitPrice: Number(values.unitPrice) || undefined,
-                image1,
-                image2,
-                image3,
-                startDate: values.startDate,
                 warrantyExpiryDate: values.warrantyExpiryDate,
                 depreciationPeriodValue: Number(values.depreciationPeriodValue) || undefined,
                 depreciationPeriodUnit: values.depreciationPeriodUnit,
-                maintenanceFrequencyValue: Number(maintenanceFrequencyValue) || undefined,
-                maintenanceFrequencyUnit: maintenanceFrequencyUnit || undefined,
-                maintenanceDayOfMonth: Number(maintenanceDayOfMonth) || undefined,
-                maintenanceMonth: Number(maintenanceMonth) || undefined,
-                ownershipType: (values.ownershipType as DeviceOwnershipType) || "INTERNAL",
-                status: values.status,
-                note: values.note,
-                parts: (values.parts || [])
-                    .filter((p: any) => p && (p.partCode || p.partName))
-                    .map((p: any) => ({
-                        partCode: String(p.partCode || "").trim(),
-                        partName: String(p.partName || "").trim(),
-                        quantity: Number(p.quantity || 1),
-                        status: p.status || "WORKING",
-                    })),
-            };
+                maintenanceFrequencyValue: Number(values.maintenanceFrequencyValue) || undefined,
+                maintenanceFrequencyUnit: values.maintenanceFrequencyUnit,
+                maintenanceDayOfMonth: Number(values.maintenanceDayOfMonth) || undefined,
+                maintenanceMonth: Number(values.maintenanceMonth) || undefined,
+                ownershipType: values.ownershipType || "INTERNAL",
+                status: "NEW",
+            } as ICreateDeviceRequest;
         },
-        [fileList, maintenanceFrequencyValue, maintenanceFrequencyUnit, maintenanceDayOfMonth, maintenanceMonth]
+        [fileList, isEdit]
     );
 
-    const submitUpdate = useCallback(
+    /** Submit */
+    const submitForm = useCallback(
         async (values: any) => {
-            if (!dataInit?.id) {
-                message.error("Thiếu thông tin thiết bị để cập nhật");
-                return;
-            }
             if (loadingUpload) {
                 message.warning("Vui lòng chờ upload ảnh hoàn tất");
                 return;
             }
+
             const payload = buildPayload(values);
-            updateDevice(
-                { id: String(dataInit.id), payload },
-                {
+
+            if (isEdit) {
+                updateDevice(
+                    { id: String(dataInit?.id), payload: payload as IUpdateDeviceRequest },
+                    {
+                        onSuccess: () => {
+                            message.success("Cập nhật thiết bị thành công");
+                            handleReset();
+                        },
+                        onError: () => message.error("Không thể cập nhật thiết bị"),
+                    }
+                );
+            } else {
+                createDevice(payload as ICreateDeviceRequest, {
                     onSuccess: () => {
-                        message.success("Cập nhật thiết bị thành công");
+                        message.success("Tạo thiết bị thành công");
                         handleReset();
                     },
-                    onError: () => message.error("Không thể cập nhật thiết bị"),
-                }
-            );
+                    onError: () => message.error("Không thể tạo thiết bị"),
+                });
+            }
         },
-        [dataInit, loadingUpload, buildPayload, updateDevice, handleReset]
+        [loadingUpload, buildPayload, isEdit, dataInit, updateDevice, createDevice, handleReset]
     );
 
-    /* ===================== Render ===================== */
     return (
         <ModalForm
-            title={<Text strong style={{ fontSize: 18 }}>Cập nhật thiết bị / công cụ dụng cụ</Text>}
+            title={
+                <Text strong style={{ fontSize: 18 }}>
+                    {isEdit ? "Cập nhật" : "Thêm mới"} thiết bị / công cụ dụng cụ
+                </Text>
+            }
             open={openModal}
             modalProps={{
                 onCancel: handleReset,
@@ -340,43 +355,43 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                 destroyOnClose: true,
                 forceRender: true,
                 width: isMobile ? "100%" : 1200,
-                okText: "Cập nhật",
+                okText: isEdit ? "Cập nhật" : "Tạo mới",
                 cancelText: "Hủy",
-                confirmLoading: isUpdating || isFetching,
+                confirmLoading: isEdit ? isUpdating || isFetching : isCreating,
                 maskClosable: false,
                 style: { top: 20 },
             }}
             scrollToFirstError
             preserve={false}
             form={form}
-            onFinish={submitUpdate}
+            onFinish={submitForm}
+            initialValues={
+                isEdit
+                    ? undefined
+                    : {
+                        maintenanceFrequencyUnit: "MONTH",
+                        depreciationPeriodUnit: "YEAR",
+                        ownershipType: "INTERNAL",
+                        status: "NEW",
+                    }
+            }
         >
             <Row gutter={[20, 16]}>
-                <Col span={24}>
-                    <DeviceBasicInfo
-                        isEdit
-                        form={form}
-                        selectedDeviceType={selectedDeviceType}
-                        setSelectedDeviceType={setSelectedDeviceType}
-                        selectedUnit={selectedUnit}
-                        setSelectedUnit={setSelectedUnit}
-                        fetchDeviceTypeList={fetchDeviceTypeList}
-                        fetchUnitList={fetchUnitList}
-                        fetchCustomerList={fetchCustomerList}
-                        initialOwnershipType={detail?.ownershipType}
-                        initialCustomer={
-                            detail?.ownershipType === "CUSTOMER" && detail?.customer
-                                ? { label: detail.customer.name ?? "", value: String(detail.customer.id ?? "") }
-                                : null
-                        }
-                    />
-                </Col>
-
-                <Col span={24}>
-                    <Form.Item name="parts" label={false}>
-                        <DevicePartsUpdateSection />
-                    </Form.Item>
-                </Col>
+                {!isEdit && (
+                    <Col span={24}>
+                        <DeviceBasicInfo
+                            isEdit={false}
+                            form={form}
+                            selectedDeviceType={selectedDeviceType}
+                            setSelectedDeviceType={setSelectedDeviceType}
+                            selectedUnit={selectedUnit}
+                            setSelectedUnit={setSelectedUnit}
+                            fetchDeviceTypeList={fetchDeviceTypeList}
+                            fetchUnitList={fetchUnitList}
+                            fetchCustomerList={fetchCustomerList}
+                        />
+                    </Col>
+                )}
 
                 <Col span={24}>
                     <DeviceSpecsAndManagement
@@ -384,7 +399,7 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                         selectedSupplier={selectedSupplier}
                         setSelectedSupplier={setSelectedSupplier}
                         selectedCompany={selectedCompany}
-                        setSelectedCompany={setSelectedCompany}
+                        setSelectedCompany={isEdit ? setSelectedCompany : handleCompanyChange}
                         selectedDepartment={selectedDepartment}
                         setSelectedDepartment={setSelectedDepartment}
                         selectedManager={selectedManager}
@@ -399,7 +414,7 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
 
                 <Col span={24}>
                     <DeviceImagesAndNotes
-                        isEdit
+                        isEdit={isEdit}
                         fileList={fileList}
                         loadingUpload={loadingUpload}
                         previewOpen={previewOpen}
@@ -410,21 +425,14 @@ const UpdateDeviceModal = ({ openModal, setOpenModal, dataInit, setDataInit }: I
                     />
                 </Col>
 
-                <Col span={24}>
-                    <MaintenanceFrequencySection
-                        maintenanceFrequencyValue={maintenanceFrequencyValue}
-                        setMaintenanceFrequencyValue={setMaintenanceFrequencyValue}
-                        maintenanceFrequencyUnit={maintenanceFrequencyUnit}
-                        setMaintenanceFrequencyUnit={setMaintenanceFrequencyUnit}
-                        maintenanceDayOfMonth={maintenanceDayOfMonth}
-                        setMaintenanceDayOfMonth={setMaintenanceDayOfMonth}
-                        maintenanceMonth={maintenanceMonth}
-                        setMaintenanceMonth={setMaintenanceMonth}
-                    />
-                </Col>
+                {!isEdit && (
+                    <Col span={24}>
+                        <DeviceWarrantyAndMaintenance freqUnit={freqUnit} setFreqUnit={setFreqUnit} />
+                    </Col>
+                )}
             </Row>
         </ModalForm>
     );
 };
 
-export default UpdateDeviceModal;
+export default DeviceModal;

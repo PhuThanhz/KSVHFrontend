@@ -4,7 +4,6 @@ import {
     callFetchDeviceById,
     callCreateDevice,
     callUpdateDevice,
-    callDeleteDevice,
 } from "@/config/api";
 
 import type {
@@ -89,24 +88,3 @@ export const useUpdateDeviceMutation = () => {
     });
 };
 
-/** ===================== Xóa thiết bị ===================== **/
-export const useDeleteDeviceMutation = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (id: string) => {
-            const res = await callDeleteDevice(id);
-            if (!res?.statusCode || res.statusCode !== 200) {
-                throw new Error(res?.message || "Không thể xóa thiết bị");
-            }
-            return res.data;
-        },
-        onSuccess: (_, id) => {
-            notify.deleted("Xóa thiết bị thành công");
-            queryClient.invalidateQueries({ queryKey: ["devices"], exact: false });
-            queryClient.removeQueries({ queryKey: ["device", id] });
-        },
-        onError: (error: any) => {
-            notify.error(error.message || "Lỗi khi xóa thiết bị");
-        },
-    });
-};

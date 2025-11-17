@@ -25,11 +25,13 @@ import type {
     IMaterialSupplier,
     ITechnician,
     IInventoryItem,
+    ICreatePartRequest,
     IDevice,
     ICreateDeviceRequest,
+    IUpdatePartStatusRequest,
     IUpdateDeviceRequest,
     IResUploadFileDTO,
-    // IDevicePart,
+    IDevicePart,
     IShiftTemplate,
     IDeviceList,
     ITechnicianAvailability,
@@ -883,40 +885,73 @@ export const callUpdateInventoryItem = (data: IInventoryItem) => {
 export const callDeleteInventoryItem = (id: string | number) => {
     return axios.delete<IBackendRes<null>>(`/api/v1/inventory-items/${id}`);
 };
-
-// /** ======================== Module Device Parts ======================== **/
-
-// export const callFetchDeviceParts = (deviceId: string) => {
-//     return axios.get<IBackendRes<IDevicePart[]>>(`/api/v1/device-parts/${deviceId}`);
-// };
-
-// export const callSyncDeviceParts = (deviceId: string, parts: IDevicePart[]) => {
-//     return axios.post<IBackendRes<null>>(`/api/v1/device-parts/${deviceId}`, parts, {
-//         headers: { "Content-Type": "application/json" },
-//     });
-// };
-
 /** ======================== Module Devices ======================== **/
 
 export const callFetchDevice = (query: string) => {
-    return axios.get<IBackendRes<IModelPaginate<IDeviceList>>>(`/api/v1/devices?${query}`);
+    return axios.get<IBackendRes<IModelPaginate<IDeviceList>>>(
+        `/api/v1/devices?${query}`
+    );
 };
+
 export const callFetchDeviceById = (id: string) => {
     return axios.get<IBackendRes<IDevice>>(`/api/v1/devices/${id}`);
 };
+
 export const callCreateDevice = (data: ICreateDeviceRequest) => {
     return axios.post<IBackendRes<IDevice>>(`/api/v1/devices`, data, {
         headers: { "Content-Type": "application/json" },
     });
 };
+
 export const callUpdateDevice = (id: string, data: IUpdateDeviceRequest) => {
     return axios.put<IBackendRes<IDevice>>(`/api/v1/devices/${id}`, data, {
         headers: { "Content-Type": "application/json" },
     });
 };
-export const callDeleteDevice = (id: string) => {
-    return axios.delete<IBackendRes<null>>(`/api/v1/devices/${id}`);
+/** ======================== Device Parts ======================== **/
+
+// GET LIST PARTS
+export const callFetchDeviceParts = (deviceId: string) => {
+    return axios.get<IBackendRes<IDevicePart[]>>(
+        `/api/v1/devices/${deviceId}/parts`
+    );
 };
+
+// CREATE PART
+export const callCreateDevicePart = (
+    deviceId: string,
+    data: ICreatePartRequest
+) => {
+    return axios.post<IBackendRes<IDevicePart>>(
+        `/api/v1/devices/${deviceId}/parts`,
+        data,
+        { headers: { "Content-Type": "application/json" } }
+    );
+};
+
+// UPDATE STATUS ONLY
+export const callUpdateDevicePartStatus = (
+    deviceId: string,
+    partId: string,                        // ❗ sửa number → string
+    data: IUpdatePartStatusRequest
+) => {
+    return axios.put<IBackendRes<IDevicePart>>(
+        `/api/v1/devices/${deviceId}/parts/${partId}/status`,  // partId là string UUID
+        data,
+        { headers: { "Content-Type": "application/json" } }
+    );
+};
+
+// DELETE PART
+export const callDeleteDevicePart = (
+    deviceId: string,
+    partId: string                         // ❗ sửa number → string
+) => {
+    return axios.delete<IBackendRes<any>>(
+        `/api/v1/devices/${deviceId}/parts/${partId}`          // partId là string UUID
+    );
+};
+
 
 
 /** ======================== Module ShiftTemplate ======================== **/

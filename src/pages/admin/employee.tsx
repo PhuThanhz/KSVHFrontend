@@ -84,7 +84,6 @@ const EmployeePage = () => {
                 ? `${q.filter} and ${sfLike("employeeCode", params.employeeCode)}`
                 : sfLike("employeeCode", params.employeeCode);
 
-        // ✅ Filter trạng thái
         if (statusFilter !== null)
             q.filter = q.filter
                 ? `${q.filter} and active=${statusFilter === "active"}`
@@ -151,7 +150,7 @@ const EmployeePage = () => {
             hideInSearch: true,
         },
         {
-            title: "Trạng thái", // ✅ thêm cột trạng thái
+            title: "Trạng thái",
             dataIndex: "active",
             align: "center",
             width: 140,

@@ -1,8 +1,6 @@
-import { Col, Row, Card, Radio, Select, Space, Typography } from "antd";
+import { Col, Row, Card, Radio, Select } from "antd";
 import { ProFormDatePicker, ProFormDigit, ProForm } from "@ant-design/pro-components";
 import type { TimeUnitType } from "@/types/backend";
-
-const { Text } = Typography;
 
 interface DeviceWarrantyAndMaintenanceProps {
     freqUnit: TimeUnitType;
@@ -19,8 +17,7 @@ const DeviceWarrantyAndMaintenance = ({ freqUnit, setFreqUnit }: DeviceWarrantyA
 
     return (
         <>
-            {/* Thời gian & Bảo hành */}
-            <Card size="small" title=" Thời gian & Bảo hành" bordered={false} style={{ background: "#fafafa" }}>
+            <Card size="small" title="Thời gian & Bảo hành" bordered={false} style={{ background: "#fafafa" }}>
                 <Row gutter={[16, 8]}>
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormDatePicker
@@ -43,8 +40,7 @@ const DeviceWarrantyAndMaintenance = ({ freqUnit, setFreqUnit }: DeviceWarrantyA
                 </Row>
             </Card>
 
-            {/* Khấu hao */}
-            <Card size="small" title=" Thời gian khấu hao" bordered={false} style={{ background: "#fafafa" }}>
+            <Card size="small" title="Thời gian khấu hao" bordered={false} style={{ background: "#fafafa" }}>
                 <Row gutter={[16, 8]}>
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormDigit
@@ -56,11 +52,7 @@ const DeviceWarrantyAndMaintenance = ({ freqUnit, setFreqUnit }: DeviceWarrantyA
                         />
                     </Col>
                     <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProForm.Item
-                            name="depreciationPeriodUnit"
-                            label="Đơn vị thời gian"
-                            rules={[{ required: true, message: "Chọn đơn vị" }]}
-                        >
+                        <ProForm.Item name="depreciationPeriodUnit" label="Đơn vị thời gian" rules={[{ required: true, message: "Chọn đơn vị" }]}>
                             <Select
                                 options={DEPRE_UNITS.map((u) => ({
                                     label: u === "MONTH" ? "Tháng" : u === "QUARTER" ? "Quý" : "Năm",
@@ -73,8 +65,7 @@ const DeviceWarrantyAndMaintenance = ({ freqUnit, setFreqUnit }: DeviceWarrantyA
                 </Row>
             </Card>
 
-            {/* Bảo dưỡng */}
-            <Card size="small" title=" Tần suất bảo dưỡng" bordered={false} style={{ background: "#fafafa" }}>
+            <Card size="small" title="Tần suất bảo dưỡng" bordered={false} style={{ background: "#fafafa" }}>
                 <Row gutter={[16, 8]}>
                     <Col lg={8} md={12} sm={24} xs={24}>
                         <ProFormDigit
@@ -91,27 +82,16 @@ const DeviceWarrantyAndMaintenance = ({ freqUnit, setFreqUnit }: DeviceWarrantyA
                             label="Đơn vị thời gian"
                             rules={[{ required: true, message: "Chọn đơn vị" }]}
                         >
-                            <Radio.Group
-                                optionType="button"
-                                buttonStyle="solid"
-                                onChange={(e) => setFreqUnit(e.target.value)}
-                            >
+                            <Radio.Group optionType="button" buttonStyle="solid" onChange={(e) => setFreqUnit(e.target.value)}>
                                 {FREQ_UNITS.map((u) => (
                                     <Radio.Button key={u} value={u}>
-                                        {u === "DAY"
-                                            ? "Ngày"
-                                            : u === "WEEK"
-                                                ? "Tuần"
-                                                : u === "MONTH"
-                                                    ? "Tháng"
-                                                    : "Năm"}
+                                        {u === "DAY" ? "Ngày" : u === "WEEK" ? "Tuần" : u === "MONTH" ? "Tháng" : "Năm"}
                                     </Radio.Button>
                                 ))}
                             </Radio.Group>
                         </ProForm.Item>
                     </Col>
 
-                    {/* MONTH fields */}
                     {showMonthFields && (
                         <Col lg={12} md={12} sm={24} xs={24}>
                             <ProFormDigit
@@ -125,7 +105,6 @@ const DeviceWarrantyAndMaintenance = ({ freqUnit, setFreqUnit }: DeviceWarrantyA
                         </Col>
                     )}
 
-                    {/* YEAR fields */}
                     {showYearFields && (
                         <>
                             <Col lg={12} md={12} sm={24} xs={24}>
@@ -139,11 +118,7 @@ const DeviceWarrantyAndMaintenance = ({ freqUnit, setFreqUnit }: DeviceWarrantyA
                                 />
                             </Col>
                             <Col lg={12} md={12} sm={24} xs={24}>
-                                <ProForm.Item
-                                    name="maintenanceMonth"
-                                    label="Tháng trong năm"
-                                    rules={[{ required: true, message: "Chọn tháng trong năm" }]}
-                                >
+                                <ProForm.Item name="maintenanceMonth" label="Tháng trong năm" rules={[{ required: true, message: "Chọn tháng trong năm" }]}>
                                     <Select options={MONTHS} placeholder="Chọn tháng" />
                                 </ProForm.Item>
                             </Col>

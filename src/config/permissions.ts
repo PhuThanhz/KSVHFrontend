@@ -157,12 +157,30 @@ export const ALL_PERMISSIONS = {
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/devices/{id}", module: "DEVICE" },
         CREATE: { method: "POST", apiPath: "/api/v1/devices", module: "DEVICE" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/devices/{id}", module: "DEVICE" },
-        DELETE: { method: "DELETE", apiPath: "/api/v1/devices/{id}", module: "DEVICE" },
     },
-    // DEVICE_PART: {
-    //     GET_BY_DEVICE_ID: { method: "GET", apiPath: "/api/v1/device-parts/{deviceId}", module: "DEVICE_PART" },
-    //     SYNC_BY_DEVICE_ID: { method: "POST", apiPath: "/api/v1/device-parts/{deviceId}", module: "DEVICE_PART" },
-    // },
+    DEVICE_PART: {
+        GET_BY_DEVICE: {
+            method: "GET",
+            apiPath: "/api/v1/devices/{deviceId}/parts",
+            module: "DEVICE_PART",
+        },
+        CREATE: {
+            method: "POST",
+            apiPath: "/api/v1/devices/{deviceId}/parts",
+            module: "DEVICE_PART",
+        },
+        UPDATE_STATUS: {
+            method: "PUT",
+            apiPath: "/api/v1/devices/{deviceId}/parts/{partId}/status",
+            module: "DEVICE_PART",
+        },
+        DELETE: {
+            method: "DELETE",
+            apiPath: "/api/v1/devices/{deviceId}/parts/{partId}",
+            module: "DEVICE_PART",
+        },
+    },
+
     SHIFT_TEMPLATE: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/shift-templates", module: "SHIFT_TEMPLATE" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/shift-templates/{id}", module: "SHIFT_TEMPLATE" },

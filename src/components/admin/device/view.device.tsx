@@ -1,5 +1,6 @@
 import { Drawer, Descriptions, Divider, Tag, Table, Spin } from "antd";
 import { useDeviceByIdQuery } from "@/hooks/useDevices";
+import { useDevicePartsQuery } from "@/hooks/useDeviceParts";
 import { formatCurrency } from "@/config/format";
 import dayjs from "dayjs";
 import React from "react";
@@ -12,6 +13,7 @@ interface IProps {
 
 const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
     const { data, isFetching } = useDeviceByIdQuery(deviceId ?? "");
+    const { data: parts, isFetching: partsLoading } = useDevicePartsQuery(deviceId ?? "");
 
     const renderDate = (v?: string | null) =>
         v ? dayjs(v).format("DD/MM/YYYY") : "-";
@@ -57,6 +59,7 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                                     ? "Thiết bị thuộc khách hàng"
                                     : "-"}
                         </Descriptions.Item>
+
                         <Descriptions.Item label="Trạng thái">{renderTag(data.status)}</Descriptions.Item>
 
                         {data.ownershipType === "CUSTOMER" && data.customer && (
@@ -167,43 +170,47 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                     )}
 
                     <Divider orientation="left">Danh sách linh kiện</Divider>
-                    <Table
-                        size="small"
-                        bordered
-                        dataSource={data.parts || []}
-                        pagination={false}
-                        rowKey={(r) => String(r.partCode || r.partName)}
-                        columns={[
-                            { title: "Mã linh kiện", dataIndex: "partCode", key: "partCode" },
-                            { title: "Tên linh kiện", dataIndex: "partName", key: "partName" },
-                            {
-                                title: "Số lượng",
-                                dataIndex: "quantity",
-                                key: "quantity",
-                                align: "center",
-                            },
-                            {
-                                title: "Trạng thái",
-                                dataIndex: "status",
-                                key: "status",
-                                align: "center",
-                                render: (v?: string) => {
-                                    switch (v) {
-                                        case "WORKING":
-                                            return <Tag color="green">Đang hoạt động</Tag>;
-                                        case "BROKEN":
-                                            return <Tag color="red">Hư hỏng</Tag>;
-                                        case "REPLACED":
-                                            return <Tag color="blue">Đã thay mới</Tag>;
-                                        case "UNDER_MAINTENANCE":
-                                            return <Tag color="orange">Đang bảo trì</Tag>;
-                                        default:
-                                            return <Tag>-</Tag>;
-                                    }
+
+                    {partsLoading ? (
+                        <Spin tip="Đang tải linh kiện..." />
+                    ) : (
+                        <Table
+                            size="small"
+                            bordered
+                            dataSource={parts || []}
+                            pagination={false}
+                            rowKey={(r) => r.id}
+                            columns={[
+                                { title: "Mã linh kiện", dataIndex: "partCode" },
+                                { title: "Tên linh kiện", dataIndex: "partName" },
+                                {
+                                    title: "Số lượng",
+                                    dataIndex: "quantity",
+                                    align: "center",
                                 },
-                            },
-                        ]}
-                    />
+                                {
+                                    title: "Trạng thái",
+                                    dataIndex: "status",
+                                    align: "center",
+                                    render: (v?: string) => {
+                                        switch (v) {
+                                            case "WORKING":
+                                                return <Tag color="green">Đang hoạt động</Tag>;
+                                            case "BROKEN":
+                                                return <Tag color="red">Hư hỏng</Tag>;
+                                            case "REPLACED":
+                                                return <Tag color="blue">Đã thay mới</Tag>;
+                                            case "REMOVED":
+                                                return <Tag color="orange">Đã tháo</Tag>;
+                                            default:
+                                                return <Tag>-</Tag>;
+                                        }
+                                    },
+                                },
+                            ]}
+                        />
+                    )}
+
                     <Divider orientation="left">Thông tin hệ thống</Divider>
                     <Descriptions bordered size="small" column={2}>
                         <Descriptions.Item label="Người tạo">{data.createdBy || "-"}</Descriptions.Item>

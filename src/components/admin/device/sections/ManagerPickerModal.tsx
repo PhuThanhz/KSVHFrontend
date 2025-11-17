@@ -5,59 +5,40 @@ import { sfLike } from "spring-filter-query-builder";
 import { useUsersQuery } from "@/hooks/user/useUsers";
 import type { IUser } from "@/types/backend";
 
-/** Props định nghĩa */
 interface IManagerPickerModalProps {
     open: boolean;
     onClose: () => void;
     onSelect: (user: { label: string; value: string }) => void;
 }
 
-/** Component tối ưu */
 const ManagerPickerModal = ({ open, onClose, onSelect }: IManagerPickerModalProps) => {
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const abortRef = useRef<AbortController | null>(null);
 
-    /** Tạo query string chỉ khi các biến thay đổi */
     const query = useMemo(() => {
         let filter = "role.name='EMPLOYEE'";
         if (search.trim()) {
-            const keywordFilter = `(${sfLike("name", search)} or ${sfLike("email", search)})`;
-            filter = `${filter} and ${keywordFilter}`;
+            filter = `${filter} and (${sfLike("name", search)} or ${sfLike("email", search)})`;
         }
-
-        return queryString.stringify(
-            {
-                page,
-                size: pageSize,
-                sort: "createdAt,desc",
-                filter,
-            },
-            { encode: false }
-        );
+        return queryString.stringify({ page, size: pageSize, sort: "createdAt,desc", filter }, { encode: false });
     }, [search, page, pageSize]);
 
-    /** Gọi API */
     const { data, isFetching, refetch } = useUsersQuery(query);
 
-    /** Debounce search — chỉ gọi lại khi user dừng gõ 400ms */
     useEffect(() => {
         const handler = setTimeout(() => {
             setPage(1);
             refetch();
         }, 400);
         return () => clearTimeout(handler);
-    }, [search]);
+    }, [search, refetch]);
 
-    /** Cleanup request khi modal đóng */
     useEffect(() => {
-        if (!open && abortRef.current) {
-            abortRef.current.abort();
-        }
+        if (!open && abortRef.current) abortRef.current.abort();
     }, [open]);
 
-    /** Columns table được memo hóa để tránh render lại */
     const columns = useMemo(
         () => [
             {
@@ -70,17 +51,11 @@ const ManagerPickerModal = ({ open, onClose, onSelect }: IManagerPickerModalProp
             },
             { title: "Tên hiển thị", dataIndex: "name", key: "name" },
             { title: "Email", dataIndex: "email", key: "email" },
-            {
-                title: "Vai trò",
-                dataIndex: ["role", "name"],
-                key: "role",
-                render: (value: string) => value || "—",
-            },
+            { title: "Vai trò", dataIndex: ["role", "name"], key: "role", render: (value: string) => value || "—" },
         ],
         [data?.meta]
     );
 
-    /** Xử lý chọn user */
     const handleSelect = useCallback(
         (record: IUser) => {
             onSelect({ label: record.name || "", value: String(record.id || "") });
@@ -89,7 +64,6 @@ const ManagerPickerModal = ({ open, onClose, onSelect }: IManagerPickerModalProp
         [onSelect, onClose]
     );
 
-    /** Giao diện modal */
     return (
         <Modal
             title="Chọn nhân viên quản lý"
@@ -132,9 +106,7 @@ const ManagerPickerModal = ({ open, onClose, onSelect }: IManagerPickerModalProp
                         },
                         showTotal: (t) => `${t.toLocaleString()} người dùng`,
                     }}
-                    onRow={(record) => ({
-                        onClick: () => handleSelect(record),
-                    })}
+                    onRow={(record) => ({ onClick: () => handleSelect(record) })}
                     style={{ cursor: "pointer" }}
                     size="middle"
                 />
