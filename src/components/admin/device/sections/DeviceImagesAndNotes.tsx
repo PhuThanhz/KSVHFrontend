@@ -1,6 +1,6 @@
 import { Card, Form, Upload, Modal, Col, Row, Select, Typography } from "antd";
 import type { UploadFile, UploadProps } from "antd/es/upload/interface";
-import { ProFormTextArea, ProFormDigit, ProForm } from "@ant-design/pro-components";
+import { ProFormTextArea, ProFormDigit, ProForm, ProFormSelect } from "@ant-design/pro-components";
 import { PlusOutlined, LoadingOutlined } from "@ant-design/icons";
 import type { DeviceStatus } from "@/types/backend";
 
@@ -54,9 +54,13 @@ const DeviceImagesAndNotes = ({
                 </Col>
                 <Col lg={12} md={12} sm={24} xs={24}>
                     {isEdit ? (
-                        <ProForm.Item name="status" label="Trạng thái">
-                            <Select options={STATUS_OPTIONS} placeholder="Chọn trạng thái" />
-                        </ProForm.Item>
+                        <ProFormSelect
+                            name="status"
+                            label="Trạng thái"
+                            options={STATUS_OPTIONS}
+                            placeholder="Chọn trạng thái"
+                        />
+
                     ) : (
                         <ProForm.Item label="Trạng thái">
                             <Text strong>Mới tạo (NEW)</Text>

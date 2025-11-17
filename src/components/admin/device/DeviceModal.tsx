@@ -132,7 +132,6 @@ const DeviceModal = ({
         setFileList(normalized.slice(0, 3));
     }, [openModal, isEdit, detail, form]);
 
-    /** Debounce fetch dropdown */
     const fetchList = useCallback(async (api: any, key: string, name: string, extra?: string) => {
         const res = await api(`page=1&size=50&${key}=/${name}/i${extra ? `&${extra}` : ""}`);
         return (
@@ -362,7 +361,7 @@ const DeviceModal = ({
                 style: { top: 20 },
             }}
             scrollToFirstError
-            preserve={false}
+            preserve={true}
             form={form}
             onFinish={submitForm}
             initialValues={
