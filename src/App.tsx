@@ -59,6 +59,16 @@ import MaintenanceExecutionAdminPage from "./pages/admin/maintenance/maintenance
 import MaintenanceAcceptancePage from "./pages/admin/maintenance/maintenance-acceptance";
 
 import MaintenanceHistoryPage from "./pages/admin/maintenance/maintenance-histories";
+import AdminMaintenanceSchedulePage from "./pages/admin/maintenance/maintenance-schedule";
+
+import DeviceDepreciationSection from "./pages/admin/maintenance-report/sections/DeviceDepreciation";
+import DeviceHistorySection from "./pages/admin/maintenance-report/sections/DeviceHistory";
+import MaintenanceRequestSection from "./pages/admin/maintenance-report/sections/MaintenanceRequest";
+import MaterialUsageSection from "./pages/admin/maintenance-report/sections/MaterialUsage";
+import TechnicianActivitySection from "./pages/admin/maintenance-report/sections/TechnicianActivity";
+import PeriodicMaintenanceSection from "./pages/admin/maintenance-report/sections/PeriodicMaintenance";
+import WarrantyProductSection from "./pages/admin/maintenance-report/sections/WarrantyProduct";
+
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -187,6 +197,76 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_SCHEDULE,
+          element:
+            <ProtectedRoute>
+              <AdminMaintenanceSchedulePage />
+            </ProtectedRoute>
+        },
+
+        // ================== BÁO CÁO THỐNG KÊ ==================
+        {
+          path: PATHS.ADMIN.MAINTENANCE_REPORT_REQUEST,
+          element: (
+            <ProtectedRoute>
+              <MaintenanceRequestSection />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_REPORT_DEVICE_HISTORY,
+          element: (
+            <ProtectedRoute>
+              <DeviceHistorySection />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_REPORT_MATERIAL_USAGE,
+          element: (
+            <ProtectedRoute>
+              <MaterialUsageSection />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_REPORT_TECHNICIAN_ACTIVITY,
+          element: (
+            <ProtectedRoute>
+              <TechnicianActivitySection />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_REPORT_DEVICE_DEPRECIATION,
+          element: (
+            <ProtectedRoute>
+              <DeviceDepreciationSection />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_REPORT_PERIODIC_MAINTENANCE,
+          element: (
+            <ProtectedRoute>
+              <PeriodicMaintenanceSection />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_REPORT_WARRANTY_PRODUCT,
+          element: (
+            <ProtectedRoute>
+              <WarrantyProductSection />
+            </ProtectedRoute>
+          ),
+        },
+
+        // ================== BÁO CÁO THỐNG KÊ ==================
+
+
+
         {
           path: PATHS.ADMIN.ISSUE_SKILL_MAPPING,
           element: (

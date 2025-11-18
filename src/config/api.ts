@@ -66,9 +66,32 @@ import type {
     IResAcceptanceCardDTO,
     IResAcceptanceDetailDTO,
     IResMaintenanceHistoryCardDTO,
-    IResMaintenanceHistoryDetailDTO
+    IResMaintenanceHistoryDetailDTO,
+    IMaintenanceSchedule,
+    IMaintenanceScheduleDetail,
+    IMaintenanceScheduleByDevice,
 
 } from '@/types/backend';
+// THỐNG KÊ BÁO CÁO
+import type {
+    // request DTO
+    IRequestMaintenanceFilter,
+    IDeviceHistoryFilter,
+    IMaterialUsageFilter,
+    ITechnicianActivityFilter,
+    IDeviceDepreciationFilter,
+    IPeriodicMaintenanceFilter,
+    IWarrantyProductFilter,
+
+    // Response DTO
+    IMaintenanceRequestReport,
+    IDeviceMaintenanceHistory,
+    IMaterialUsageReport,
+    ITechnicianActivityReport,
+    IDeviceDepreciationReport,
+    IPeriodicMaintenanceReport,
+    IWarrantyProductReport,
+} from "@/types/backend";
 import axios from 'config/axios-customize';
 import type { IMaintenanceCause, IMaintenanceCauseRequest } from "@/types/backend";
 import type {
@@ -929,26 +952,24 @@ export const callCreateDevicePart = (
     );
 };
 
-// UPDATE STATUS ONLY
 export const callUpdateDevicePartStatus = (
     deviceId: string,
-    partId: string,                        // ❗ sửa number → string
+    partId: string,
     data: IUpdatePartStatusRequest
 ) => {
     return axios.put<IBackendRes<IDevicePart>>(
-        `/api/v1/devices/${deviceId}/parts/${partId}/status`,  // partId là string UUID
+        `/api/v1/devices/${deviceId}/parts/${partId}/status`,
         data,
         { headers: { "Content-Type": "application/json" } }
     );
 };
 
-// DELETE PART
 export const callDeleteDevicePart = (
     deviceId: string,
-    partId: string                         // ❗ sửa number → string
+    partId: string
 ) => {
     return axios.delete<IBackendRes<any>>(
-        `/api/v1/devices/${deviceId}/parts/${partId}`          // partId là string UUID
+        `/api/v1/devices/${deviceId}/parts/${partId}`
     );
 };
 
@@ -1161,7 +1182,7 @@ export const callRejectTechnicianAssignment = (
 };
 
 
-// ======================= Cập nhật khảo sát ======================= //
+// =======================   MODULE: Cập nhật khảo sát ======================= //
 export const callCreateMaintenanceSurvey = (data: IReqMaintenanceSurveyDTO) => {
     return axios.post<IBackendRes<IResMaintenanceSurveyDTO>>(
         "/api/v1/maintenance-surveys",
@@ -1180,8 +1201,8 @@ export const callFetchMaintenanceSurveysInProgress = (query: string) => {
         `/api/v1/maintenance-surveys/in-progress?${query}`
     );
 };
+// =======================   MODULE:Lên Kế hoach bảo trì ======================= //
 
-/** ===================== Lập kế hoạch bảo trì (tạo mới) ===================== */
 export const callCreateMaintenancePlan = (payload: IReqMaintenancePlanDTO) => {
     return axios.post<IBackendRes<IResMaintenancePlanCreateDTO>>(
         `/api/v1/maintenance-plans`,
@@ -1192,7 +1213,6 @@ export const callCreateMaintenancePlan = (payload: IReqMaintenancePlanDTO) => {
     );
 };
 
-/** ===================== Lập lại kế hoạch bảo trì (sau khi bị từ chối) ===================== */
 export const callReplanMaintenance = (planId: string, payload: IReqMaintenancePlanDTO) => {
     return axios.post<IBackendRes<IResMaintenancePlanCreateDTO>>(
         `/api/v1/maintenance-plans/replan/${planId}`,
@@ -1203,23 +1223,19 @@ export const callReplanMaintenance = (planId: string, payload: IReqMaintenancePl
     );
 };
 
-/** ===================== Danh sách phiếu đã khảo sát ===================== */
 export const callFetchSurveyedMaintenanceRequests = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResMaintenanceSurveyedListDTO>>>(
         `/api/v1/maintenance-plans/surveyed?${query}`
     );
 };
 
-/** ===================== Chi tiết phiếu đã khảo sát ===================== */
 export const callFetchSurveyedMaintenanceDetail = (id: string) => {
     return axios.get<IBackendRes<IResMaintenanceSurveyedDetailDTO>>(
         `/api/v1/maintenance-plans/surveyed/${id}`
     );
 };
 
-/** ============================
- *  MODULE: MAINTENANCE APPROVAL
- *  ============================ */
+/* ========================   MODULE: Phê duyệt kế hoạch (ADMIN)========================*/
 
 export const callFetchMaintenanceApprovals = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResMaintenancePlanApprovalListDTO>>>(
@@ -1251,37 +1267,31 @@ export const callRejectMaintenancePlan = (planId: string, data: IReqRejectPlanDT
 
 
 
-/* ========================   MODULE: MAINTENANCE EXECUTION ========================
+/* ========================   MODULE: Thi Công Kỹ Thuật Viên ( KTV )========================*/
 
-
-/** 1 Danh sách thi công (dành cho ADMIN) */
 export const callFetchAllExecutions = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<any>>>(
         `/api/v1/maintenance-executions?${query}`
     );
 };
-/** 2 Danh sách phiếu đã được duyệt để thi công (dành cho kỹ thuật viên) */
 export const callFetchApprovedExecutions = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResExecutionCardDTO>>>(
         `/api/v1/maintenance-executions/approved?${query}`
     );
 };
 
-/** 3 Lấy chi tiết thi công (gồm khảo sát, kế hoạch, vật tư, tiến độ) */
 export const callGetExecutionDetail = (requestId: string) => {
     return axios.get<IBackendRes<IResExecutionDetailDTO>>(
         `/api/v1/maintenance-executions/${requestId}/detail`
     );
 };
 
-/** 4 Kỹ thuật viên bấm “Bắt đầu thi công” */
 export const callStartExecution = (requestId: string) => {
     return axios.put<IBackendRes<IResExecutionDetailDTO>>(
         `/api/v1/maintenance-executions/${requestId}/start`
     );
 };
 
-/** Kỹ thuật viên cập nhật 1 task thi công */
 export const callUpdateExecutionTask = (taskId: string, data: IReqUpdateTaskDTO) => {
     return axios.put<IBackendRes<any>>(
         `/api/v1/maintenance-executions/tasks/${taskId}`,
@@ -1291,7 +1301,6 @@ export const callUpdateExecutionTask = (taskId: string, data: IReqUpdateTaskDTO)
 };
 
 
-/** 6 Kỹ thuật viên bấm “Hoàn thành công việc thi công” */
 export const callCompleteExecution = (requestId: string) => {
     return axios.put<IBackendRes<IResExecutionDetailDTO>>(
         `/api/v1/maintenance-executions/${requestId}/complete`
@@ -1299,7 +1308,7 @@ export const callCompleteExecution = (requestId: string) => {
 };
 
 
-/* ========================   MODULE: MAINTENANCE EXECUTION ADMIN========================*/
+/* ========================   MODULE: Thi Công Kỹ Thuật Viên ( ADMIN )========================*/
 
 export const callFetchAdminExecutions = (query: string) => {
     return axios.get<
@@ -1314,7 +1323,8 @@ export const callFetchAdminExecutionDetail = (requestId: string) => {
 };
 
 
-/* ========================   MODULE: MAINTENANCE Acceptance ADMIN========================*/
+
+/* ========================   MODULE: Nghiệm Thu========================*/
 export const callFetchAcceptancePending = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResAcceptanceCardDTO>>>(
         `/api/v1/maintenance-acceptances/pending?${query}`
@@ -1358,6 +1368,7 @@ export const callRejectAcceptance = (
 };
 
 
+/* ========================   MODULE: lịch sử bảo trì ========================*/
 
 export const callFetchMaintenanceHistories = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IResMaintenanceHistoryCardDTO>>>(
@@ -1369,3 +1380,140 @@ export const callFetchMaintenanceHistoryDetail = (requestId: string) => {
         `/api/v1/maintenance-histories/${requestId}`
     );
 };
+
+
+
+/* ========================   MODULE: lịch bảo trì định kì========================*/
+
+export const callFetchMaintenanceSchedules = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IMaintenanceSchedule>>>(
+        `/api/v1/maintenance-schedules?${query}`
+    );
+};
+export const callFetchMaintenanceScheduleById = (id: string) => {
+    return axios.get<IBackendRes<IMaintenanceScheduleDetail>>(
+        `/api/v1/maintenance-schedules/${id}`
+    );
+};
+export const callFetchScheduleByDevice = (deviceId: string) => {
+    return axios.get<IBackendRes<IMaintenanceScheduleByDevice[]>>(
+        `/api/v1/maintenance-schedules/device/${deviceId}`
+    );
+};
+export const callGenerateScheduleRequest = (scheduleId: string) => {
+    return axios.post<IBackendRes<any>>(
+        `/api/v1/maintenance-schedules/${scheduleId}/generate-request`
+    );
+};
+export const callGenerateDueRequests = () => {
+    return axios.post<IBackendRes<any>>(
+        `/api/v1/maintenance-schedules/generate-requests`
+    );
+};
+
+
+
+
+
+
+
+
+
+
+
+//====================+++++++++++++++++ BÁO CÁO THỐNG KÊ +++++++++++++++====================
+
+export const callFetchMaintenanceRequestReport = (
+    filter: IRequestMaintenanceFilter,
+    query: string
+) => {
+    return axios.post<IBackendRes<IModelPaginate<IMaintenanceRequestReport>>>(
+        `/api/v1/maintenance-report/requests?${query}`,
+        filter
+    );
+};
+
+export const callFetchDeviceHistoryReport = (
+    filter: IDeviceHistoryFilter,
+    query: string
+) => {
+    return axios.post<IBackendRes<IModelPaginate<IDeviceMaintenanceHistory>>>(
+        `/api/v1/maintenance-report/device-history?${query}`,
+        filter
+    );
+};
+
+
+export const callFetchMaterialUsageReport = (
+    filter: IMaterialUsageFilter,
+    query: string
+) => {
+    return axios.post<IBackendRes<IModelPaginate<IMaterialUsageReport>>>(
+        `/api/v1/maintenance-report/material-usage?${query}`,
+        filter
+    );
+};
+
+
+export const callFetchTechnicianActivityReport = (
+    filter: ITechnicianActivityFilter,
+    query: string
+) => {
+    return axios.post<IBackendRes<IModelPaginate<ITechnicianActivityReport>>>(
+        `/api/v1/maintenance-report/technician-activity?${query}`,
+        filter
+    );
+};
+
+export const callFetchDeviceDepreciationReport = (
+    filter: IDeviceDepreciationFilter,
+    query: string
+) => {
+    return axios.post<IBackendRes<IModelPaginate<IDeviceDepreciationReport>>>(
+        `/api/v1/maintenance-report/device-depreciation?${query}`,
+        filter
+    );
+};
+
+export const callFetchPeriodicMaintenanceReport = (
+    filter: IPeriodicMaintenanceFilter,
+    query: string
+) => {
+    return axios.post<IBackendRes<IModelPaginate<IPeriodicMaintenanceReport>>>(
+        `/api/v1/maintenance-report/periodic-maintenance?${query}`,
+        filter
+    );
+};
+
+export const callFetchWarrantyProductReport = (
+    filter: IWarrantyProductFilter,
+    query: string
+) => {
+    return axios.post<IBackendRes<IModelPaginate<IWarrantyProductReport>>>(
+        `/api/v1/maintenance-report/customer-products?${query}`,
+        filter
+    );
+};
+export const callExportDeviceDepreciationReport = (queryString: string) => {
+    return axios.get(`/api/v1/report/export/device-depreciation?${queryString}`, {
+        responseType: "arraybuffer"
+    });
+};
+
+export const callExportDeviceHistoryReport = (queryString: string) =>
+    axios.get(`/api/v1/report/export/device-history?${queryString}`, { responseType: "arraybuffer" });
+
+export const callExportMaintenanceRequestReport = (queryString: string) =>
+    axios.get(`/api/v1/report/export/maintenance-request?${queryString}`, { responseType: "arraybuffer" });
+
+export const callExportMaterialUsageReport = (qs: string) =>
+    axios.get(`/api/v1/report/export/material-usage?${qs}`, { responseType: "arraybuffer" });
+
+export const callExportPeriodicMaintenanceReport = (qs: string) =>
+    axios.get(`/api/v1/report/export/periodic-maintenance?${qs}`, { responseType: "arraybuffer" });
+
+export const callExportTechnicianActivityReport = (qs: string) =>
+    axios.get(`/api/v1/report/export/technician-activity?${qs}`, { responseType: "arraybuffer" });
+
+export const callExportWarrantyProductReport = (qs: string) =>
+    axios.get(`/api/v1/report/export/warranty-product?${qs}`, { responseType: "arraybuffer" });

@@ -4,17 +4,6 @@ export const ALL_PERMISSIONS = {
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/users/{id}", module: "USERS" },
         CREATE: { method: "POST", apiPath: "/api/v1/users", module: "USERS" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/users", module: "USERS" },
-        FORGOT_PASSWORD: { method: "POST", apiPath: "/api/v1/users/forgot-password", module: "USERS" },
-        REQUEST_PASSWORD_CODE: {
-            method: "POST",
-            apiPath: "/api/v1/users/request-password-code",
-            module: "USERS",
-        },
-        CONFIRM_RESET_PASSWORD: {
-            method: "POST",
-            apiPath: "/api/v1/users/confirm-reset-password",
-            module: "USERS",
-        },
     },
     PERMISSIONS: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/permissions", module: "PERMISSIONS" },
@@ -22,14 +11,12 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/permissions", module: "PERMISSIONS" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/permissions/{id}", module: "PERMISSIONS" },
     },
-
     ROLES: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/roles", module: "ROLES" },
         CREATE: { method: "POST", apiPath: "/api/v1/roles", module: "ROLES" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/roles", module: "ROLES" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/roles/{id}", module: "ROLES" },
     },
-
     COMPANY: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/companies", module: "COMPANY" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/companies/{id}", module: "COMPANY" },
@@ -37,7 +24,6 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/companies", module: "COMPANY" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/companies/{id}", module: "COMPANY" },
     },
-
     ASSET_TYPE: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/asset-types", module: "ASSET_TYPE" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/asset-types/{id}", module: "ASSET_TYPE" },
@@ -45,7 +31,6 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/asset-types", module: "ASSET_TYPE" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/asset-types/{id}", module: "ASSET_TYPE" },
     },
-
     DEPARTMENT: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/departments", module: "DEPARTMENT" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/departments/{id}", module: "DEPARTMENT" },
@@ -53,7 +38,6 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/departments", module: "DEPARTMENT" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/departments/{id}", module: "DEPARTMENT" },
     },
-
     POSITION: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/positions", module: "POSITION" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/positions/{id}", module: "POSITION" },
@@ -61,14 +45,12 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/positions", module: "POSITION" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/positions/{id}", module: "POSITION" },
     },
-
     EMPLOYEE: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
         CREATE: { method: "POST", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
     },
-
     CUSTOMER: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/customers", module: "CUSTOMER" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/customers/{id}", module: "CUSTOMER" },
@@ -89,7 +71,6 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/skills", module: "SKILL" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/skills/{id}", module: "SKILL" },
     },
-
     SOLUTION: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/solutions", module: "SOLUTION" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/solutions/{id}", module: "SOLUTION" },
@@ -180,7 +161,6 @@ export const ALL_PERMISSIONS = {
             module: "DEVICE_PART",
         },
     },
-
     SHIFT_TEMPLATE: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/shift-templates", module: "SHIFT_TEMPLATE" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/shift-templates/{id}", module: "SHIFT_TEMPLATE" },
@@ -188,7 +168,6 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/shift-templates", module: "SHIFT_TEMPLATE" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/shift-templates/{id}", module: "SHIFT_TEMPLATE" },
     },
-
     TECHNICIAN_AVAILABILITY: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/technician-availabilities", module: "TECHNICIAN_AVAILABILITY" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/technician-availabilities/{id}", module: "TECHNICIAN_AVAILABILITY" },
@@ -196,7 +175,6 @@ export const ALL_PERMISSIONS = {
         UPDATE: { method: "PUT", apiPath: "/api/v1/technician-availabilities/{id}", module: "TECHNICIAN_AVAILABILITY" },
         DELETE: { method: "DELETE", apiPath: "/api/v1/technician-availabilities/{id}", module: "TECHNICIAN_AVAILABILITY" },
     },
-
     MAINTENANCE_REQUESTS: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-requests", module: "MAINTENANCE_REQUESTS" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/maintenance-requests/{id}", module: "MAINTENANCE_REQUESTS" },
@@ -256,7 +234,6 @@ export const ALL_PERMISSIONS = {
         APPROVE: { method: "PUT", apiPath: "/api/v1/maintenance-approvals/{planId}/approve", module: "MAINTENANCE_APPROVAL" },
         REJECT: { method: "PUT", apiPath: "/api/v1/maintenance-approvals/{planId}/reject", module: "MAINTENANCE_APPROVAL" },
     },
-
     MAINTENANCE_EXECUTION_ADMIN: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/admin/maintenance-executions", module: "MAINTENANCE_EXECUTION_ADMIN", },
         GET_DETAIL: { method: "GET", apiPath: "/api/v1/admin/maintenance-executions/{requestId}/detail", module: "MAINTENANCE_EXECUTION_ADMIN", },
@@ -294,12 +271,113 @@ export const ALL_PERMISSIONS = {
             module: "MAINTENANCE_ACCEPTANCE",
         },
 
-
     },
     MAINTENANCE_HISTORY: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-histories", module: "MAINTENANCE_HISTORY" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/maintenance-histories/{requestId}", module: "MAINTENANCE_HISTORY" },
     },
+    MAINTENANCE_SCHEDULE: {
+        GET_PAGINATE: {
+            method: "GET",
+            apiPath: "/api/v1/maintenance-schedules",
+            module: "MAINTENANCE_SCHEDULE",
+        },
+        GET_BY_ID: {
+            method: "GET",
+            apiPath: "/api/v1/maintenance-schedules/{id}",
+            module: "MAINTENANCE_SCHEDULE",
+        },
+        GET_BY_DEVICE: {
+            method: "GET",
+            apiPath: "/api/v1/maintenance-schedules/device/{deviceId}",
+            module: "MAINTENANCE_SCHEDULE",
+        },
+        GENERATE_MANUAL: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-schedules/{id}/generate-request",
+            module: "MAINTENANCE_SCHEDULE",
+        },
+        GENERATE_AUTO: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-schedules/generate-requests",
+            module: "MAINTENANCE_SCHEDULE",
+        },
+    },
+    MAINTENANCE_REPORT: {
+        REQUEST_REPORT: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-report/requests",
+            module: "MAINTENANCE_REPORT",
+        },
+        DEVICE_HISTORY: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-report/device-history",
+            module: "MAINTENANCE_REPORT",
+        },
+        MATERIAL_USAGE: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-report/material-usage",
+            module: "MAINTENANCE_REPORT",
+        },
+        TECHNICIAN_ACTIVITY: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-report/technician-activity",
+            module: "MAINTENANCE_REPORT",
+        },
+        DEVICE_DEPRECIATION: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-report/device-depreciation",
+            module: "MAINTENANCE_REPORT",
+        },
+        PERIODIC_MAINTENANCE: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-report/periodic-maintenance",
+            module: "MAINTENANCE_REPORT",
+        },
+        WARRANTY_CUSTOMER_PRODUCTS: {
+            method: "POST",
+            apiPath: "/api/v1/maintenance-report/customer-products",
+            module: "MAINTENANCE_REPORT",
+        },
+    },
+    REPORT_EXPORT: {
+        DEVICE_DEPRECIATION: {
+            method: "GET",
+            apiPath: "/api/v1/report/export/device-depreciation",
+            module: "REPORT_EXPORT",
+        },
+        DEVICE_HISTORY: {
+            method: "GET",
+            apiPath: "/api/v1/report/export/device-history",
+            module: "REPORT_EXPORT",
+        },
+        MAINTENANCE_REQUEST: {
+            method: "GET",
+            apiPath: "/api/v1/report/export/maintenance-request",
+            module: "REPORT_EXPORT",
+        },
+        MATERIAL_USAGE: {
+            method: "GET",
+            apiPath: "/api/v1/report/export/material-usage",
+            module: "REPORT_EXPORT",
+        },
+        PERIODIC_MAINTENANCE: {
+            method: "GET",
+            apiPath: "/api/v1/report/export/periodic-maintenance",
+            module: "REPORT_EXPORT",
+        },
+        TECHNICIAN_ACTIVITY: {
+            method: "GET",
+            apiPath: "/api/v1/report/export/technician-activity",
+            module: "REPORT_EXPORT",
+        },
+        WARRANTY_PRODUCT: {
+            method: "GET",
+            apiPath: "/api/v1/report/export/warranty-product",
+            module: "REPORT_EXPORT",
+        },
+    },
+
 };
 
 export const ALL_MODULES = {
@@ -323,7 +401,7 @@ export const ALL_MODULES = {
     ISSUE: "ISSUE",
     MATERIAL_SUPPLIER: "MATERIAL_SUPPLIER",
     TECHNICIAN: "TECHNICIAN",
-    // DEVICE_PART: "DEVICE_PART",
+    DEVICE_PART: "DEVICE_PART",
     DEVICE: "DEVICE",
     SHIFT_TEMPLATE: "SHIFT_TEMPLATE",
     TECHNICIAN_AVAILABILITY: "TECHNICIAN_AVAILABILITY",
@@ -335,5 +413,8 @@ export const ALL_MODULES = {
     MAINTENANCE_APPROVAL: "MAINTENANCE_APPROVAL",
     MAINTENANCE_EXECUTION_ADMIN: "MAINTENANCE_EXECUTION_ADMIN",
     MAINTENANCE_ACCEPTANCE: "MAINTENANCE_ACCEPTANCE",
+    MAINTENANCE_SCHEDULE: "MAINTENANCE_SCHEDULE",
+    MAINTENANCE_REPORT: "MAINTENANCE_REPORT",
+    REPORT_EXPORT: "REPORT_EXPORT",
 
 };

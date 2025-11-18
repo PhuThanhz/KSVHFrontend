@@ -242,7 +242,6 @@ const EmployeePage = () => {
                                 options={positionOptions}
                                 onChange={(value) => setPositionFilter(value || null)}
                             />
-                            {/* ✅ Filter trạng thái hoạt động */}
                             <Select
                                 placeholder="Trạng thái"
                                 allowClear

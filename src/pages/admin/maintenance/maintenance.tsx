@@ -30,7 +30,6 @@ const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
 
 const MaintenancePage = () => {
-    const [activeTab, setActiveTab] = useState("ALL");
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
@@ -42,11 +41,6 @@ const MaintenancePage = () => {
 
     const { data, isLoading } = useMaintenanceRequestsQuery(query);
     const requests = data?.result || [];
-
-    const filtered =
-        activeTab === "ALL"
-            ? requests
-            : requests.filter((r) => r.requestInfo.status === "CHO_PHAN_CONG");
 
     const handlePageChange = (newPage: number, newSize?: number) => {
         const size = newSize || pageSize;
@@ -94,26 +88,13 @@ const MaintenancePage = () => {
             {/* Tabs */}
             <Tabs
                 defaultActiveKey="ALL"
-                activeKey={activeTab}
-                onChange={(key) => setActiveTab(key)}
+                activeKey="ALL"
                 items={[
                     {
                         key: "ALL",
                         label: (
                             <>
                                 Danh sách yêu cầu <Tag color="blue">{data?.meta?.total || 0}</Tag>
-
-                            </>
-                        ),
-                    },
-                    {
-                        key: "CHO_PHAN_CONG",
-                        label: (
-                            <>
-                                Yêu cầu chờ phân công{" "}
-                                <Tag color="red">
-                                    {requests.filter(r => r.requestInfo.status === "CHO_PHAN_CONG").length}
-                                </Tag>
 
                             </>
                         ),
@@ -161,12 +142,12 @@ const MaintenancePage = () => {
                 <div style={{ textAlign: "center", marginTop: 50 }}>
                     <Spin size="large" />
                 </div>
-            ) : filtered.length === 0 ? (
+            ) : requests.length === 0 ? (
                 <Empty description="Không có phiếu bảo trì nào" />
             ) : (
                 <>
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                        {filtered.map((item) => {
+                        {requests.map((item) => {
                             const info = item.requestInfo;
                             const device = info.device;
 
@@ -519,7 +500,6 @@ const MaintenancePage = () => {
                 </Modal>
             )}
 
-            {/* Modal log từ chối */}
             {showRejectModal && (
                 <RejectLogsModal
                     requestId={showRejectModal}
@@ -531,7 +511,6 @@ const MaintenancePage = () => {
                 onClose={() => setShowAutoAssignModal(false)}
             />
 
-            {/* Modal tạo phiếu */}
             <ModalCreateMaintenance
                 open={showCreateModal}
                 onClose={() => setShowCreateModal(false)}

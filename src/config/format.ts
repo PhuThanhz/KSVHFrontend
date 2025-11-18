@@ -36,7 +36,23 @@ export const formatDateTime = (date?: string | Date | null): string => {
         minute: "2-digit",
     });
 };
+/**
+ * Định dạng ngày về dạng DD/MM/YYYY
+ * @param date string hoặc Date
+ * @returns Chuỗi ngày "DD/MM/YYYY" hoặc "-"
+ */
+export const formatDate = (date?: string | Date | null): string => {
+    if (!date) return "-";
 
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "-";
+
+    return d.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+    });
+};
 /**
  * Rút gọn chuỗi dài, dùng trong bảng hoặc tooltip
  * @param str chuỗi cần rút gọn

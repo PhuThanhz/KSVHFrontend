@@ -25,6 +25,7 @@ import {
 import { Link } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import { PATHS } from '@/constants/paths';
 
 const { Sider } = Layout;
 
@@ -121,6 +122,7 @@ const SliderAdmin: React.FC<IProps> = ({
                     checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.MAINTENANCE_EXECUTION_ADMIN?.GET_PAGINATE ?? {}) ||
                     checkPermission(ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_SCHEDULE.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.MAINTENANCE_HISTORY.GET_PAGINATE) ||
                     checkPermission(ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE?.GET_PAGINATE ?? {})
                     ? [{
@@ -160,6 +162,12 @@ const SliderAdmin: React.FC<IProps> = ({
                                     icon: <CheckCircleOutlined />,
                                 }] : []),
 
+                            ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_HISTORY?.GET_PAGINATE ?? {})
+                                ? [{
+                                    label: <Link to={PATHS.ADMIN.MAINTENANCE_SCHEDULE}>Lịch bảo trì định kỳ</Link>,
+                                    key: PATHS.ADMIN.MAINTENANCE_SCHEDULE,
+                                    icon: <CheckCircleOutlined />,
+                                }] : []),
                             ...(checkPermission(ALL_PERMISSIONS.ISSUE.GET_PAGINATE)
                                 ? [{
                                     label: <Link to="/admin/issue">Quản lý vấn đề</Link>,
@@ -343,6 +351,131 @@ const SliderAdmin: React.FC<IProps> = ({
                                 }] : []),
                         ],
                     }] : []),
+
+
+                // ========== BÁO CÁO THỐNG KÊ ==========
+                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.REQUEST_REPORT) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.DEVICE_HISTORY) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.MATERIAL_USAGE) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.TECHNICIAN_ACTIVITY) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.DEVICE_DEPRECIATION) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.PERIODIC_MAINTENANCE) ||
+                    checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.WARRANTY_CUSTOMER_PRODUCTS)
+                    ? [
+                        {
+                            label: "Báo cáo thống kê",
+                            key: PATHS.ADMIN.MAINTENANCE_REPORT,
+                            icon: <HistoryOutlined />,
+                            children: [
+                                // 1. Báo cáo yêu cầu bảo trì
+                                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.REQUEST_REPORT)
+                                    ? [
+                                        {
+                                            label: (
+                                                <Link to={PATHS.ADMIN.MAINTENANCE_REPORT_REQUEST}>
+                                                    Báo cáo yêu cầu bảo trì
+                                                </Link>
+                                            ),
+                                            key: PATHS.ADMIN.MAINTENANCE_REPORT_REQUEST,
+                                            icon: <CheckCircleOutlined />,
+                                        },
+                                    ]
+                                    : []),
+
+                                // 2. Lịch sử bảo trì thiết bị
+                                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.DEVICE_HISTORY)
+                                    ? [
+                                        {
+                                            label: (
+                                                <Link to={PATHS.ADMIN.MAINTENANCE_REPORT_DEVICE_HISTORY}>
+                                                    Lịch sử bảo trì thiết bị
+                                                </Link>
+                                            ),
+                                            key: PATHS.ADMIN.MAINTENANCE_REPORT_DEVICE_HISTORY,
+                                            icon: <HistoryOutlined />,
+                                        },
+                                    ]
+                                    : []),
+
+                                // 3. Báo cáo vật tư
+                                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.MATERIAL_USAGE)
+                                    ? [
+                                        {
+                                            label: (
+                                                <Link to={PATHS.ADMIN.MAINTENANCE_REPORT_MATERIAL_USAGE}>
+                                                    Báo cáo vật tư
+                                                </Link>
+                                            ),
+                                            key: PATHS.ADMIN.MAINTENANCE_REPORT_MATERIAL_USAGE,
+                                            icon: <InboxOutlined />,
+                                        },
+                                    ]
+                                    : []),
+
+                                // 4. Hoạt động kỹ thuật viên
+                                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.TECHNICIAN_ACTIVITY)
+                                    ? [
+                                        {
+                                            label: (
+                                                <Link to={PATHS.ADMIN.MAINTENANCE_REPORT_TECHNICIAN_ACTIVITY}>
+                                                    Hoạt động kỹ thuật viên
+                                                </Link>
+                                            ),
+                                            key: PATHS.ADMIN.MAINTENANCE_REPORT_TECHNICIAN_ACTIVITY,
+                                            icon: <ToolOutlined />,
+                                        },
+                                    ]
+                                    : []),
+
+                                // 5. Khấu hao thiết bị
+                                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.DEVICE_DEPRECIATION)
+                                    ? [
+                                        {
+                                            label: (
+                                                <Link to={PATHS.ADMIN.MAINTENANCE_REPORT_DEVICE_DEPRECIATION}>
+                                                    Khấu hao thiết bị
+                                                </Link>
+                                            ),
+                                            key: PATHS.ADMIN.MAINTENANCE_REPORT_DEVICE_DEPRECIATION,
+                                            icon: <LaptopOutlined />,
+                                        },
+                                    ]
+                                    : []),
+
+                                // 6. Bảo trì định kỳ
+                                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.PERIODIC_MAINTENANCE)
+                                    ? [
+                                        {
+                                            label: (
+                                                <Link to={PATHS.ADMIN.MAINTENANCE_REPORT_PERIODIC_MAINTENANCE}>
+                                                    Bảo trì định kỳ
+                                                </Link>
+                                            ),
+                                            key: PATHS.ADMIN.MAINTENANCE_REPORT_PERIODIC_MAINTENANCE,
+                                            icon: <SettingOutlined />,
+                                        },
+                                    ]
+                                    : []),
+
+                                // 7. Báo hành sản phẩm
+                                ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REPORT.WARRANTY_CUSTOMER_PRODUCTS)
+                                    ? [
+                                        {
+                                            label: (
+                                                <Link to={PATHS.ADMIN.MAINTENANCE_REPORT_WARRANTY_PRODUCT}>
+                                                    Bảo hành sản phẩm
+                                                </Link>
+                                            ),
+                                            key: PATHS.ADMIN.MAINTENANCE_REPORT_WARRANTY_PRODUCT,
+                                            icon: <SolutionOutlined />,
+                                        },
+                                    ]
+                                    : []),
+                            ],
+                        },
+                    ]
+                    : [])
+
             ];
 
             setMenuItems(full);

@@ -39,6 +39,18 @@ export const PATHS = {
         MAINTENANCE_EXECUTION: "/admin/maintenance-execution",
         MAINTENANCE_ACCEPTANCE: "/admin/maintenance-acceptance",
         MAINTENANCE_HISTORY: "/admin/maintenance-history",
+        MAINTENANCE_SCHEDULE: "/admin/maintenance-schedule",
+
+
+        // ======================== BÁO CÁO THỐNG KÊ ========================
+        MAINTENANCE_REPORT: "/admin/maintenance-report",
+        MAINTENANCE_REPORT_REQUEST: "/admin/maintenance-report/request",
+        MAINTENANCE_REPORT_DEVICE_HISTORY: "/admin/maintenance-report/device-history",
+        MAINTENANCE_REPORT_MATERIAL_USAGE: "/admin/maintenance-report/material-usage",
+        MAINTENANCE_REPORT_TECHNICIAN_ACTIVITY: "/admin/maintenance-report/technician-activity",
+        MAINTENANCE_REPORT_DEVICE_DEPRECIATION: "/admin/maintenance-report/device-depreciation",
+        MAINTENANCE_REPORT_PERIODIC_MAINTENANCE: "/admin/maintenance-report/periodic-maintenance",
+        MAINTENANCE_REPORT_WARRANTY_PRODUCT: "/admin/maintenance-report/warranty-product",
 
     },
 

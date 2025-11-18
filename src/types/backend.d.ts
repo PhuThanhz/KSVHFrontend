@@ -818,6 +818,12 @@ export interface IAutoAssignmentResponse {
     assignedBy: string;
 }
 
+
+
+
+
+
+
 /** ==============================
  *   ENUM TRẠNG THÁI PHIẾU 
  * ============================== */
@@ -1463,3 +1469,295 @@ export interface IRejectHistoryItem {
     rejectedBy: string;
     rejectedAt: string;
 }
+
+
+
+
+/** ==============================
+ *  MAINTENANCE SCHEDULE MODULE
+ * ============================== */
+
+/** Enum trạng thái lịch bảo trì (theo backend Java) */
+export type MaintenanceScheduleStatus =
+    | "CHUA_THUC_HIEN"
+    | "DA_TAO_PHIEU"
+    | "HOAN_THANH";
+
+export interface IMaintenanceSchedule {
+    id: string;
+    deviceCode?: string;
+    deviceName?: string;
+    scheduledDate: string;
+    underWarranty: boolean;
+    status: MaintenanceScheduleStatus;
+    requestCode?: string | null;
+    createdAt?: string | null;
+}
+
+export interface IMaintenanceScheduleByDevice {
+    id: string;
+    scheduledDate: string;
+    underWarranty: boolean;
+    status: MaintenanceScheduleStatus;
+    requestCode?: string | null;
+}
+
+export interface IMaintenanceScheduleDetail {
+    id: string;
+    scheduledDate: string;
+    underWarranty: boolean;
+    note?: string | null;
+    requestInfo?: IResRequestCommonDTO | null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//====================+++++++++++++++++ BÁO CÁO THỐNG KÊ +++++++++++++++====================
+
+//REQUEST
+export interface IRequestMaintenanceFilter {
+    fromDate?: string;
+    toDate?: string;
+    companyName?: string;
+    departmentName?: string;
+    maintenanceType?: string;
+    status?: string;
+    priorityLevel?: string;
+    keyword?: string;
+}
+
+export interface IDeviceHistoryFilter {
+    deviceCode?: string;
+    deviceName?: string;
+    companyName?: string;
+    departmentName?: string;
+    fromDate?: string;
+    toDate?: string;
+}
+
+export interface IMaterialUsageFilter {
+    fromDate?: string;
+    toDate?: string;
+    materialType?: string;
+    warehouseName?: string;
+    unitName?: string;
+}
+
+export interface ITechnicianActivityFilter {
+    fromDate?: string;
+    toDate?: string;
+    specialty?: string;
+    type?: string;
+}
+
+export interface IDeviceDepreciationFilter {
+    companyId?: number | string;
+    departmentId?: number | string;
+    deviceTypeId?: number | string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+}
+
+
+export interface IPeriodicMaintenanceFilter {
+    companyId?: number | string;
+    departmentId?: number | string;
+    deviceCode?: string;
+    deviceName?: string;
+    startDate?: string;
+    endDate?: string;
+}
+
+export interface IWarrantyProductFilter {
+    startDate?: string;
+    endDate?: string;
+    customerCode?: string;
+    customerName?: string;
+    city?: string;
+    ward?: string;
+    deviceType?: string;
+    solution?: string;
+}
+//RESPONSE
+
+export interface IDeviceDepreciationReport {
+    deviceCode: string;
+    deviceName: string;
+    companyName: string;
+    departmentName: string;
+    deviceTypeName: string;
+    assetType: string;
+    unitPrice: number;
+
+    startDate?: string;
+    warrantyExpiryDate?: string;
+    depreciationPeriod?: string;
+    depreciationEndDate?: string;
+
+    monthlyDepreciation?: number;
+    depreciationToDate?: number;
+    remainingValue?: number;
+
+    monthlyDepreciationStr?: string;
+    depreciationToDateStr?: string;
+    remainingValueStr?: string;
+
+    managerName?: string;
+    status?: string;
+}
+
+
+export interface IDeviceMaintenanceHistory {
+    maintenanceCount: number;
+    deviceCode: string;
+    deviceName: string;
+    companyName: string;
+    departmentName: string;
+    issueDescription: string;
+    causeName: string;
+    damageLevel: string;
+    maintenanceType: string;
+    solutionMethod: string;
+    priorityLevel: string;
+
+    createdDate?: string;
+    creatorName?: string;
+    startDate?: string;
+    endDate?: string;
+    executorName?: string;
+    acceptanceDate?: string;
+    acceptanceUserName?: string;
+    deviceStatusAfter?: string;
+}
+
+
+export interface IMaintenanceRequestReport {
+    requestCode: string;
+    deviceName: string;
+    companyName: string;
+    departmentName: string;
+    issueDescription: string;
+    causeName: string;
+
+    damageLevel: string;
+    maintenanceType: string;
+    solutionMethod: string;
+    priorityLevel: string;
+    status: string;
+    rejectReason?: string;
+
+    createdDate?: string;
+    creatorName?: string;
+    surveyDate?: string;
+    surveyorName?: string;
+    planDate?: string;
+    plannerName?: string;
+    startDate?: string;
+    endDate?: string;
+    executorName?: string;
+    acceptanceDate?: string;
+    acceptanceUserName?: string;
+}
+
+
+export interface IMaterialUsageReport {
+    partCode: string;
+    partName: string;
+    materialType: string;
+    unitName: string;
+    totalQuantityUsed: number;
+    unitPrice: number;
+    totalAmount: number;
+    supplyCount: number;
+    warehouseName: string;
+    stockRemaining: number;
+}
+
+
+export interface IPeriodicMaintenanceReport {
+    maintenanceDate?: string;
+    deviceCode: string;
+    deviceName: string;
+    companyName: string;
+    departmentName: string;
+    location: string;
+    technicianName: string;
+    postMaintenanceStatus: string;
+    status: string;
+}
+
+export interface ITechnicianActivityReport {
+    technicianCode: string;
+    fullName: string;
+    specialty: string;
+    type: string;
+    totalAssigned: number;
+    totalCompleted: number;
+    completionRate: number;
+    totalHours: number;
+    avgHoursPerTask: number;
+    onTimeCount: number;
+}
+
+
+export interface IWarrantyProductReport {
+    customerCode: string;
+    customerName: string;
+    phone?: string;
+    address?: string;
+
+    deviceCode: string;
+    deviceName: string;
+    deviceType: string;
+    brand?: string;
+    model?: string;
+
+    purchaseDate?: string;
+    warrantyExpiryDate?: string;
+    requestDate?: string;
+    completionDate?: string;
+
+    issue?: string;
+    rootCause?: string;
+    solution?: string;
+    technicianName?: string;
+
+    inWarranty?: boolean;
+    warrantyRemainingDays?: number;
+    warrantyStatusText?: string;
+}
+
