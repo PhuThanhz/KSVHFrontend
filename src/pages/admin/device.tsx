@@ -254,7 +254,7 @@ const DevicePage = () => {
                                 onClick={() => handleManageParts(String(entity.id))}
                                 icon={<ToolOutlined />}
                             >
-                                Linh kiện
+                                Quản lý Linh kiện
                             </Button>
                         </Access>
 

@@ -1,5 +1,5 @@
 import { ModalForm } from "@ant-design/pro-components";
-import { Col, Form, Row, message, Typography, Card } from "antd";
+import { Col, Form, Row, message, Typography } from "antd";
 import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { isMobile } from "react-device-detect";
 import { callUploadMultipleFiles } from "@/config/api";
@@ -30,16 +30,18 @@ import {
 
 import DeviceBasicInfo from "./sections/DeviceBasicInfo";
 import DeviceSpecsAndManagement from "./sections/DeviceSpecsAndManagement";
-import DeviceWarrantyAndMaintenance from "./sections/DeviceWarrantyAndMaintenance";
 import DeviceImagesAndNotes from "./sections/DeviceImagesAndNotes";
+import DeviceWarrantyAndMaintenance from "./sections/DeviceWarrantyAndMaintenance";
 
 import type { ISelectItem } from "./sections/types";
 
 const { Text } = Typography;
 
+// convert object → select option
 const toSelect = (label?: string | null, value?: string | number | null): ISelectItem | null =>
     label && value ? { label: String(label), value } : null;
 
+// extract filename from url
 const extractFileName = (url: string): string => {
     if (!url) return "";
     const mark = "/storage/device/";
@@ -60,6 +62,7 @@ const DeviceModal = ({
     dataInit,
     setDataInit,
 }: IProps) => {
+
     const [form] = Form.useForm();
     const isEdit = Boolean(dataInit?.id);
 
@@ -79,6 +82,7 @@ const DeviceModal = ({
 
     const [freqUnit, setFreqUnit] = useState<TimeUnitType>("MONTH");
 
+    // mutation
     const { mutate: updateDevice, isPending: isUpdating } = useUpdateDeviceMutation();
     const { mutate: createDevice, isPending: isCreating } = useCreateDeviceMutation();
 
@@ -89,35 +93,83 @@ const DeviceModal = ({
 
     const { data: detail, isFetching } = useDeviceByIdQuery(deviceId || undefined);
 
-    /** Load dữ liệu khi EDIT */
+    // ============= DISABLED FIELDS CHO UPDATE =============
+    const disabledFields = useMemo(
+        () =>
+            isEdit
+                ? {
+                    deviceCode: true,
+                    accountingCode: true,
+                    deviceName: true,
+                    deviceType: true,
+                    unit: true,
+                    ownershipType: true,
+                    customer: true,
+                    startDate: true,
+                    warrantyExpiryDate: true,
+                }
+                : {},
+        [isEdit]
+    );
+
+    // ============= LOAD DATA EDIT =============
     useEffect(() => {
         if (!openModal || !isEdit || !detail) return;
 
         form.setFieldsValue({
+            deviceCode: detail.deviceCode,
+            accountingCode: detail.accountingCode,
+            deviceName: detail.deviceName,
+            deviceType: toSelect(detail.deviceType?.typeName, detail.deviceType?.id),
             unit: toSelect(detail.unit?.name, detail.unit?.id),
-            supplier: toSelect(detail.supplier?.supplierName, detail.supplier?.id),
-            company: toSelect(detail.company?.name, detail.company?.id),
-            department: toSelect(detail.department?.name, detail.department?.id),
-            manager: toSelect(detail.manager?.name, detail.manager?.id),
+            ownershipType: detail.ownershipType,
+            customer: toSelect(detail.customer?.name, detail.customer?.id),
+
+            // specs
             brand: detail.brand,
             modelDesc: detail.modelDesc,
             powerCapacity: detail.powerCapacity,
             length: detail.length,
             width: detail.width,
             height: detail.height,
+
+            // management
+            supplier: toSelect(detail.supplier?.supplierName, detail.supplier?.id),
+            company: toSelect(detail.company?.name, detail.company?.id),
+            department: toSelect(detail.department?.name, detail.department?.id),
+            manager: toSelect(detail.manager?.name, detail.manager?.id),
+
+            // pricing & status
             unitPrice: detail.unitPrice,
-            startDate: detail.startDate || null,
-            note: detail.note,
             status: detail.status,
+
+            // warranty
+            startDate: detail.startDate,
+            warrantyExpiryDate: detail.warrantyExpiryDate,
+            depreciationPeriodUnit: detail.depreciationPeriodUnit,
+            depreciationPeriodValue: detail.depreciationPeriodValue,
+
+            // maintenance
+            maintenanceFrequencyUnit: detail.maintenanceFrequencyUnit,
+            maintenanceFrequencyValue: detail.maintenanceFrequencyValue,
+            maintenanceDayOfMonth: detail.maintenanceDayOfMonth,
+            maintenanceMonth: detail.maintenanceMonth,
+
+            note: detail.note,
         });
 
+        setSelectedDeviceType(toSelect(detail.deviceType?.typeName, detail.deviceType?.id));
         setSelectedUnit(toSelect(detail.unit?.name, detail.unit?.id));
         setSelectedSupplier(toSelect(detail.supplier?.supplierName, detail.supplier?.id));
         setSelectedCompany(toSelect(detail.company?.name, detail.company?.id));
         setSelectedDepartment(toSelect(detail.department?.name, detail.department?.id));
         setSelectedManager(toSelect(detail.manager?.name, detail.manager?.id));
 
+        setFreqUnit(detail.maintenanceFrequencyUnit as TimeUnitType);
+
+        // load images
         const imgs = [detail.image1, detail.image2, detail.image3].filter(Boolean) as string[];
+
         const normalized: UploadFile[] = imgs.map((raw) => {
             const fullUrl = raw.startsWith("http")
                 ? raw
@@ -129,9 +181,11 @@ const DeviceModal = ({
                 url: fullUrl,
             };
         });
+
         setFileList(normalized.slice(0, 3));
     }, [openModal, isEdit, detail, form]);
 
+    // ============= FETCH SELECT LIST =============
     const fetchList = useCallback(async (api: any, key: string, name: string, extra?: string) => {
         const res = await api(`page=1&size=50&${key}=/${name}/i${extra ? `&${extra}` : ""}`);
         return (
@@ -166,7 +220,7 @@ const DeviceModal = ({
         return res?.data?.result?.map((e: any) => ({ label: e.name, value: e.id })) || [];
     }, []);
 
-    /** Preview */
+    // ============= PREVIEW IMAGE =============
     const handlePreview = useCallback((file: any) => {
         const show = (src: string) => {
             setPreviewImage(src);
@@ -183,7 +237,7 @@ const DeviceModal = ({
         }
     }, []);
 
-    /** Upload */
+    // ============= CUSTOM UPLOAD =============
     const uploadProps = useMemo<UploadProps>(
         () => ({
             listType: "picture-card",
@@ -226,7 +280,7 @@ const DeviceModal = ({
         [fileList, handlePreview]
     );
 
-    /** Reset modal */
+    // ============= RESET MODAL =============
     const handleReset = useCallback(() => {
         form.resetFields();
         setOpenModal(false);
@@ -241,17 +295,7 @@ const DeviceModal = ({
         setDataInit?.(null);
     }, []);
 
-    /** Company change */
-    const handleCompanyChange = useCallback(
-        (value: ISelectItem | null) => {
-            setSelectedCompany(value);
-            setSelectedDepartment(null);
-            form.setFieldsValue({ department: undefined });
-        },
-        [form]
-    );
-
-    /** Build payload */
+    // ============= BUILD REQUEST PAYLOAD =============
     const buildPayload = useCallback(
         (values: any): ICreateDeviceRequest | IUpdateDeviceRequest => {
             const [image1, image2, image3] = fileList
@@ -306,7 +350,7 @@ const DeviceModal = ({
         [fileList, isEdit]
     );
 
-    /** Submit */
+    // ============= SUBMIT FORM =============
     const submitForm = useCallback(
         async (values: any) => {
             if (loadingUpload) {
@@ -340,6 +384,7 @@ const DeviceModal = ({
         [loadingUpload, buildPayload, isEdit, dataInit, updateDevice, createDevice, handleReset]
     );
 
+    // ============= RENDER =============
     return (
         <ModalForm
             title={
@@ -376,21 +421,20 @@ const DeviceModal = ({
             }
         >
             <Row gutter={[20, 16]}>
-                {!isEdit && (
-                    <Col span={24}>
-                        <DeviceBasicInfo
-                            isEdit={false}
-                            form={form}
-                            selectedDeviceType={selectedDeviceType}
-                            setSelectedDeviceType={setSelectedDeviceType}
-                            selectedUnit={selectedUnit}
-                            setSelectedUnit={setSelectedUnit}
-                            fetchDeviceTypeList={fetchDeviceTypeList}
-                            fetchUnitList={fetchUnitList}
-                            fetchCustomerList={fetchCustomerList}
-                        />
-                    </Col>
-                )}
+                <Col span={24}>
+                    <DeviceBasicInfo
+                        isEdit={isEdit}
+                        disabledFields={disabledFields}
+                        form={form}
+                        selectedDeviceType={selectedDeviceType}
+                        setSelectedDeviceType={setSelectedDeviceType}
+                        selectedUnit={selectedUnit}
+                        setSelectedUnit={setSelectedUnit}
+                        fetchDeviceTypeList={fetchDeviceTypeList}
+                        fetchUnitList={fetchUnitList}
+                        fetchCustomerList={fetchCustomerList}
+                    />
+                </Col>
 
                 <Col span={24}>
                     <DeviceSpecsAndManagement
@@ -398,7 +442,7 @@ const DeviceModal = ({
                         selectedSupplier={selectedSupplier}
                         setSelectedSupplier={setSelectedSupplier}
                         selectedCompany={selectedCompany}
-                        setSelectedCompany={isEdit ? setSelectedCompany : handleCompanyChange}
+                        setSelectedCompany={setSelectedCompany}
                         selectedDepartment={selectedDepartment}
                         setSelectedDepartment={setSelectedDepartment}
                         selectedManager={selectedManager}
@@ -424,11 +468,14 @@ const DeviceModal = ({
                     />
                 </Col>
 
-                {!isEdit && (
-                    <Col span={24}>
-                        <DeviceWarrantyAndMaintenance freqUnit={freqUnit} setFreqUnit={setFreqUnit} />
-                    </Col>
-                )}
+                <Col span={24}>
+                    <DeviceWarrantyAndMaintenance
+                        isEdit={isEdit}
+                        disabledFields={disabledFields}
+                        freqUnit={freqUnit}
+                        setFreqUnit={setFreqUnit}
+                    />
+                </Col>
             </Row>
         </ModalForm>
     );

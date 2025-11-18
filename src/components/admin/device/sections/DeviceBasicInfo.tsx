@@ -8,6 +8,7 @@ import type { FormInstance } from "antd";
 
 interface DeviceBasicInfoProps {
     isEdit: boolean;
+    disabledFields: Record<string, boolean | undefined>;
     selectedDeviceType: ISelectItem | null;
     setSelectedDeviceType: (v: ISelectItem | null) => void;
     selectedUnit: ISelectItem | null;
@@ -15,8 +16,6 @@ interface DeviceBasicInfoProps {
     fetchDeviceTypeList: (name: string) => Promise<ISelectItem[]>;
     fetchUnitList: (name: string) => Promise<ISelectItem[]>;
     fetchCustomerList: (name: string) => Promise<ISelectItem[]>;
-    initialOwnershipType?: DeviceOwnershipType;
-    initialCustomer?: ISelectItem | null;
     form: FormInstance<any>;
 }
 
@@ -27,6 +26,7 @@ const OWNERSHIP_OPTIONS: { label: string; value: DeviceOwnershipType }[] = [
 
 const DeviceBasicInfo = ({
     isEdit,
+    disabledFields,
     form,
     selectedDeviceType,
     setSelectedDeviceType,
@@ -35,37 +35,55 @@ const DeviceBasicInfo = ({
     fetchDeviceTypeList,
     fetchUnitList,
     fetchCustomerList,
-    initialOwnershipType,
-    initialCustomer,
 }: DeviceBasicInfoProps) => {
+
     const [ownershipType, setOwnershipType] = useState<DeviceOwnershipType>("INTERNAL");
     const [selectedCustomer, setSelectedCustomer] = useState<ISelectItem | null>(null);
 
+    // load ownership + customer khi update
     useEffect(() => {
-        if (initialOwnershipType) setOwnershipType(initialOwnershipType);
-        if (initialCustomer) {
-            setSelectedCustomer(initialCustomer);
-            form.setFieldValue("customer", initialCustomer);
+        const o = form.getFieldValue("ownershipType");
+        const c = form.getFieldValue("customer");
+
+        if (o) setOwnershipType(o);
+        if (c) {
+            setSelectedCustomer(c);
         } else {
             setSelectedCustomer(null);
-            form.setFieldValue("customer", null);
         }
-    }, [initialOwnershipType, initialCustomer, form]);
+    }, [form]);
 
     return (
-        <Card size="small" title="Thông tin cơ bản" bordered={false} style={{ background: "#fafafa" }}>
+        <Card
+            size="small"
+            title="Thông tin cơ bản"
+            bordered={false}
+            style={{ background: "#fafafa" }}
+        >
             <Row gutter={[16, 8]}>
+
+                {/* Mã thiết bị */}
                 <Col lg={8} md={12} sm={24} xs={24}>
                     <ProFormText
                         label="Mã thiết bị"
                         name="deviceCode"
-                        rules={[{ required: true, message: "Vui lòng nhập mã thiết bị" }]}
                         placeholder="Nhập mã thiết bị"
+                        disabled={disabledFields.deviceCode}
+                        rules={[{ required: true, message: "Vui lòng nhập mã thiết bị" }]}
                     />
                 </Col>
+
+                {/* Mã kế toán */}
                 <Col lg={8} md={12} sm={24} xs={24}>
-                    <ProFormText label="Mã kế toán" name="accountingCode" placeholder="Nhập mã kế toán" />
+                    <ProFormText
+                        label="Mã kế toán"
+                        name="accountingCode"
+                        placeholder="Nhập mã kế toán"
+                        disabled={disabledFields.accountingCode}
+                    />
                 </Col>
+
+                {/* Ownership Type */}
                 <Col lg={8} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="ownershipType"
@@ -75,6 +93,7 @@ const DeviceBasicInfo = ({
                         <Radio.Group
                             optionType="button"
                             buttonStyle="solid"
+                            disabled={disabledFields.ownershipType}
                             value={ownershipType}
                             onChange={(e) => {
                                 setOwnershipType(e.target.value);
@@ -85,12 +104,15 @@ const DeviceBasicInfo = ({
                             }}
                         >
                             {OWNERSHIP_OPTIONS.map((o) => (
-                                <Radio.Button key={o.value} value={o.value}>{o.label}</Radio.Button>
+                                <Radio.Button key={o.value} value={o.value}>
+                                    {o.label}
+                                </Radio.Button>
                             ))}
                         </Radio.Group>
                     </ProForm.Item>
                 </Col>
 
+                {/* CUSTOMER field */}
                 {ownershipType === "CUSTOMER" && (
                     <Col lg={12} md={12} sm={24} xs={24}>
                         <ProForm.Item
@@ -105,20 +127,25 @@ const DeviceBasicInfo = ({
                                 fetchOptions={fetchCustomerList}
                                 value={selectedCustomer}
                                 onChange={(v: any) => setSelectedCustomer(v as ISelectItem)}
+                                disabled={disabledFields.customer}
                                 style={{ width: "100%" }}
                             />
                         </ProForm.Item>
                     </Col>
                 )}
 
+                {/* Tên thiết bị */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProFormText
                         label="Tên thiết bị"
                         name="deviceName"
-                        rules={[{ required: true, message: "Vui lòng nhập tên thiết bị" }]}
                         placeholder="Nhập tên thiết bị"
+                        disabled={disabledFields.deviceName}
+                        rules={[{ required: true, message: "Vui lòng nhập tên thiết bị" }]}
                     />
                 </Col>
+
+                {/* Loại thiết bị */}
                 <Col lg={6} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="deviceType"
@@ -133,9 +160,12 @@ const DeviceBasicInfo = ({
                             value={selectedDeviceType}
                             onChange={(v: any) => setSelectedDeviceType(v as ISelectItem)}
                             style={{ width: "100%" }}
+                            disabled={disabledFields.deviceType}
                         />
                     </ProForm.Item>
                 </Col>
+
+                {/* Đơn vị */}
                 <Col lg={6} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="unit"
@@ -149,15 +179,15 @@ const DeviceBasicInfo = ({
                             fetchOptions={fetchUnitList}
                             value={selectedUnit}
                             onChange={(v: any) => setSelectedUnit(v as ISelectItem)}
+                            disabled={disabledFields.unit}
                             style={{ width: "100%" }}
                         />
                     </ProForm.Item>
                 </Col>
+
             </Row>
         </Card>
     );
 };
 
 export default DeviceBasicInfo;
-
-

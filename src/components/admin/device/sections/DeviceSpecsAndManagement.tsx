@@ -35,39 +35,90 @@ const DeviceSpecsAndManagement = ({
     fetchSupplierList,
     fetchCompanyList,
     fetchDepartmentList,
+    fetchManagerList,
     departmentKey,
 }: DeviceSpecsAndManagementProps) => {
+
     const [openManagerPicker, setOpenManagerPicker] = useState(false);
 
     return (
         <>
-            <Card size="small" title="Thông số kỹ thuật" bordered={false} style={{ background: "#fafafa" }}>
+            {/* ================== THÔNG SỐ KỸ THUẬT ================== */}
+            <Card
+                size="small"
+                title="Thông số kỹ thuật"
+                bordered={false}
+                style={{ background: "#fafafa" }}
+            >
                 <Row gutter={[16, 8]}>
                     <Col lg={8} md={12} sm={24} xs={24}>
-                        <ProFormText label="Nhãn hiệu" name="brand" placeholder="Nhập tên nhãn hiệu" />
+                        <ProFormText
+                            label="Nhãn hiệu"
+                            name="brand"
+                            placeholder="Nhập tên nhãn hiệu"
+                        />
                     </Col>
+
                     <Col lg={8} md={12} sm={24} xs={24}>
-                        <ProFormText label="Model" name="modelDesc" placeholder="Nhập số Model" />
+                        <ProFormText
+                            label="Model"
+                            name="modelDesc"
+                            placeholder="Nhập số Model"
+                        />
                     </Col>
+
                     <Col lg={8} md={12} sm={24} xs={24}>
-                        <ProFormText label="Công suất" name="powerCapacity" placeholder="Nhập công suất" />
+                        <ProFormText
+                            label="Công suất"
+                            name="powerCapacity"
+                            placeholder="Nhập công suất"
+                        />
                     </Col>
+
                     <Col lg={8} md={8} sm={24} xs={24}>
-                        <ProFormDigit label="Chiều dài (cm)" name="length" min={0} placeholder="Dài" />
+                        <ProFormDigit
+                            label="Chiều dài (cm)"
+                            name="length"
+                            min={0}
+                            placeholder="Dài"
+                        />
                     </Col>
+
                     <Col lg={8} md={8} sm={24} xs={24}>
-                        <ProFormDigit label="Chiều rộng (cm)" name="width" min={0} placeholder="Rộng" />
+                        <ProFormDigit
+                            label="Chiều rộng (cm)"
+                            name="width"
+                            min={0}
+                            placeholder="Rộng"
+                        />
                     </Col>
+
                     <Col lg={8} md={8} sm={24} xs={24}>
-                        <ProFormDigit label="Chiều cao (cm)" name="height" min={0} placeholder="Cao" />
+                        <ProFormDigit
+                            label="Chiều cao (cm)"
+                            name="height"
+                            min={0}
+                            placeholder="Cao"
+                        />
                     </Col>
                 </Row>
             </Card>
 
-            <Card size="small" title="Đơn vị quản lý" bordered={false} style={{ background: "#fafafa" }}>
+            {/* ================== ĐƠN VỊ QUẢN LÝ ================== */}
+            <Card
+                size="small"
+                title="Đơn vị quản lý"
+                bordered={false}
+                style={{ background: "#fafafa" }}
+            >
                 <Row gutter={[16, 8]}>
+                    {/* SUPPLIER */}
                     <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProForm.Item name="supplier" label="Nhà cung cấp" rules={[{ required: true, message: "Vui lòng chọn nhà cung cấp" }]}>
+                        <ProForm.Item
+                            name="supplier"
+                            label="Nhà cung cấp"
+                            rules={[{ required: true, message: "Vui lòng chọn nhà cung cấp" }]}
+                        >
                             <DebounceSelect
                                 allowClear
                                 showSearch
@@ -79,8 +130,14 @@ const DeviceSpecsAndManagement = ({
                             />
                         </ProForm.Item>
                     </Col>
+
+                    {/* COMPANY */}
                     <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProForm.Item name="company" label="Công ty" rules={[{ required: true, message: "Vui lòng chọn công ty" }]}>
+                        <ProForm.Item
+                            name="company"
+                            label="Công ty"
+                            rules={[{ required: true, message: "Vui lòng chọn công ty" }]}
+                        >
                             <DebounceSelect
                                 allowClear
                                 showSearch
@@ -92,13 +149,23 @@ const DeviceSpecsAndManagement = ({
                             />
                         </ProForm.Item>
                     </Col>
+
+                    {/* DEPARTMENT */}
                     <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProForm.Item name="department" label="Phòng ban / Nhà hàng" rules={[{ required: true, message: "Vui lòng chọn phòng ban" }]}>
+                        <ProForm.Item
+                            name="department"
+                            label="Phòng ban / Nhà hàng"
+                            rules={[{ required: true, message: "Vui lòng chọn phòng ban" }]}
+                        >
                             <DebounceSelect
                                 key={departmentKey ?? "no-company"}
                                 allowClear
                                 showSearch
-                                placeholder={selectedCompany ? "Chọn phòng ban / nhà hàng" : "Chọn công ty trước"}
+                                placeholder={
+                                    selectedCompany
+                                        ? "Chọn phòng ban / nhà hàng"
+                                        : "Chọn công ty trước"
+                                }
                                 fetchOptions={fetchDepartmentList}
                                 value={selectedDepartment}
                                 onChange={(v: any) => setSelectedDepartment(v as ISelectItem)}
@@ -107,17 +174,28 @@ const DeviceSpecsAndManagement = ({
                             />
                         </ProForm.Item>
                     </Col>
+
+                    {/* MANAGER */}
                     <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProForm.Item name="manager" label="Nhân viên quản lý" rules={[{ required: true, message: "Vui lòng chọn nhân viên quản lý" }]}>
+                        <ProForm.Item
+                            name="manager"
+                            label="Nhân viên quản lý"
+                            rules={[{ required: true, message: "Vui lòng chọn nhân viên quản lý" }]}
+                        >
                             <Input
                                 readOnly
                                 placeholder="Chọn nhân viên quản lý"
                                 value={selectedManager?.label ?? ""}
                                 onClick={() => setOpenManagerPicker(true)}
-                                addonAfter={<Button type="link" onClick={() => setOpenManagerPicker(true)}>Chọn</Button>}
+                                addonAfter={
+                                    <Button type="link" onClick={() => setOpenManagerPicker(true)}>
+                                        Chọn
+                                    </Button>
+                                }
                             />
                         </ProForm.Item>
 
+                        {/* Modal chọn manager */}
                         <ManagerPickerModal
                             open={openManagerPicker}
                             onClose={() => setOpenManagerPicker(false)}

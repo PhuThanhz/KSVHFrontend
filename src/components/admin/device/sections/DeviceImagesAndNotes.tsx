@@ -1,7 +1,6 @@
 import { Card, Form, Upload, Modal, Col, Row, Select, Typography } from "antd";
 import type { UploadFile, UploadProps } from "antd/es/upload/interface";
 import { ProFormTextArea, ProFormDigit, ProForm, ProFormSelect } from "@ant-design/pro-components";
-import { PlusOutlined, LoadingOutlined } from "@ant-design/icons";
 import type { DeviceStatus } from "@/types/backend";
 
 const { Text } = Typography;
@@ -36,8 +35,16 @@ const DeviceImagesAndNotes = ({
     handleCancelPreview,
 }: DeviceImagesAndNotesProps) => (
     <>
-        <Card size="small" title="Giá trị & Trạng thái" bordered={false} style={{ background: '#fafafa' }}>
+        {/* ================== GIÁ TRỊ & TRẠNG THÁI ================== */}
+        <Card
+            size="small"
+            title="Giá trị & Trạng thái"
+            bordered={false}
+            style={{ background: '#fafafa' }}
+        >
             <Row gutter={[16, 8]}>
+
+                {/* UNIT PRICE */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProFormDigit
                         label="Đơn giá (VNĐ)"
@@ -46,12 +53,18 @@ const DeviceImagesAndNotes = ({
                         placeholder="Nhập đơn giá"
                         fieldProps={{
                             precision: 0,
-                            formatter: (value?: number) => value ? `${Number(value).toLocaleString("vi-VN")} VNĐ` : "",
-                            parser: (value?: string) => value ? Number(value.replace(/\s?VNĐ|(,*)/g, "")) : 0,
+                            formatter: (value?: number) =>
+                                value
+                                    ? `${Number(value).toLocaleString("vi-VN")} VNĐ`
+                                    : "",
+                            parser: (value?: string) =>
+                                value ? Number(value.replace(/\s?VNĐ|(,*)/g, "")) : 0,
                         }}
                         rules={[{ required: true, message: "Vui lòng nhập đơn giá" }]}
                     />
                 </Col>
+
+                {/* STATUS */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     {isEdit ? (
                         <ProFormSelect
@@ -60,38 +73,61 @@ const DeviceImagesAndNotes = ({
                             options={STATUS_OPTIONS}
                             placeholder="Chọn trạng thái"
                         />
-
                     ) : (
                         <ProForm.Item label="Trạng thái">
                             <Text strong>Mới tạo (NEW)</Text>
                         </ProForm.Item>
                     )}
                 </Col>
+
             </Row>
         </Card>
 
-        <Card size="small" title="Hình ảnh thiết bị (tối đa 3 ảnh)" bordered={false} style={{ background: '#fafafa' }}>
+        {/* ================== HÌNH ẢNH ================== */}
+        <Card
+            size="small"
+            title="Hình ảnh thiết bị (tối đa 3 ảnh)"
+            bordered={false}
+            style={{ background: '#fafafa' }}
+        >
             <Form.Item
                 name="images"
-                rules={[{
-                    validator: () => fileList.length > 0 ? Promise.resolve() : Promise.reject("Vui lòng upload ít nhất 1 hình ảnh"),
-                }]}
+                rules={[
+                    {
+                        validator: () =>
+                            fileList.length > 0
+                                ? Promise.resolve()
+                                : Promise.reject("Vui lòng upload ít nhất 1 hình ảnh"),
+                    },
+                ]}
             >
                 <Upload {...uploadProps}>
                     {fileList.length >= 3 ? null : (
                         <div>
-                            {loadingUpload ? <LoadingOutlined /> : <PlusOutlined />}
+                            {loadingUpload ? "Đang tải..." : "+"}
                             <div style={{ marginTop: 8 }}>Upload</div>
                         </div>
                     )}
                 </Upload>
             </Form.Item>
-            <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancelPreview}>
+
+            <Modal
+                open={previewOpen}
+                title={previewTitle}
+                footer={null}
+                onCancel={handleCancelPreview}
+            >
                 <img alt="preview" style={{ width: "100%" }} src={previewImage} />
             </Modal>
         </Card>
 
-        <Card size="small" title="Ghi chú" bordered={false} style={{ background: '#fafafa' }}>
+        {/* ================== GHI CHÚ ================== */}
+        <Card
+            size="small"
+            title="Ghi chú"
+            bordered={false}
+            style={{ background: '#fafafa' }}
+        >
             <ProFormTextArea
                 name="note"
                 placeholder="Nhập ghi chú bổ sung (nếu có)"
