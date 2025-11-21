@@ -64,10 +64,11 @@ import AdminMaintenanceSchedulePage from "./pages/admin/maintenance/maintenance-
 import DeviceDepreciationSection from "./pages/admin/maintenance-report/sections/DeviceDepreciation";
 import DeviceHistorySection from "./pages/admin/maintenance-report/sections/DeviceHistory";
 import MaintenanceRequestSection from "./pages/admin/maintenance-report/sections/MaintenanceRequest";
-import MaterialUsageSection from "./pages/admin/maintenance-report/sections/MaterialUsage";
-import TechnicianActivitySection from "./pages/admin/maintenance-report/sections/TechnicianActivity";
-import PeriodicMaintenanceSection from "./pages/admin/maintenance-report/sections/PeriodicMaintenance";
-import WarrantyProductSection from "./pages/admin/maintenance-report/sections/WarrantyProduct";
+// import MaterialUsageSection from "./pages/admin/maintenance-report/sections/MaterialUsage";
+// import TechnicianActivitySection from "./pages/admin/maintenance-report/sections/TechnicianActivity";
+// import PeriodicMaintenanceSection from "./pages/admin/maintenance-report/sections/PeriodicMaintenance";
+// import WarrantyProductSection from "./pages/admin/maintenance-report/sections/WarrantyProduct";
+import ScanResult from "./pages/ScanResult";
 
 
 export default function App() {
@@ -117,6 +118,15 @@ export default function App() {
 
       ],
     },
+    {
+      path: "scan-result/:code",
+      element: (
+        <ProtectedRoute>
+          <ScanResult />
+        </ProtectedRoute>
+      ),
+    }
+    ,
     // ==================== TECHNICIAN =====================//
     {
       path: PATHS.TECHNICIAN.ROOT,
@@ -157,6 +167,7 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
+
         {
           path: PATHS.ADMIN.MAINTENANCE,
           element:
@@ -205,7 +216,7 @@ export default function App() {
             </ProtectedRoute>
         },
 
-        // ================== BÁO CÁO THỐNG KÊ ==================
+        //================== BÁO CÁO THỐNG KÊ ==================
         {
           path: PATHS.ADMIN.MAINTENANCE_REPORT_REQUEST,
           element: (
@@ -222,22 +233,22 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
-        {
-          path: PATHS.ADMIN.MAINTENANCE_REPORT_MATERIAL_USAGE,
-          element: (
-            <ProtectedRoute>
-              <MaterialUsageSection />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: PATHS.ADMIN.MAINTENANCE_REPORT_TECHNICIAN_ACTIVITY,
-          element: (
-            <ProtectedRoute>
-              <TechnicianActivitySection />
-            </ProtectedRoute>
-          ),
-        },
+        // {
+        //   path: PATHS.ADMIN.MAINTENANCE_REPORT_MATERIAL_USAGE,
+        //   element: (
+        //     <ProtectedRoute>
+        //       <MaterialUsageSection />
+        //     </ProtectedRoute>
+        //   ),
+        // },
+        // {
+        //   path: PATHS.ADMIN.MAINTENANCE_REPORT_TECHNICIAN_ACTIVITY,
+        //   element: (
+        //     <ProtectedRoute>
+        //       <TechnicianActivitySection />
+        //     </ProtectedRoute>
+        //   ),
+        // },
         {
           path: PATHS.ADMIN.MAINTENANCE_REPORT_DEVICE_DEPRECIATION,
           element: (
@@ -246,22 +257,22 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
-        {
-          path: PATHS.ADMIN.MAINTENANCE_REPORT_PERIODIC_MAINTENANCE,
-          element: (
-            <ProtectedRoute>
-              <PeriodicMaintenanceSection />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: PATHS.ADMIN.MAINTENANCE_REPORT_WARRANTY_PRODUCT,
-          element: (
-            <ProtectedRoute>
-              <WarrantyProductSection />
-            </ProtectedRoute>
-          ),
-        },
+        // {
+        //   path: PATHS.ADMIN.MAINTENANCE_REPORT_PERIODIC_MAINTENANCE,
+        //   element: (
+        //     <ProtectedRoute>
+        //       <PeriodicMaintenanceSection />
+        //     </ProtectedRoute>
+        //   ),
+        // },
+        // {
+        //   path: PATHS.ADMIN.MAINTENANCE_REPORT_WARRANTY_PRODUCT,
+        //   element: (
+        //     <ProtectedRoute>
+        //       <WarrantyProductSection />
+        //     </ProtectedRoute>
+        //   ),
+        // },
 
         // ================== BÁO CÁO THỐNG KÊ ==================
 

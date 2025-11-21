@@ -1,22 +1,16 @@
-// src/pages/admin/maintenance-report/sections/DeviceHistory.tsx
-
 import { useState, useMemo } from "react";
-import { Card, Table, Space, message } from "antd";
-import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
+import { Space, Typography } from "antd";
+import type { ProColumns } from "@ant-design/pro-components";
+import queryString from "query-string";
 import dayjs from "dayjs";
 
 import DeviceHistoryFilter from "../filters/DeviceHistoryFilter";
-import ExportButton from "@/components/admin/maintenance-report/ExportButton";
+import ExportExcelButton from "@/pages/admin/maintenance-report/export-excel/ExportExcelButton";
+import DataTable from "@/components/admin/data-table";
 import Access from "@/components/share/access";
 
-import {
-    useDeviceHistoryReportQuery,
-} from "@/hooks/useMaintenanceReports";
-
-import {
-    callExportDeviceHistoryReport,
-} from "@/config/api";
-
+import { useDeviceHistoryReportQuery } from "@/hooks/useMaintenanceReports";
+import { callDownloadDeviceHistoryReport } from "@/config/api";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 
 import type {
@@ -24,151 +18,193 @@ import type {
     IDeviceMaintenanceHistory,
 } from "@/types/backend";
 
+const { Text } = Typography;
+
 const DeviceHistorySection = () => {
     const [filter, setFilter] = useState<IDeviceHistoryFilter>({});
-    interface ITableParams {
-        pagination: Partial<TablePaginationConfig>;
-    }
+    const [query, setQuery] = useState("page=0&size=10&sort=createdDate,desc");
 
-    const [tableParams, setTableParams] = useState<ITableParams>({
-        pagination: {
-            current: 1,
-            pageSize: 10,
-            showSizeChanger: true,
-            pageSizeOptions: [10, 20, 50, 100],
-        },
-    });
+    const { data, isFetching } = useDeviceHistoryReportQuery(filter, query);
 
+    const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
+    const items = data?.result ?? [];
 
-    const [exportLoading, setExportLoading] = useState(false);
+    const buildQuery = (params: any, sorter: any) => {
+        const q: any = {
+            page: (params.current || 1) - 1,
+            size: params.pageSize || 10,
+        };
 
-    const queryString = useMemo(() => {
-        const params = new URLSearchParams();
-        params.set("page", String((tableParams.pagination.current || 1) - 1));
-        params.set("size", String(tableParams.pagination.pageSize || 10));
-        return params.toString();
-    }, [tableParams]);
+        const field = Object.keys(sorter || {})[0];
 
-    const { data, isLoading } = useDeviceHistoryReportQuery(filter, queryString);
+        const fieldMap: Record<string, string> = {
+            createdDate: "createdAt",
+            startDate: "startAt",
+            endDate: "endAt",
+        };
 
-    const pagination: TablePaginationConfig = {
-        ...tableParams.pagination,
-        total: data?.meta?.total ?? 0,
-    };
-
-    const handleTableChange = (pagination: TablePaginationConfig) => {
-        setTableParams({ pagination });
-    };
-
-    const handleFilterChange = (next: IDeviceHistoryFilter) => {
-        setFilter(next);
-        setTableParams((prev) => ({
-            ...prev,
-            pagination: { ...prev.pagination, current: 1 },
-        }));
-    };
-
-    const buildExportQuery = (f: IDeviceHistoryFilter) => {
-        const params = new URLSearchParams();
-        if (f.deviceCode) params.set("deviceCode", f.deviceCode);
-        if (f.deviceName) params.set("deviceName", f.deviceName);
-        if (f.companyName) params.set("companyName", f.companyName);
-        if (f.departmentName) params.set("departmentName", f.departmentName);
-        if (f.fromDate) params.set("fromDate", f.fromDate);
-        if (f.toDate) params.set("toDate", f.toDate);
-        return params.toString();
-    };
-
-    const handleExport = async () => {
-        try {
-            setExportLoading(true);
-            const qs = buildExportQuery(filter);
-            const res = await callExportDeviceHistoryReport(qs);
-
-            const blob = new Blob([res.data], {
-                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `lich_su_bao_tri_${dayjs().format("YYYYMMDD_HHmmss")}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error(error);
-            message.error("Xuất báo cáo thất bại");
-        } finally {
-            setExportLoading(false);
+        if (field) {
+            const backendField = fieldMap[field] || field;
+            q.sort = `${backendField},${sorter[field] === "ascend" ? "asc" : "desc"}`;
+        } else {
+            q.sort = "createdAt,desc";
         }
+
+        return queryString.stringify(q);
     };
 
-    const columns: ColumnsType<IDeviceMaintenanceHistory> = [
-        { title: "Mã thiết bị", dataIndex: "deviceCode", key: "deviceCode", width: 140 },
-        { title: "Tên thiết bị", dataIndex: "deviceName", key: "deviceName", width: 180 },
-        { title: "Công ty", dataIndex: "companyName", key: "companyName", width: 180 },
-        { title: "Phòng ban", dataIndex: "departmentName", key: "departmentName", width: 160 },
-        { title: "Mô tả sự cố", dataIndex: "issueDescription", key: "issueDescription", width: 220, ellipsis: true },
-        { title: "Nguyên nhân", dataIndex: "causeName", key: "causeName", width: 180 },
-        { title: "Mức độ hư hỏng", dataIndex: "damageLevel", key: "damageLevel", width: 150 },
-        { title: "Loại bảo trì", dataIndex: "maintenanceType", key: "maintenanceType", width: 140 },
-        { title: "Phương án xử lý", dataIndex: "solutionMethod", key: "solutionMethod", width: 200, ellipsis: true },
-        { title: "Ưu tiên", dataIndex: "priorityLevel", key: "priorityLevel", width: 120 },
-        {
-            title: "Ngày tạo",
-            dataIndex: "createdDate",
-            key: "createdDate",
-            width: 130,
-            render: (v: string | undefined) => (v ? dayjs(v).format("DD/MM/YYYY") : ""),
-        },
-        {
-            title: "Ngày bắt đầu",
-            dataIndex: "startDate",
-            key: "startDate",
-            width: 130,
-            render: (v) => (v ? dayjs(v).format("DD/MM/YYYY") : ""),
-        },
-        {
-            title: "Ngày kết thúc",
-            dataIndex: "endDate",
-            key: "endDate",
-            width: 130,
-            render: (v) => (v ? dayjs(v).format("DD/MM/YYYY") : ""),
-        },
-        { title: "Người thực hiện", dataIndex: "executorName", key: "executorName", width: 150 },
-        { title: "Trạng thái sau", dataIndex: "deviceStatusAfter", key: "deviceStatusAfter", width: 140 },
-        { title: "Số lần bảo trì", dataIndex: "maintenanceCount", key: "maintenanceCount", width: 140 },
-    ];
+    const columns: ProColumns<IDeviceMaintenanceHistory>[] = useMemo(
+        () => [
+            {
+                title: "STT",
+                dataIndex: "maintenanceCount",
+                width: 80,
+            },
+            {
+                title: "Mã thiết bị",
+                dataIndex: "deviceCode",
+                width: 120,
+            },
+            {
+                title: "Tên thiết bị",
+                dataIndex: "deviceName",
+                width: 180,
+            },
+            {
+                title: "Công ty",
+                dataIndex: "companyName",
+                width: 160,
+            },
+            {
+                title: "Phòng ban",
+                dataIndex: "departmentName",
+                width: 160,
+            },
+            {
+                title: "Vấn đề",
+                dataIndex: "issueDescription",
+                width: 220,
+                ellipsis: true,
+            },
+            {
+                title: "Nguyên nhân",
+                dataIndex: "causeName",
+                width: 200,
+                ellipsis: true,
+            },
+            {
+                title: "Mức độ hư hỏng",
+                dataIndex: "damageLevel",
+                width: 160,
+            },
+            {
+                title: "Hình thức bảo trì",
+                dataIndex: "maintenanceType",
+                width: 160,
+            },
+            {
+                title: "Mức ưu tiên",
+                dataIndex: "priorityLevel",
+                width: 140,
+            },
+            {
+                title: "Ngày tạo",
+                dataIndex: "createdDate",
+                width: 140,
+                render: (_, record) =>
+                    record.createdDate ? dayjs(record.createdDate).format("DD/MM/YYYY") : "-",
+            },
+            {
+                title: "Ngày bắt đầu",
+                dataIndex: "startDate",
+                width: 140,
+                render: (_, record) =>
+                    record.startDate ? dayjs(record.startDate).format("DD/MM/YYYY") : "-",
+            },
+            {
+                title: "Ngày kết thúc",
+                dataIndex: "endDate",
+                width: 140,
+                render: (_, record) =>
+                    record.endDate ? dayjs(record.endDate).format("DD/MM/YYYY") : "-",
+            },
+            {
+                title: "Người thực hiện",
+                dataIndex: "executorName",
+                width: 160,
+            },
+            {
+                title: "Ngày nghiệm thu",
+                dataIndex: "acceptanceDate",
+                width: 140,
+                render: (_, record) =>
+                    record.acceptanceDate ? dayjs(record.acceptanceDate).format("DD/MM/YYYY") : "-",
+            },
+            {
+                title: "Người nghiệm thu",
+                dataIndex: "acceptanceUserName",
+                width: 160,
+            },
+            {
+                title: "Trạng thái sau BT",
+                dataIndex: "deviceStatusAfter",
+                width: 200,
+            },
+        ],
+        []
+    );
 
     return (
-        <Card title="Báo cáo lịch sử bảo trì thiết bị" bodyStyle={{ paddingTop: 12 }}>
-            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+        <div>
+            <DeviceHistoryFilter filter={filter} onChange={setFilter} />
+
+            <Space
+                style={{
+                    marginBottom: 10,
+                    width: "100%",
+                    justifyContent: "space-between",
+                }}
+            >
+                <Text strong>Báo cáo lịch sử bảo trì thiết bị</Text>
+
                 <Access permission={ALL_PERMISSIONS.REPORT_EXPORT.DEVICE_HISTORY} hideChildren>
-                    <ExportButton onExport={handleExport} loading={exportLoading} />
-                </Access>
-
-                <DeviceHistoryFilter
-                    filter={filter}
-                    onChange={handleFilterChange}
-                    loading={isLoading}
-                />
-
-                <Access permission={ALL_PERMISSIONS.MAINTENANCE_REPORT.DEVICE_HISTORY}>
-                    <Table<IDeviceMaintenanceHistory>
-                        rowKey={(record) => record.deviceCode + record.startDate}
-                        columns={columns}
-                        dataSource={data?.result ?? []}
-                        loading={isLoading}
-                        pagination={pagination}
-                        scroll={{ x: 1500 }}
-                        onChange={handleTableChange}
-                        size="middle"
+                    <ExportExcelButton
+                        label="Xuất Excel"
+                        apiFn={callDownloadDeviceHistoryReport}
+                        filter={filter}
+                        fileName={`bao_cao_lich_su_${dayjs().format("YYYYMMDD_HHmmss")}.xlsx`}
                     />
-
                 </Access>
             </Space>
-        </Card>
+
+            <Access permission={ALL_PERMISSIONS.MAINTENANCE_REPORT.DEVICE_HISTORY}>
+                <DataTable<IDeviceMaintenanceHistory>
+                    rowKey="maintenanceCount"
+                    loading={isFetching}
+                    columns={columns}
+                    dataSource={items}
+                    search={false}
+                    scroll={{ x: "max-content" }}
+                    pagination={{
+                        current: meta.page,
+                        pageSize: meta.pageSize,
+                        total: meta.total,
+                        showSizeChanger: true,
+                        pageSizeOptions: [10, 20, 50, 100],
+                    }}
+                    request={async (params, sorter) => {
+                        const q = buildQuery(params, sorter);
+                        setQuery(q);
+
+                        return {
+                            data: items,
+                            success: true,
+                            total: meta.total,
+                        };
+                    }}
+                />
+            </Access>
+        </div>
     );
 };
 

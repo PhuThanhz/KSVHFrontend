@@ -10,10 +10,6 @@ interface DeviceWarrantyAndMaintenanceProps {
 
 const DEPRE_UNITS: TimeUnitType[] = ["MONTH", "QUARTER", "YEAR"];
 const FREQ_UNITS: TimeUnitType[] = ["DAY", "WEEK", "MONTH", "YEAR"];
-const MONTHS = Array.from({ length: 12 }, (_, i) => ({
-    label: `Tháng ${i + 1}`,
-    value: i + 1,
-}));
 
 const DeviceWarrantyAndMaintenance = ({
     isEdit,
@@ -21,10 +17,6 @@ const DeviceWarrantyAndMaintenance = ({
     setFreqUnit,
 }: DeviceWarrantyAndMaintenanceProps) => {
 
-    const showMonthFields = freqUnit === "MONTH";
-    const showYearFields = freqUnit === "YEAR";
-
-    // nếu update → disable toàn bộ
     const disabled = isEdit === true;
 
     return (
@@ -70,9 +62,7 @@ const DeviceWarrantyAndMaintenance = ({
                             min={1}
                             placeholder="Nhập số kỳ"
                             rules={[{ required: true, message: "Nhập số kỳ khấu hao" }]}
-                            fieldProps={{
-                                disabled,
-                            }}
+                            fieldProps={{ disabled }}
                         />
                     </Col>
 
@@ -80,7 +70,7 @@ const DeviceWarrantyAndMaintenance = ({
                         <ProForm.Item
                             name="depreciationPeriodUnit"
                             label="Đơn vị thời gian"
-                            rules={[{ required: true, message: "Chọn đơn vị" }]}
+                            rules={[{ required: true, message: "Chọn đơn vị khấu hao" }]}
                         >
                             <Select
                                 disabled={disabled}
@@ -109,7 +99,7 @@ const DeviceWarrantyAndMaintenance = ({
                             name="maintenanceFrequencyValue"
                             min={1}
                             placeholder="Nhập số lần"
-                            rules={[{ required: true, message: "Nhập số lần" }]}
+                            rules={[{ required: true, message: "Nhập tần suất bảo dưỡng" }]}
                             fieldProps={{ disabled }}
                         />
                     </Col>
@@ -118,7 +108,7 @@ const DeviceWarrantyAndMaintenance = ({
                         <ProForm.Item
                             name="maintenanceFrequencyUnit"
                             label="Đơn vị thời gian"
-                            rules={[{ required: true, message: "Chọn đơn vị" }]}
+                            rules={[{ required: true, message: "Chọn đơn vị bảo dưỡng" }]}
                         >
                             <Radio.Group
                                 optionType="button"
@@ -142,50 +132,6 @@ const DeviceWarrantyAndMaintenance = ({
                             </Radio.Group>
                         </ProForm.Item>
                     </Col>
-
-                    {showMonthFields && (
-                        <Col lg={12} md={12} sm={24} xs={24}>
-                            <ProFormDigit
-                                label="Ngày trong tháng"
-                                name="maintenanceDayOfMonth"
-                                min={1}
-                                max={31}
-                                placeholder="Nhập ngày (1-31)"
-                                rules={[{ required: true, message: "Nhập ngày trong tháng" }]}
-                                fieldProps={{ disabled }}
-                            />
-                        </Col>
-                    )}
-
-                    {showYearFields && (
-                        <>
-                            <Col lg={12} md={12} sm={24} xs={24}>
-                                <ProFormDigit
-                                    label="Ngày trong tháng"
-                                    name="maintenanceDayOfMonth"
-                                    min={1}
-                                    max={31}
-                                    placeholder="Nhập ngày (1-31)"
-                                    rules={[{ required: true, message: "Nhập ngày trong tháng" }]}
-                                    fieldProps={{ disabled }}
-                                />
-                            </Col>
-
-                            <Col lg={12} md={12} sm={24} xs={24}>
-                                <ProForm.Item
-                                    name="maintenanceMonth"
-                                    label="Tháng trong năm"
-                                    rules={[{ required: true, message: "Chọn tháng trong năm" }]}
-                                >
-                                    <Select
-                                        options={MONTHS}
-                                        placeholder="Chọn tháng"
-                                        disabled={disabled}
-                                    />
-                                </ProForm.Item>
-                            </Col>
-                        </>
-                    )}
                 </Row>
             </Card>
         </>

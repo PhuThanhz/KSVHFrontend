@@ -40,7 +40,8 @@ export const useMaintenanceRequestReportQuery = (
         queryKey: ["maintenance-request-report", filter, query],
         queryFn: async () => {
             const res = await callFetchMaintenanceRequestReport(filter, query);
-            if (!res?.data) throw new Error("Không thể lấy báo cáo yêu cầu bảo trì");
+            if (!res?.data)
+                throw new Error("Không thể lấy báo cáo yêu cầu bảo trì");
             return res.data as IModelPaginate<IMaintenanceRequestReport>;
         },
     });

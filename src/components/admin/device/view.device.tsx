@@ -40,6 +40,66 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                 </div>
             ) : data ? (
                 <>
+                    {/* =============== MÃ VẠCH & QR CODE =============== */}
+                    <Divider orientation="left">Mã vạch & QR Code</Divider>
+
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            padding: "12px 0",
+                            gap: 20,
+                            flexWrap: "wrap",
+                        }}
+                    >
+                        {/* BARCODE */}
+                        <div style={{ textAlign: "center" }}>
+                            {data.barcodeBase64 ? (
+                                <>
+                                    <img
+                                        src={`data:image/png;base64,${data.barcodeBase64}`}
+                                        alt="barcode"
+                                        style={{
+                                            width: 260,
+                                            height: 90,
+                                            objectFit: "contain",
+                                            border: "1px solid #ddd",
+                                            padding: 8,
+                                            background: "#fff",
+                                            borderRadius: 6,
+                                        }}
+                                    />
+                                    <div style={{ marginTop: 8, fontWeight: "bold", fontSize: 16 }}>
+                                        {data.deviceCode}
+                                    </div>
+                                </>
+                            ) : (
+                                <div>Không có mã vạch</div>
+                            )}
+                        </div>
+
+                        {/* QR CODE */}
+                        <div style={{ textAlign: "center" }}>
+                            {data.qrCodeBase64 ? (
+                                <img
+                                    src={`data:image/png;base64,${data.qrCodeBase64}`}
+                                    alt="qrcode"
+                                    style={{
+                                        width: 150,
+                                        height: 150,
+                                        objectFit: "contain",
+                                        border: "1px solid #ddd",
+                                        padding: 8,
+                                        background: "#fff",
+                                        borderRadius: 6,
+                                    }}
+                                />
+                            ) : (
+                                <div>Không có QR Code</div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* =============== THÔNG TIN CƠ BẢN =============== */}
                     <Descriptions bordered size="middle" column={2}>
                         <Descriptions.Item label="Mã thiết bị">{data.deviceCode}</Descriptions.Item>
@@ -87,6 +147,7 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                     <Descriptions bordered size="middle" column={2}>
                         <Descriptions.Item label="Ngày đưa vào sử dụng">{renderDate(data.startDate)}</Descriptions.Item>
                         <Descriptions.Item label="Ngày hết hạn bảo hành">{renderDate(data.warrantyExpiryDate)}</Descriptions.Item>
+
                         <Descriptions.Item label="Chu kỳ khấu hao">
                             {data.depreciationPeriodValue
                                 ? `${data.depreciationPeriodValue} ${data.depreciationPeriodUnit === "MONTH"
@@ -97,25 +158,18 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                                 }`
                                 : "-"}
                         </Descriptions.Item>
-                        <Descriptions.Item label="Ngày hết khấu hao dự kiến">{renderDate(data.depreciationEndDate)}</Descriptions.Item>
+
                         <Descriptions.Item label="Tần suất bảo dưỡng">
                             {data.maintenanceFrequencyValue
-                                ? `${data.maintenanceFrequencyValue} ${data.maintenanceFrequencyUnit === "DAY"
+                                ? `Mỗi ${data.maintenanceFrequencyValue} ${data.maintenanceFrequencyUnit === "DAY"
                                     ? "ngày"
                                     : data.maintenanceFrequencyUnit === "WEEK"
                                         ? "tuần"
                                         : data.maintenanceFrequencyUnit === "MONTH"
                                             ? "tháng"
                                             : "năm"
-                                } / lần`
+                                }`
                                 : "-"}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Chi tiết bảo dưỡng">
-                            {data.maintenanceDayOfMonth
-                                ? `Ngày ${data.maintenanceDayOfMonth}`
-                                : data.maintenanceMonth
-                                    ? `Tháng ${data.maintenanceMonth}`
-                                    : "-"}
                         </Descriptions.Item>
                     </Descriptions>
 
@@ -170,7 +224,6 @@ const ViewDevice: React.FC<IProps> = ({ open, onClose, deviceId }) => {
                     )}
 
                     <Divider orientation="left">Danh sách linh kiện</Divider>
-
                     {partsLoading ? (
                         <Spin tip="Đang tải linh kiện..." />
                     ) : (

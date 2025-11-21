@@ -152,8 +152,6 @@ const DeviceModal = ({
             // maintenance
             maintenanceFrequencyUnit: detail.maintenanceFrequencyUnit,
             maintenanceFrequencyValue: detail.maintenanceFrequencyValue,
-            maintenanceDayOfMonth: detail.maintenanceDayOfMonth,
-            maintenanceMonth: detail.maintenanceMonth,
 
             note: detail.note,
         });
@@ -169,7 +167,6 @@ const DeviceModal = ({
 
         // load images
         const imgs = [detail.image1, detail.image2, detail.image3].filter(Boolean) as string[];
-
         const normalized: UploadFile[] = imgs.map((raw) => {
             const fullUrl = raw.startsWith("http")
                 ? raw
@@ -181,7 +178,6 @@ const DeviceModal = ({
                 url: fullUrl,
             };
         });
-
         setFileList(normalized.slice(0, 3));
     }, [openModal, isEdit, detail, form]);
 
@@ -341,8 +337,6 @@ const DeviceModal = ({
                 depreciationPeriodUnit: values.depreciationPeriodUnit,
                 maintenanceFrequencyValue: Number(values.maintenanceFrequencyValue) || undefined,
                 maintenanceFrequencyUnit: values.maintenanceFrequencyUnit,
-                maintenanceDayOfMonth: Number(values.maintenanceDayOfMonth) || undefined,
-                maintenanceMonth: Number(values.maintenanceMonth) || undefined,
                 ownershipType: values.ownershipType || "INTERNAL",
                 status: "NEW",
             } as ICreateDeviceRequest;
@@ -471,7 +465,6 @@ const DeviceModal = ({
                 <Col span={24}>
                     <DeviceWarrantyAndMaintenance
                         isEdit={isEdit}
-                        disabledFields={disabledFields}
                         freqUnit={freqUnit}
                         setFreqUnit={setFreqUnit}
                     />

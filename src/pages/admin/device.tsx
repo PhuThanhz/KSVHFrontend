@@ -18,6 +18,9 @@ import { useCompaniesQuery } from "@/hooks/useCompanies";
 import DateRangeFilter from "@/components/common/DateRangeFilter";
 import type { IDeviceList } from "@/types/backend";
 import type { ProColumns } from "@ant-design/pro-components";
+const DeviceMaintenanceScheduleModal = lazy(() =>
+    import("@/components/admin/device/DeviceMaintenanceScheduleModal")
+);
 
 // Lazy load modals
 const DeviceModal = lazy(() => import("@/components/admin/device/DeviceModal"));
@@ -48,6 +51,9 @@ const DevicePage = () => {
     const [dataInit, setDataInit] = useState<{ id?: string | number | null } | null>(
         null
     );
+    const [openSchedule, setOpenSchedule] = useState(false);
+    const [scheduleDeviceId, setScheduleDeviceId] = useState<string | null>(null);
+
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [partsDeviceId, setPartsDeviceId] = useState<string | null>(null);
@@ -57,7 +63,10 @@ const DevicePage = () => {
     /** ===================== Filters & queries ===================== */
     const [internalFilters, dispatchInternalFilters] = useReducer(filterReducer, {});
     const [customerFilters, dispatchCustomerFilters] = useReducer(filterReducer, {});
-
+    const handleViewSchedule = useCallback((deviceId: string) => {
+        setScheduleDeviceId(deviceId);
+        setOpenSchedule(true);
+    }, []);
     const [internalQuery, setInternalQuery] = useState(() =>
         queryString.stringify(
             {
@@ -257,6 +266,15 @@ const DevicePage = () => {
                                 Quản lý Linh kiện
                             </Button>
                         </Access>
+                        <Access permission={ALL_PERMISSIONS.MAINTENANCE_SCHEDULE.GET_BY_DEVICE} hideChildren>
+                            <Button
+                                type="default"
+                                onClick={() => handleViewSchedule(String(entity.id))}
+                                icon={<ToolOutlined />}
+                            >
+                                Lịch bảo trì
+                            </Button>
+                        </Access>
 
                     </Space>
                 ),
@@ -362,13 +380,17 @@ const DevicePage = () => {
                                 dispatchFilters({ createdAt: filterStr })
                             }
                         />
-                        <Button
-                            icon={<PlusOutlined />}
-                            type="primary"
-                            onClick={handleCreate}
-                        >
-                            Thêm mới
-                        </Button>
+
+                        <Access permission={ALL_PERMISSIONS.DEVICE.CREATE} hideChildren>
+                            <Button
+                                icon={<PlusOutlined />}
+                                type="primary"
+                                onClick={handleCreate}
+                            >
+                                Thêm mới
+                            </Button>
+                        </Access>
+
                     </Space>,
                 ]}
             />
@@ -455,6 +477,13 @@ const DevicePage = () => {
                         open={openParts}
                         onClose={() => setOpenParts(false)}
                         deviceId={partsDeviceId}
+                    />
+                )}
+                {openSchedule && scheduleDeviceId && (
+                    <DeviceMaintenanceScheduleModal
+                        open={openSchedule}
+                        onClose={() => setOpenSchedule(false)}
+                        deviceId={scheduleDeviceId}
                     />
                 )}
 

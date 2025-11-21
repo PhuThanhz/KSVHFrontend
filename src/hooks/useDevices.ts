@@ -4,6 +4,7 @@ import {
     callFetchDeviceById,
     callCreateDevice,
     callUpdateDevice,
+    callFetchDeviceByCode,
 } from "@/config/api";
 
 import type {
@@ -88,3 +89,19 @@ export const useUpdateDeviceMutation = () => {
     });
 };
 
+/** ===================== Thiết bị theo mã vạch ===================== **/
+export const useDeviceByCodeQuery = (deviceCode?: string) => {
+    return useQuery({
+        queryKey: ["device-by-code", deviceCode],
+        enabled: !!deviceCode && deviceCode.trim() !== "",
+        queryFn: async () => {
+            if (!deviceCode) throw new Error("Thiếu mã thiết bị");
+
+            const res = await callFetchDeviceByCode(deviceCode.trim());
+            if (!res?.data) throw new Error("Không tìm thấy thiết bị");
+
+            return res.data as IDevice;
+        },
+        placeholderData: (prev) => prev,
+    });
+};

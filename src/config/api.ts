@@ -931,6 +931,11 @@ export const callUpdateDevice = (id: string, data: IUpdateDeviceRequest) => {
         headers: { "Content-Type": "application/json" },
     });
 };
+
+export const callFetchDeviceByCode = (deviceCode: string) => {
+    return axios.get<IBackendRes<IDevice>>(`/api/v1/devices/by-code/${deviceCode}`);
+};
+
 /** ======================== Device Parts ======================== **/
 
 // GET LIST PARTS
@@ -1494,26 +1499,65 @@ export const callFetchWarrantyProductReport = (
         filter
     );
 };
-export const callExportDeviceDepreciationReport = (queryString: string) => {
-    return axios.get(`/api/v1/report/export/device-depreciation?${queryString}`, {
-        responseType: "arraybuffer"
+
+
+
+
+export const callDownloadMaintenanceRequestReport = (
+    filter: IRequestMaintenanceFilter
+) => {
+    return axios.get(`/api/v1/report/export/maintenance-request`, {
+        params: filter,
+        responseType: "blob"
     });
 };
 
-export const callExportDeviceHistoryReport = (queryString: string) =>
-    axios.get(`/api/v1/report/export/device-history?${queryString}`, { responseType: "arraybuffer" });
+export const callDownloadDeviceHistoryReport = (
+    filter: IDeviceHistoryFilter
+) => {
+    return axios.get(`/api/v1/report/export/device-history`, {
+        params: filter,
+        responseType: "blob"
+    });
+};
+export const callDownloadMaterialUsageReport = (
+    filter: IMaterialUsageFilter
+) => {
+    return axios.get(`/api/v1/report/export/material-usage`, {
+        params: filter,
+        responseType: "blob"
+    });
+};
+export const callDownloadTechnicianActivityReport = (
+    filter: ITechnicianActivityFilter
+) => {
+    return axios.get(`/api/v1/report/export/technician-activity`, {
+        params: filter,
+        responseType: "blob"
+    });
+};
+export const callDownloadDeviceDepreciationReport = (
+    filter: IDeviceDepreciationFilter
+) => {
+    return axios.get(`/api/v1/report/export/device-depreciation`, {
+        params: filter,
+        responseType: "blob",
+    });
+};
+export const callDownloadPeriodicMaintenanceReport = (
+    filter: IPeriodicMaintenanceFilter
+) => {
+    return axios.get(`/api/v1/report/export/periodic-maintenance`, {
+        params: filter,
+        responseType: "blob"
+    });
+};
 
-export const callExportMaintenanceRequestReport = (queryString: string) =>
-    axios.get(`/api/v1/report/export/maintenance-request?${queryString}`, { responseType: "arraybuffer" });
-
-export const callExportMaterialUsageReport = (qs: string) =>
-    axios.get(`/api/v1/report/export/material-usage?${qs}`, { responseType: "arraybuffer" });
-
-export const callExportPeriodicMaintenanceReport = (qs: string) =>
-    axios.get(`/api/v1/report/export/periodic-maintenance?${qs}`, { responseType: "arraybuffer" });
-
-export const callExportTechnicianActivityReport = (qs: string) =>
-    axios.get(`/api/v1/report/export/technician-activity?${qs}`, { responseType: "arraybuffer" });
-
-export const callExportWarrantyProductReport = (qs: string) =>
-    axios.get(`/api/v1/report/export/warranty-product?${qs}`, { responseType: "arraybuffer" });
+export const callDownloadWarrantyProductReport = (
+    filter: IWarrantyProductFilter
+) => {
+    return axios.get(`/api/v1/report/export/warranty-product`, {
+        params: filter,
+        responseType: "blob"
+    });
+};

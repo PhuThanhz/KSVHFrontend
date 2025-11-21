@@ -1,19 +1,17 @@
 import { useState, useMemo } from "react";
-import type { ProColumns } from "@ant-design/pro-components";
 import { Space, Typography } from "antd";
+import type { ProColumns } from "@ant-design/pro-components";
+import queryString from "query-string";
 import dayjs from "dayjs";
 
 import DeviceDepreciationFilter from "../filters/DeviceDepreciationFilter";
-import ExportButton from "@/components/admin/maintenance-report/ExportButton";
+import ExportExcelButton from "@/pages/admin/maintenance-report/export-excel/ExportExcelButton";
 import DataTable from "@/components/admin/data-table";
+import Access from "@/components/share/access";
 
 import { useDeviceDepreciationReportQuery } from "@/hooks/useMaintenanceReports";
-import { callExportDeviceDepreciationReport } from "@/config/api";
-
+import { callDownloadDeviceDepreciationReport } from "@/config/api";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import Access from "@/components/share/access";
-import { notify } from "@/components/common/notify";
-import queryString from "query-string";
 
 import type {
     IDeviceDepreciationFilter,
@@ -24,17 +22,13 @@ const { Text } = Typography;
 
 const DeviceDepreciationSection = () => {
     const [filter, setFilter] = useState<IDeviceDepreciationFilter>({});
-    const [query, setQuery] = useState("page=0&size=10&sort=startDate,desc");
-    const [exportLoading, setExportLoading] = useState(false);
+    const [query, setQuery] = useState("page=0&size=10&sort=commissioningDate,desc");
 
     const { data, isFetching } = useDeviceDepreciationReportQuery(filter, query);
 
     const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
     const items = data?.result ?? [];
 
-    /* ==========================
-     * BUILD TABLE QUERY
-     * ========================== */
     const buildQuery = (params: any, sorter: any) => {
         const q: any = {
             page: (params.current || 1) - 1,
@@ -45,101 +39,97 @@ const DeviceDepreciationSection = () => {
         if (field) {
             q.sort = `${field},${sorter[field] === "ascend" ? "asc" : "desc"}`;
         } else {
-            q.sort = "startDate,desc";
+            q.sort = "commissioningDate,desc";
         }
 
         return queryString.stringify(q);
     };
 
-    /* ==========================
-     * BUILD EXPORT QUERY
-     * ========================== */
-    const buildExportQuery = (f: IDeviceDepreciationFilter) => {
-        const q: any = {};
-        if (f.companyId) q.companyId = f.companyId;
-        if (f.departmentId) q.departmentId = f.departmentId;
-        if (f.deviceTypeId) q.deviceTypeId = f.deviceTypeId;
-        if (f.status) q.status = f.status;
-        if (f.startDate) q.startDate = f.startDate;
-        if (f.endDate) q.endDate = f.endDate;
-
-        return queryString.stringify(q);
-    };
-
-    /* ==========================
-     * EXPORT EXCEL
-     * ========================== */
-    const handleExport = async () => {
-        try {
-            setExportLoading(true);
-            const qs = buildExportQuery(filter);
-
-            const res = await callExportDeviceDepreciationReport(qs); // must be arraybuffer
-
-            const blob = new Blob([res.data], {
-                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            });
-
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `bao_cao_khau_hao_${dayjs().format("YYYYMMDD_HHmmss")}.xlsx`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        } catch (err) {
-            notify.error("Xuất báo cáo thất bại");
-        } finally {
-            setExportLoading(false);
-        }
-    };
-
-    /* ==========================
-     * TABLE COLUMNS
-     * ========================== */
     const columns: ProColumns<IDeviceDepreciationReport>[] = useMemo(
         () => [
-            { title: "Mã thiết bị", dataIndex: "deviceCode", width: 130 },
-            { title: "Tên thiết bị", dataIndex: "deviceName", width: 180 },
-            { title: "Công ty", dataIndex: "companyName", width: 180 },
-            { title: "Phòng ban", dataIndex: "departmentName", width: 160 },
-            { title: "Loại tài sản", dataIndex: "assetType", width: 140 },
-            { title: "Loại thiết bị", dataIndex: "deviceTypeName", width: 160 },
-
+            {
+                title: "Mã thiết bị",
+                dataIndex: "deviceCode",
+                width: 140,
+            },
+            {
+                title: "Tên thiết bị",
+                dataIndex: "deviceName",
+                width: 200,
+            },
+            {
+                title: "Công ty",
+                dataIndex: "companyName",
+                width: 180,
+            },
+            {
+                title: "Phòng ban",
+                dataIndex: "departmentName",
+                width: 180,
+            },
+            {
+                title: "Loại tài sản",
+                dataIndex: "assetType",
+                width: 160,
+            },
+            {
+                title: "Loại thiết bị",
+                dataIndex: "deviceTypeName",
+                width: 160,
+            },
             {
                 title: "Giá gốc (₫)",
                 dataIndex: "unitPrice",
                 width: 150,
-                render: (_, r) => r.unitPrice?.toLocaleString("vi-VN"),
+                render: (_, record) =>
+                    record.unitPrice ? record.unitPrice.toLocaleString("vi-VN") : "-",
             },
-
-            { title: "Ngày bắt đầu", dataIndex: "startDate", width: 140 },
-            { title: "Thời gian KH", dataIndex: "depreciationPeriod", width: 120 },
-            { title: "Ngày hết KH", dataIndex: "depreciationEndDate", width: 140 },
-
+            {
+                title: "Ngày đưa vào sử dụng",
+                dataIndex: "commissioningDate",
+                width: 160,
+            },
+            {
+                title: "Thời gian KH",
+                dataIndex: "depreciationPeriod",
+                width: 140,
+            },
+            {
+                title: "Ngày hết KH",
+                dataIndex: "depreciationEndDate",
+                width: 160,
+            },
             {
                 title: "KH/tháng (₫)",
                 dataIndex: "monthlyDepreciation",
-                width: 140,
-                render: (_, r) =>
-                    r.monthlyDepreciation?.toLocaleString("vi-VN") ?? "-",
+                width: 160,
+                render: (_, record) =>
+                    record.monthlyDepreciation ? record.monthlyDepreciation.toLocaleString("vi-VN") : "-",
             },
             {
                 title: "Đã khấu hao (₫)",
                 dataIndex: "depreciationToDate",
-                width: 150,
-                render: (_, r) =>
-                    r.depreciationToDate?.toLocaleString("vi-VN") ?? "-",
+                width: 160,
+                render: (_, record) =>
+                    record.depreciationToDate ? record.depreciationToDate.toLocaleString("vi-VN") : "-",
             },
             {
                 title: "Giá trị còn lại (₫)",
                 dataIndex: "remainingValue",
-                width: 150,
-                render: (_, r) =>
-                    r.remainingValue?.toLocaleString("vi-VN") ?? "-",
+                width: 160,
+                render: (_, record) =>
+                    record.remainingValue ? record.remainingValue.toLocaleString("vi-VN") : "-",
             },
-
-            { title: "Người quản lý", dataIndex: "managerName", width: 150 },
-            { title: "Trạng thái", dataIndex: "status", width: 140 },
+            {
+                title: "Người quản lý",
+                dataIndex: "managerName",
+                width: 180,
+            },
+            {
+                title: "Trạng thái",
+                dataIndex: "status",
+                width: 150,
+            },
         ],
         []
     );
@@ -161,7 +151,12 @@ const DeviceDepreciationSection = () => {
                     permission={ALL_PERMISSIONS.REPORT_EXPORT.DEVICE_DEPRECIATION}
                     hideChildren
                 >
-                    <ExportButton onExport={handleExport} loading={exportLoading} />
+                    <ExportExcelButton
+                        label="Xuất Excel"
+                        apiFn={callDownloadDeviceDepreciationReport}
+                        filter={filter}
+                        fileName={`bao_cao_khau_hao_${dayjs().format("YYYYMMDD_HHmmss")}.xlsx`}
+                    />
                 </Access>
             </Space>
 
@@ -171,12 +166,14 @@ const DeviceDepreciationSection = () => {
                     loading={isFetching}
                     columns={columns}
                     dataSource={items}
-                    scroll={{ x: 1200 }}
+                    search={false}
+                    scroll={{ x: "max-content" }}
                     pagination={{
                         current: meta.page,
                         pageSize: meta.pageSize,
                         total: meta.total,
                         showSizeChanger: true,
+                        pageSizeOptions: [10, 20, 50, 100],
                     }}
                     request={async (params, sorter) => {
                         const q = buildQuery(params, sorter);

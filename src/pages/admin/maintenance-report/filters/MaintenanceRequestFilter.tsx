@@ -1,152 +1,207 @@
-// src/pages/admin/maintenance-report/filters/MaintenanceRequestFilter.tsx
-
-import { Form, Input, Button, DatePicker, Row, Col } from "antd";
-import type { Dayjs } from "dayjs";
-import dayjs from "dayjs";
-import { useEffect } from "react";
+import { Card, Col, DatePicker, Form, Input, Row, Select } from "antd";
+import { useEffect, useState } from "react";
+import dayjs, { Dayjs } from "dayjs";
 import type { IRequestMaintenanceFilter } from "@/types/backend";
+import { callFetchCompany, callFetchDepartment } from "@/config/api";
 
 const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 interface IProps {
-    filter: IRequestMaintenanceFilter;
+    value: IRequestMaintenanceFilter;
     onChange: (filter: IRequestMaintenanceFilter) => void;
     loading?: boolean;
 }
 
 interface IFormValues {
     dateRange?: [Dayjs, Dayjs];
-    companyName?: string;
-    departmentName?: string;
+    companyId?: number | string;
+    departmentId?: number | string;
     maintenanceType?: string;
     status?: string;
     priorityLevel?: string;
     keyword?: string;
 }
 
-const MaintenanceRequestFilter = ({ filter, onChange, loading }: IProps) => {
+const MaintenanceRequestFilter = ({ value, onChange }: IProps) => {
     const [form] = Form.useForm<IFormValues>();
 
-    // Đồng bộ form khi filter bên ngoài thay đổi (ví dụ reset từ parent)
+    const [companies, setCompanies] = useState<{ label: string; value: number }[]>([]);
+    const [departments, setDepartments] = useState<{ label: string; value: number }[]>([]);
+    const [selectedCompanyId, setSelectedCompanyId] = useState<number | undefined>();
+
+    /* ======================= FETCH DATA ======================= */
     useEffect(() => {
-        const values: IFormValues = {
-            companyName: filter.companyName,
-            departmentName: filter.departmentName,
-            maintenanceType: filter.maintenanceType,
-            status: filter.status,
-            priorityLevel: filter.priorityLevel,
-            keyword: filter.keyword,
-            dateRange:
-                filter.fromDate && filter.toDate
-                    ? [dayjs(filter.fromDate), dayjs(filter.toDate)]
-                    : undefined,
-        };
-        form.setFieldsValue(values);
-    }, [filter, form]);
+        fetchCompanies();
+    }, []);
 
-    const handleFinish = (values: IFormValues) => {
-        const next: IRequestMaintenanceFilter = {
-            companyName: values.companyName?.trim() || undefined,
-            departmentName: values.departmentName?.trim() || undefined,
-            maintenanceType: values.maintenanceType?.trim() || undefined,
-            status: values.status?.trim() || undefined,
-            priorityLevel: values.priorityLevel?.trim() || undefined,
+    useEffect(() => {
+        if (selectedCompanyId) {
+            fetchDepartments(selectedCompanyId);
+        } else {
+            setDepartments([]);
+            form.setFieldsValue({ departmentId: undefined });
+        }
+    }, [selectedCompanyId]);
+
+    const fetchCompanies = async () => {
+        const res = await callFetchCompany("page=0&size=1000");
+        setCompanies(
+            res?.data?.result?.map((c: any) => ({
+                label: c.name,
+                value: c.id,
+            })) || []
+        );
+    };
+
+    const fetchDepartments = async (companyId: number | string) => {
+        const res = await callFetchDepartment(`companyId=${companyId}&page=0&size=1000`);
+        setDepartments(
+            res?.data?.result?.map((d: any) => ({
+                label: d.name,
+                value: d.id,
+            })) || []
+        );
+    };
+
+    /* ======================= APPLY / RESET ======================= */
+    const applyFilter = () => {
+        const values = form.getFieldsValue();
+        onChange({
+            companyName:
+                companies.find((x) => x.value === values.companyId)?.label || undefined,
+            departmentName:
+                departments.find((x) => x.value === values.departmentId)?.label || undefined,
+            maintenanceType: values.maintenanceType || undefined,
+            status: values.status || undefined,
+            priorityLevel: values.priorityLevel || undefined,
             keyword: values.keyword?.trim() || undefined,
-            fromDate: values.dateRange?.[0]
-                ? values.dateRange[0].format("YYYY-MM-DD")
-                : undefined,
-            toDate: values.dateRange?.[1]
-                ? values.dateRange[1].format("YYYY-MM-DD")
-                : undefined,
-        };
-
-        onChange(next);
+            fromDate: values.dateRange?.[0]?.format("YYYY-MM-DD"),
+            toDate: values.dateRange?.[1]?.format("YYYY-MM-DD"),
+        });
     };
 
     const handleReset = () => {
         form.resetFields();
+        setSelectedCompanyId(undefined);
         onChange({});
     };
 
+    /* ======================= RENDER ======================= */
     return (
-        <Form<IFormValues>
-            form={form}
-            layout="vertical"
-            onFinish={handleFinish}
-            style={{ marginBottom: 16 }}
-        >
-            <Row gutter={16}>
-                <Col xs={24} md={8}>
-                    <Form.Item label="Khoảng ngày tạo phiếu" name="dateRange">
-                        <RangePicker
-                            style={{ width: "100%" }}
-                            allowEmpty={[true, true]}
-                            format="YYYY-MM-DD"
-                        />
-                    </Form.Item>
-                </Col>
+        <Card size="small" style={{ marginBottom: 16 }} title="Bộ lọc báo cáo yêu cầu bảo trì">
+            <Form form={form} layout="vertical">
+                <Row gutter={12}>
+                    {/* Công ty */}
+                    <Col xl={6} lg={8} md={8}>
+                        <Form.Item label="Công ty" name="companyId">
+                            <Select
+                                allowClear
+                                placeholder="Chọn công ty"
+                                options={companies}
+                                onChange={(v) => setSelectedCompanyId(v)}
+                            />
+                        </Form.Item>
+                    </Col>
 
-                <Col xs={24} md={8}>
-                    <Form.Item label="Công ty" name="companyName">
-                        <Input placeholder="Nhập tên công ty" allowClear />
-                    </Form.Item>
-                </Col>
+                    {/* Phòng ban */}
+                    <Col xl={6} lg={8} md={8}>
+                        <Form.Item label="Phòng ban / Nhà hàng" name="departmentId">
+                            <Select
+                                allowClear
+                                placeholder="Chọn phòng ban"
+                                options={departments}
+                                disabled={!selectedCompanyId}
+                            />
+                        </Form.Item>
+                    </Col>
 
-                <Col xs={24} md={8}>
-                    <Form.Item label="Phòng ban / Nhà hàng" name="departmentName">
-                        <Input placeholder="Nhập phòng ban" allowClear />
-                    </Form.Item>
-                </Col>
-            </Row>
+                    {/* Loại bảo trì */}
+                    <Col xl={6} lg={8} md={8}>
+                        <Form.Item label="Loại bảo trì" name="maintenanceType">
+                            <Select allowClear placeholder="Chọn loại bảo trì">
+                                <Option value="DOT_XUAT">Đột xuất</Option>
+                                <Option value="DINH_KY">Định kỳ</Option>
+                                <Option value="SUA_CHUA">Sửa chữa</Option>
+                            </Select>
+                        </Form.Item>
+                    </Col>
 
-            <Row gutter={16}>
-                <Col xs={24} md={8}>
-                    <Form.Item label="Loại bảo trì" name="maintenanceType">
-                        <Input placeholder="Nhập loại bảo trì" allowClear />
-                    </Form.Item>
-                </Col>
+                    {/* Trạng thái */}
+                    <Col xl={6} lg={8} md={8}>
+                        <Form.Item label="Trạng thái" name="status">
+                            <Select allowClear placeholder="Chọn trạng thái">
+                                <Option value="CHO_PHAN_CONG">Chờ phân công</Option>
+                                <Option value="DANG_BAO_TRI">Đang bảo trì</Option>
+                                <Option value="HOAN_THANH">Hoàn thành</Option>
+                                <Option value="HUY">Hủy</Option>
+                            </Select>
+                        </Form.Item>
+                    </Col>
+                </Row>
 
-                <Col xs={24} md={8}>
-                    <Form.Item label="Trạng thái" name="status">
-                        <Input placeholder="Nhập trạng thái" allowClear />
-                    </Form.Item>
-                </Col>
+                <Row gutter={12}>
+                    {/* Mức độ ưu tiên */}
+                    <Col xl={6} lg={8} md={8}>
+                        <Form.Item label="Mức độ ưu tiên" name="priorityLevel">
+                            <Select allowClear placeholder="Chọn mức độ ưu tiên">
+                                <Option value="KHAN_CAP">Khẩn cấp</Option>
+                                <Option value="CAO">Cao</Option>
+                                <Option value="TRUNG_BINH">Trung bình</Option>
+                                <Option value="THAP">Thấp</Option>
+                            </Select>
+                        </Form.Item>
+                    </Col>
 
-                <Col xs={24} md={8}>
-                    <Form.Item label="Mức độ ưu tiên" name="priorityLevel">
-                        <Input placeholder="Nhập mức độ ưu tiên" allowClear />
-                    </Form.Item>
-                </Col>
-            </Row>
+                    {/* Khoảng ngày tạo phiếu */}
+                    <Col xl={6} lg={8} md={8}>
+                        <Form.Item label="Khoảng ngày tạo phiếu" name="dateRange">
+                            <RangePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+                        </Form.Item>
+                    </Col>
 
-            <Row gutter={16} align="bottom">
-                <Col xs={24} md={16}>
-                    <Form.Item label="Từ khóa" name="keyword">
-                        <Input placeholder="Mã phiếu / tên thiết bị..." allowClear />
-                    </Form.Item>
-                </Col>
+                    {/* Từ khóa */}
+                    <Col xl={12} lg={8} md={8}>
+                        <Form.Item label="Từ khóa" name="keyword">
+                            <Input allowClear placeholder="Mã phiếu / tên thiết bị..." />
+                        </Form.Item>
+                    </Col>
+                </Row>
 
-                <Col
-                    xs={24}
-                    md={8}
-                    style={{
-                        display: "flex",
-                        gap: 8,
-                        alignItems: "flex-end",
-                        justifyContent: "flex-end",
-                    }}
-                >
-                    <Button onClick={handleReset}>Xóa bộ lọc</Button>
-                    <Button
-                        type="primary"
-                        htmlType="submit"
-                        loading={loading}
-                    >
-                        Tìm kiếm
-                    </Button>
-                </Col>
-            </Row>
-        </Form>
+                <Row justify="end" gutter={8}>
+                    <Col>
+                        <button
+                            type="button"
+                            style={{
+                                padding: "6px 16px",
+                                borderRadius: 6,
+                                border: "1px solid #ccc",
+                                background: "#fff",
+                            }}
+                            onClick={handleReset}
+                        >
+                            Đặt lại
+                        </button>
+                    </Col>
+                    <Col>
+                        <button
+                            type="button"
+                            style={{
+                                padding: "6px 20px",
+                                borderRadius: 6,
+                                background: "#1677ff",
+                                color: "#fff",
+                                border: "none",
+                                fontWeight: 600,
+                            }}
+                            onClick={applyFilter}
+                        >
+                            Áp dụng
+                        </button>
+                    </Col>
+                </Row>
+            </Form>
+        </Card>
     );
 };
 

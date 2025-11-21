@@ -546,6 +546,7 @@ export interface IDeviceList {
     status?: DeviceStatus;
 }
 
+
 /* ============================================================
    DEVICE DETAIL (SHOW)
    ============================================================ */
@@ -562,7 +563,6 @@ export interface IDevice {
     supplier?: { id?: number | string; supplierName?: string; phone?: string };
     manager?: { id?: string; name?: string; email?: string };
     unit?: { id?: number | string; name?: string };
-
     customer?: { id?: string; name?: string; customerCode?: string };
 
     brand?: string | null;
@@ -580,26 +580,32 @@ export interface IDevice {
     unitPrice?: number | string | null;
     ownershipType?: DeviceOwnershipType;
 
+    /** Ngày đưa vào sử dụng */
     startDate?: string | null;
+
+    /** Ngày hết hạn bảo hành */
     warrantyExpiryDate?: string | null;
 
+    /** Khấu hao (thời gian) */
     depreciationPeriodValue?: number | null;
     depreciationPeriodUnit?: TimeUnitType | null;
-    depreciationEndDate?: string | null;
 
+    /** Bảo dưỡng định kỳ (thời gian) */
     maintenanceFrequencyValue?: number | null;
     maintenanceFrequencyUnit?: TimeUnitType | null;
-    maintenanceDayOfMonth?: number | null;
-    maintenanceMonth?: number | null;
 
     note?: string | null;
-    status?: DeviceStatus | null;
+    status?: DeviceStatus;
 
     createdAt?: string | null;
     updatedAt?: string | null;
     createdBy?: string | null;
     updatedBy?: string | null;
+
+    barcodeBase64?: string | null;
+    qrCodeBase64?: string | null;
 }
+
 
 /* ============================================================
    CREATE DEVICE REQUEST
@@ -631,17 +637,24 @@ export interface ICreateDeviceRequest {
 
     unitPrice?: number | string | null;
 
+    /** Ngày đưa vào sử dụng */
     startDate?: string | null;
+
+    /** Ngày hết hạn bảo hành */
     warrantyExpiryDate?: string | null;
+
+    /** Thời gian khấu hao (Số + Đơn vị) */
     depreciationPeriodValue?: number | null;
     depreciationPeriodUnit?: TimeUnitType | null;
-    depreciationEndDate?: string | null;
+
+    /** Tần suất bảo dưỡng (Số + Đơn vị) */
     maintenanceFrequencyValue?: number | null;
     maintenanceFrequencyUnit?: TimeUnitType | null;
-    maintenanceDayOfMonth?: number | null;
-    maintenanceMonth?: number | null;
-    note?: string;
+
+    note?: string | null;
     status?: DeviceStatus | null;
+
+    /** Khi ownershipType = CUSTOMER */
     customerId?: string | null;
 }
 
@@ -1612,8 +1625,8 @@ export interface IWarrantyProductFilter {
     deviceType?: string;
     solution?: string;
 }
-//RESPONSE
 
+//RESPONSE
 export interface IDeviceDepreciationReport {
     deviceCode: string;
     deviceName: string;
@@ -1675,7 +1688,8 @@ export interface IMaintenanceRequestReport {
 
     damageLevel: string;
     maintenanceType: string;
-    solutionMethod: string;
+
+    solutionMethods: string[];
     priorityLevel: string;
     status: string;
     rejectReason?: string;
@@ -1692,6 +1706,7 @@ export interface IMaintenanceRequestReport {
     acceptanceDate?: string;
     acceptanceUserName?: string;
 }
+
 
 
 export interface IMaterialUsageReport {
