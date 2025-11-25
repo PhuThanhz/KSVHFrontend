@@ -7,6 +7,7 @@ import {
     callAutoAssignAll,
     callAssignTechnicianManual,
     callFetchRejectLogsByRequestId,
+    callFetchMaintenanceRequestTimeline
 } from "@/config/api";
 import type {
     IModelPaginate,
@@ -15,8 +16,10 @@ import type {
     IReqMaintenanceRequestInternalDTO,
     IReqMaintenanceRequestCustomerDTO,
     IResMaintenanceRejectDTO,
+    IResMaintenanceTimelineDTO
 } from "@/types/backend";
 import { notify } from "@/components/common/notify";
+
 
 /** ========================= Lấy danh sách phiếu bảo trì ========================= */
 export const useMaintenanceRequestsQuery = (query: string) => {
@@ -143,6 +146,21 @@ export const useAutoAssignAllMutation = () => {
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi phân công tự động");
+        },
+    });
+};
+
+/** ========================= Lấy timeline phiếu bảo trì ========================= */
+export const useMaintenanceTimelineQuery = (id?: string) => {
+    return useQuery({
+        queryKey: ["maintenance-request-timeline", id],
+        enabled: !!id,
+        queryFn: async () => {
+            if (!id) throw new Error("Thiếu ID phiếu bảo trì");
+            const res = await callFetchMaintenanceRequestTimeline(id);
+            if (!res?.data)
+                throw new Error(res?.message || "Không thể lấy timeline phiếu bảo trì");
+            return res.data as IResMaintenanceTimelineDTO;
         },
     });
 };

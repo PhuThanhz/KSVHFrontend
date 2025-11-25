@@ -1,194 +1,227 @@
-// // src/pages/admin/maintenance-report/sections/WarrantyProduct.tsx
+import { useMemo, useState } from "react";
+import { Table, Space, Typography } from "antd";
+import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
+import dayjs from "dayjs";
 
-// import { useState, useMemo } from "react";
-// import { Card, Table, Space, message } from "antd";
-// import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
-// import dayjs from "dayjs";
+import WarrantyProductFilter from "../filters/WarrantyProductFilter";
+import ExportExcelButton from "@/pages/admin/maintenance-report/export-excel/ExportExcelButton";
+import Access from "@/components/share/access";
 
-// import WarrantyProductFilter from "../filters/WarrantyProductFilter";
-// import ExportButton from "@/components/admin/maintenance-report/ExportButton";
-// import Access from "@/components/share/access";
+import { useWarrantyProductReportQuery } from "@/hooks/useMaintenanceReports";
+import { callDownloadWarrantyProductReport } from "@/config/api";
+import { ALL_PERMISSIONS } from "@/config/permissions";
 
-// import { useWarrantyProductReportQuery } from "@/hooks/useMaintenanceReports";
+import type { IWarrantyProductFilter, IWarrantyProductReport } from "@/types/backend";
 
-// import { callExportWarrantyProductReport } from "@/config/api";
+interface TableParams {
+    pagination: TablePaginationConfig;
+}
 
-// import { ALL_PERMISSIONS } from "@/config/permissions";
+const { Text } = Typography;
 
-// import type {
-//     IWarrantyProductFilter,
-//     IWarrantyProductReport,
-// } from "@/types/backend";
+const WarrantyProductSection = () => {
+    const [filter, setFilter] = useState<IWarrantyProductFilter>({});
+    const [tableParams, setTableParams] = useState<TableParams>({
+        pagination: {
+            current: 1,
+            pageSize: 10,
+            showSizeChanger: true,
+            pageSizeOptions: [10, 20, 50, 100],
+        },
+    });
 
-// interface ITableParams {
-//     pagination: Partial<TablePaginationConfig>;
-// }
+    const queryString = useMemo(() => {
+        const params = new URLSearchParams();
+        if (tableParams.pagination?.current)
+            params.set("page", String(tableParams.pagination.current - 1));
+        if (tableParams.pagination?.pageSize)
+            params.set("size", String(tableParams.pagination.pageSize));
+        return params.toString();
+    }, [tableParams]);
 
-// const WarrantyProductSection = () => {
-//     const [filter, setFilter] = useState<IWarrantyProductFilter>({});
-//     const [tableParams, setTableParams] = useState<ITableParams>({
-//         pagination: {
-//             current: 1,
-//             pageSize: 10,
-//             showSizeChanger: true,
-//             pageSizeOptions: [10, 20, 50, 100],
-//         },
-//     });
+    const { data, isLoading } = useWarrantyProductReportQuery(filter, queryString);
 
-//     const [exportLoading, setExportLoading] = useState(false);
+    const pagination: TablePaginationConfig = {
+        ...tableParams.pagination,
+        total: data?.meta?.total ?? 0,
+    };
 
-//     /* ---------------------- Build Query String ---------------------- */
-//     const queryString = useMemo(() => {
-//         const params = new URLSearchParams();
-//         params.set("page", String((tableParams.pagination.current ?? 1) - 1));
-//         params.set("size", String(tableParams.pagination.pageSize ?? 10));
-//         return params.toString();
-//     }, [tableParams]);
+    const handleTableChange = (pagination: TablePaginationConfig) => {
+        setTableParams({ pagination });
+    };
 
-//     const { data, isLoading } = useWarrantyProductReportQuery(filter, queryString);
+    const handleFilterChange = (next: IWarrantyProductFilter) => {
+        setFilter(next);
+        setTableParams((prev) => ({
+            ...prev,
+            pagination: { ...prev.pagination, current: 1 },
+        }));
+    };
 
-//     const pagination: TablePaginationConfig = {
-//         ...tableParams.pagination,
-//         total: data?.meta?.total ?? 0,
-//     };
+    const columns: ColumnsType<IWarrantyProductReport> = useMemo(
+        () => [
+            {
+                title: "Mã KH",
+                dataIndex: "customerCode",
+                key: "customerCode",
+                width: 140,
+                fixed: "left",
+            },
+            {
+                title: "Tên khách hàng",
+                dataIndex: "customerName",
+                key: "customerName",
+                width: 200,
+            },
+            {
+                title: "Số điện thoại",
+                dataIndex: "phone",
+                key: "phone",
+                width: 140,
+            },
+            {
+                title: "Địa chỉ",
+                dataIndex: "address",
+                key: "address",
+                width: 250,
+                ellipsis: true,
+            },
+            {
+                title: "Mã thiết bị",
+                dataIndex: "deviceCode",
+                key: "deviceCode",
+                width: 140,
+            },
+            {
+                title: "Tên thiết bị",
+                dataIndex: "deviceName",
+                key: "deviceName",
+                width: 200,
+            },
+            {
+                title: "Loại thiết bị",
+                dataIndex: "deviceType",
+                key: "deviceType",
+                width: 160,
+            },
+            {
+                title: "Thương hiệu",
+                dataIndex: "brand",
+                key: "brand",
+                width: 160,
+            },
+            {
+                title: "Model",
+                dataIndex: "model",
+                key: "model",
+                width: 160,
+            },
+            {
+                title: "Ngày mua",
+                dataIndex: "purchaseDate",
+                key: "purchaseDate",
+                width: 130,
+                render: (v) => (v ? dayjs(v).format("DD/MM/YYYY") : "-"),
+            },
+            {
+                title: "Ngày hết hạn BH",
+                dataIndex: "warrantyExpiryDate",
+                key: "warrantyExpiryDate",
+                width: 130,
+                render: (v) => (v ? dayjs(v).format("DD/MM/YYYY") : "-"),
+            },
+            {
+                title: "Còn lại (ngày)",
+                dataIndex: "warrantyRemainingDays",
+                key: "warrantyRemainingDays",
+                width: 140,
+                align: "center",
+                render: (v) => (v != null ? v.toLocaleString("vi-VN") : "-"),
+            },
+            {
+                title: "Trạng thái bảo hành",
+                dataIndex: "warrantyStatusText",
+                key: "warrantyStatusText",
+                width: 160,
+                align: "center",
+            },
+            {
+                title: "Vấn đề",
+                dataIndex: "issue",
+                key: "issue",
+                width: 200,
+                ellipsis: true,
+            },
+            {
+                title: "Nguyên nhân gốc",
+                dataIndex: "rootCause",
+                key: "rootCause",
+                width: 200,
+                ellipsis: true,
+            },
+            {
+                title: "Giải pháp",
+                dataIndex: "solutionMethods",
+                key: "solutionMethods",
+                width: 220,
+                render: (v) =>
+                    Array.isArray(v) && v.length > 0 ? v.join(", ") : "-",
+                ellipsis: true,
+            },
+            {
+                title: "Kỹ thuật viên",
+                dataIndex: "technicianName",
+                key: "technicianName",
+                width: 180,
+            },
+        ],
+        []
+    );
 
-//     const handleTableChange = (pagination: TablePaginationConfig) => {
-//         setTableParams({ pagination });
-//     };
+    return (
+        <div>
+            <WarrantyProductFilter
+                value={filter}
+                onChange={handleFilterChange}
+                loading={isLoading}
+            />
 
-//     const handleFilterChange = (next: IWarrantyProductFilter) => {
-//         setFilter(next);
-//         setTableParams((prev) => ({
-//             ...prev,
-//             pagination: {
-//                 ...prev.pagination!,
-//                 current: 1,
-//             },
-//         }));
-//     };
+            <Space
+                style={{
+                    marginBottom: 16,
+                    width: "100%",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                }}
+            >
+                <Text strong style={{ fontSize: 16 }}>
+                    Báo cáo bảo hành sản phẩm
+                </Text>
 
-//     /* ---------------------- EXPORT EXCEL ---------------------- */
-//     const buildExportQuery = (f: IWarrantyProductFilter) => {
-//         const params = new URLSearchParams();
+                <Access permission={ALL_PERMISSIONS.REPORT_EXPORT.WARRANTY_PRODUCT} hideChildren>
+                    <ExportExcelButton
+                        label="Xuất Excel"
+                        apiFn={callDownloadWarrantyProductReport}
+                        filter={filter}
+                        fileName={`bao_cao_bao_hanh_${dayjs().format("YYYYMMDD_HHmmss")}.xlsx`}
+                    />
+                </Access>
+            </Space>
 
+            <Access permission={ALL_PERMISSIONS.MAINTENANCE_REPORT.WARRANTY_CUSTOMER_PRODUCTS}>
+                <Table<IWarrantyProductReport>
+                    rowKey={(r) => `${r.deviceCode}-${r.customerCode}`}
+                    columns={columns}
+                    dataSource={data?.result ?? []}
+                    loading={isLoading}
+                    pagination={pagination}
+                    scroll={{ x: "max-content" }}
+                    onChange={handleTableChange}
+                    size="middle"
+                />
+            </Access>
+        </div>
+    );
+};
 
-//         if (f.customerName) params.set("customerName", f.customerName);
-
-
-//         return params.toString();
-//     };
-
-//     const handleExport = async () => {
-//         try {
-//             setExportLoading(true);
-//             const qs = buildExportQuery(filter);
-//             const res = await callExportWarrantyProductReport(qs);
-
-//             const blob = new Blob([res.data], {
-//                 type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//             });
-
-//             const url = window.URL.createObjectURL(blob);
-//             const a = document.createElement("a");
-//             a.href = url;
-//             a.download = `bao_hanh_san_pham_${dayjs().format(
-//                 "YYYYMMDD_HHmmss"
-//             )}.xlsx`;
-
-//             document.body.appendChild(a);
-//             a.click();
-//             a.remove();
-//             window.URL.revokeObjectURL(url);
-//         } catch (err) {
-//             console.error(err);
-//             message.error("Xuất báo cáo thất bại");
-//         } finally {
-//             setExportLoading(false);
-//         }
-//     };
-
-//     /* ---------------------- TABLE COLUMNS ---------------------- */
-//     const columns: ColumnsType<IWarrantyProductReport> = [
-//         {
-//             title: "Mã thiết bị",
-//             dataIndex: "deviceCode",
-//             key: "deviceCode",
-//             width: 140,
-//             fixed: "left",
-//         },
-//         {
-//             title: "Tên thiết bị",
-//             dataIndex: "deviceName",
-//             key: "deviceName",
-//             width: 200,
-//         },
-//         {
-//             title: "Khách hàng",
-//             dataIndex: "customerName",
-//             key: "customerName",
-//             width: 180,
-//         },
-//         {
-//             title: "Ngày mua",
-//             dataIndex: "purchaseDate",
-//             key: "purchaseDate",
-//             width: 130,
-//             render: (v: string | undefined) =>
-//                 v ? dayjs(v).format("DD/MM/YYYY") : "",
-//         },
-//         {
-//             title: "Ngày hết hạn BH",
-//             dataIndex: "warrantyEndDate",
-//             key: "warrantyEndDate",
-//             width: 130,
-//             render: (v: string | undefined) =>
-//                 v ? dayjs(v).format("DD/MM/YYYY") : "",
-//         },
-//         {
-//             title: "Trạng thái bảo hành",
-//             dataIndex: "warrantyStatus",
-//             key: "warrantyStatus",
-//             width: 160,
-//         },
-//         {
-//             title: "Ghi chú",
-//             dataIndex: "notes",
-//             key: "notes",
-//             width: 220,
-//             ellipsis: true,
-//         },
-//     ];
-
-//     return (
-//         <Card title="Báo cáo bảo hành sản phẩm" bodyStyle={{ paddingTop: 12 }}>
-//             <Space direction="vertical" style={{ width: "100%" }} size="middle">
-
-//                 <Access permission={ALL_PERMISSIONS.REPORT_EXPORT.WARRANTY_PRODUCT} hideChildren>
-//                     <ExportButton onExport={handleExport} loading={exportLoading} />
-//                 </Access>
-
-//                 <WarrantyProductFilter
-//                     filter={filter}
-//                     onChange={handleFilterChange}
-//                     loading={isLoading}
-//                 />
-
-//                 <Access permission={ALL_PERMISSIONS.MAINTENANCE_REPORT.WARRANTY_CUSTOMER_PRODUCTS}>
-//                     <Table<IWarrantyProductReport>
-//                         rowKey={(r) => r.deviceCode + r.customerName}
-//                         columns={columns}
-//                         dataSource={data?.result ?? []}
-//                         loading={isLoading}
-//                         pagination={pagination}
-//                         scroll={{ x: 1500 }}
-//                         onChange={handleTableChange}
-//                         size="middle"
-//                     />
-//                 </Access>
-
-//             </Space>
-//         </Card>
-//     );
-// };
-
-// export default WarrantyProductSection;
+export default WarrantyProductSection;

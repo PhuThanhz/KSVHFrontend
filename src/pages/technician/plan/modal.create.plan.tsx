@@ -2,12 +2,11 @@ import {
     ModalForm,
     ProFormTextArea,
     ProFormSwitch,
-    ProFormList,
     ProFormText,
     ProFormCheckbox,
 } from "@ant-design/pro-components";
 import { Form, Spin } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { isMobile } from "react-device-detect";
 import {
     useCreateMaintenancePlanMutation,
@@ -16,18 +15,27 @@ import {
 import {
     callFetchSurveyedMaintenanceDetail,
     callFetchSolution,
+    callFetchInventoryItem,
 } from "@/config/api";
 import type {
     IReqMaintenancePlanDTO,
     ISolution,
     IResMaintenanceSurveyedDetailDTO,
+    IInventoryItem,
+    IReqMaintenancePlanMaterialItemDTO,
 } from "@/types/backend";
+import MaterialListForm from "./MaterialListForm";
 
 interface IProps {
     openModal: boolean;
     setOpenModal: (v: boolean) => void;
     maintenanceRequestId?: string | null;
 }
+
+/** Type riêng cho form vật tư */
+type IFormMaterialItem = IReqMaintenancePlanMaterialItemDTO & {
+    tag?: string;
+};
 
 type MaintenancePlanFormValues = IReqMaintenancePlanDTO & {
     readonlyRequestCode?: string;
@@ -44,60 +52,90 @@ const ModalCreateMaintenancePlan = ({
     const { mutate: replan, isPending: replanning } = useReplanMaintenanceMutation();
 
     const [loading, setLoading] = useState(false);
-    const [solutionOptions, setSolutionOptions] = useState<
-        { label: string; value: number | string }[]
-    >([]);
+    const [solutionOptions, setSolutionOptions] = useState<{ label: string; value: number | string }[]>([]);
+    const [inventoryOptions, setInventoryOptions] = useState<IInventoryItem[]>([]);
     const [useMaterial, setUseMaterial] = useState(false);
     const [detail, setDetail] = useState<IResMaintenanceSurveyedDetailDTO | null>(null);
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    /** =================== Lấy danh sách phương án =================== */
-    const fetchSolutions = async () => {
-        try {
-            const res = await callFetchSolution("page=1&size=50&sort=createdAt,asc");
-            if (res?.data?.result) {
-                const options = res.data.result.map((s: ISolution) => ({
-                    label: s.solutionName,
-                    value: s.id!,
-                }));
-                setSolutionOptions(options);
+    /** Lấy danh sách phương án */
+    useEffect(() => {
+        const fetchSolutions = async () => {
+            try {
+                const res = await callFetchSolution("page=1&size=50&sort=createdAt,asc");
+                if (res?.data?.result) {
+                    setSolutionOptions(
+                        res.data.result.map((s: ISolution) => ({
+                            label: s.solutionName,
+                            value: s.id!,
+                        }))
+                    );
+                }
+            } catch {
+                console.error("Không thể tải danh sách phương án");
             }
-        } catch {
-            console.error("Không thể tải danh sách phương án");
-        }
-    };
+        };
+        fetchSolutions();
+    }, []);
 
-    /** =================== Lấy chi tiết phiếu khảo sát =================== */
+    /** Lấy danh sách vật tư kho */
+    useEffect(() => {
+        const fetchInventoryItems = async () => {
+            try {
+                const res = await callFetchInventoryItem("page=1&size=200&sort=createdAt,asc");
+                if (res?.data?.result) setInventoryOptions(res.data.result);
+            } catch {
+                console.error("Không thể tải danh sách vật tư kho");
+            }
+        };
+        fetchInventoryItems();
+    }, []);
+
+    /** Lấy chi tiết phiếu khảo sát */
     useEffect(() => {
         const fetchDetail = async () => {
-            if (!maintenanceRequestId || !openModal) return;
+            if (!maintenanceRequestId || !openModal || !inventoryOptions.length) return;
             try {
                 setLoading(true);
                 const res = await callFetchSurveyedMaintenanceDetail(maintenanceRequestId);
                 if (res?.data) {
                     const data = res.data;
                     setDetail(data);
-
                     const { requestCode, device, planInfo } = data;
 
-                    // Set thông tin cơ bản
                     form.setFieldsValue({
                         maintenanceRequestId,
                         readonlyRequestCode: requestCode,
                         readonlyDeviceCode: device?.deviceCode,
                     });
 
-                    // Nếu có planInfo (phiếu bị từ chối => có kế hoạch cũ) thì prefill
                     if (planInfo) {
+                        // Map lại vật tư
+                        const mappedMaterials: IFormMaterialItem[] = (planInfo.materials || []).map((m) => {
+                            const matchedItem = inventoryOptions.find(
+                                (i) => i.itemCode === m.partCode
+                            );
+                            return {
+                                ...m,
+                                inventoryItemId: matchedItem?.id ? Number(matchedItem.id) : null,
+                                tag: m.isNewProposal
+                                    ? "Mua bổ sung"
+                                    : m.isShortage
+                                        ? "Thiếu"
+                                        : "Có sẵn",
+                            };
+                        });
+
                         form.setFieldsValue({
                             solutionIds: planInfo.solutionIds || [],
                             customSolution: planInfo.customSolution || "",
                             useMaterial: planInfo.useMaterial || false,
                             note: planInfo.note || "",
-                            materials: planInfo.materials || [],
+                            materials: mappedMaterials,
                         });
+
                         setUseMaterial(!!planInfo.useMaterial);
                     } else {
-                        // Trường hợp lập mới
                         form.resetFields(["solutionIds", "customSolution", "note", "materials"]);
                         setUseMaterial(false);
                     }
@@ -109,11 +147,10 @@ const ModalCreateMaintenancePlan = ({
             }
         };
 
-        fetchSolutions();
         fetchDetail();
-    }, [maintenanceRequestId, openModal]);
+    }, [maintenanceRequestId, openModal, inventoryOptions.length]);
 
-    /** =================== Gửi dữ liệu =================== */
+    /** Gửi dữ liệu */
     const handleSubmit = async (values: MaintenancePlanFormValues) => {
         if (!maintenanceRequestId) return;
 
@@ -123,42 +160,39 @@ const ModalCreateMaintenancePlan = ({
             customSolution: values.customSolution || "",
             useMaterial: values.useMaterial || false,
             note: values.note || "",
-            materials: values.useMaterial ? values.materials || [] : [],
+            materials: values.useMaterial
+                ? (values.materials as IReqMaintenancePlanMaterialItemDTO[]) || []
+                : [],
         };
 
         const isRejected = detail?.status === "TU_CHOI_PHE_DUYET";
         const planId = detail?.planInfo?.planId;
 
-        if (isRejected && planId) {
-            // Phiếu bị từ chối → gọi replan
-            replan({ planId, payload }, {
-                onSuccess: () => {
-                    form.resetFields();
-                    setUseMaterial(false);
-                    setOpenModal(false);
-                },
-            });
-        } else {
-            // Phiếu bình thường → gọi create
-            createPlan(payload, {
-                onSuccess: () => {
-                    form.resetFields();
-                    setUseMaterial(false);
-                    setOpenModal(false);
-                },
-            });
-        }
+        const onSuccess = () => {
+            form.resetFields();
+            setUseMaterial(false);
+            setOpenModal(false);
+        };
+
+        if (isRejected && planId) replan({ planId, payload }, { onSuccess });
+        else createPlan(payload, { onSuccess });
     };
 
-    /** =================== Giao diện =================== */
+    const selectOptions = useMemo(
+        () =>
+            inventoryOptions.map((item) => ({
+                label: item.itemCode,
+                value: item.id!,
+                item,
+            })),
+        [inventoryOptions]
+    );
+
+    /** UI */
     return (
         <ModalForm<MaintenancePlanFormValues>
             key={maintenanceRequestId}
-            title={
-                detail?.status === "TU_CHOI_PHE_DUYET"
-                    ? "Lập lại kế hoạch bảo trì"
-                    : "Lập kế hoạch bảo trì"
-            }
+            title={detail?.status === "TU_CHOI_PHE_DUYET" ? "Lập lại kế hoạch bảo trì" : "Lập kế hoạch bảo trì"}
             open={openModal}
             form={form}
             layout="vertical"
@@ -166,7 +200,7 @@ const ModalCreateMaintenancePlan = ({
             modalProps={{
                 destroyOnClose: true,
                 maskClosable: false,
-                width: isMobile ? "100%" : 900,
+                width: isMobile ? "100%" : 1100,
                 confirmLoading: creating || replanning,
                 onCancel: () => setOpenModal(false),
                 okText: "Lưu kế hoạch",
@@ -203,23 +237,12 @@ const ModalCreateMaintenancePlan = ({
                 />
 
                 {useMaterial && (
-                    <ProFormList
-                        name="materials"
-                        label="Danh sách vật tư"
-                        creatorButtonProps={{
-                            position: "bottom",
-                            creatorButtonText: "Thêm vật tư",
-                        }}
-                        copyIconProps={false}
-                    >
-                        <div className="grid grid-cols-5 gap-2">
-                            <ProFormText name="partCode" label="Mã vật tư" />
-                            <ProFormText name="partName" label="Tên vật tư" />
-                            <ProFormText name="quantity" label="Số lượng" />
-                            <ProFormSwitch name="isNewProposal" label="Đề xuất mới" />
-                            <ProFormSwitch name="isShortage" label="Thiếu vật tư" />
-                        </div>
-                    </ProFormList>
+                    <MaterialListForm
+                        form={form}
+                        selectOptions={selectOptions}
+                        inventoryOptions={inventoryOptions}
+                        backendURL={backendURL}
+                    />
                 )}
 
                 <ProFormTextArea

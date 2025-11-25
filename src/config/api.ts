@@ -70,6 +70,7 @@ import type {
     IMaintenanceSchedule,
     IMaintenanceScheduleDetail,
     IMaintenanceScheduleByDevice,
+    IResMaintenanceTimelineDTO,
 
 } from '@/types/backend';
 // THỐNG KÊ BÁO CÁO
@@ -80,7 +81,6 @@ import type {
     IMaterialUsageFilter,
     ITechnicianActivityFilter,
     IDeviceDepreciationFilter,
-    IPeriodicMaintenanceFilter,
     IWarrantyProductFilter,
 
     // Response DTO
@@ -89,7 +89,6 @@ import type {
     IMaterialUsageReport,
     ITechnicianActivityReport,
     IDeviceDepreciationReport,
-    IPeriodicMaintenanceReport,
     IWarrantyProductReport,
 } from "@/types/backend";
 import axios from 'config/axios-customize';
@@ -866,18 +865,22 @@ export const callUpdateTechnician = (technician: ITechnician) => {
 
 
 /** ======================== Module InventoryItem ======================== **/
+/** ======================== Module InventoryItem ======================== **/
 export const callFetchInventoryItem = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IInventoryItem>>>(`/api/v1/inventory-items?${query}`);
 };
+
 export const callFetchInventoryItemById = (id: string | number) => {
     return axios.get<IBackendRes<IInventoryItem>>(`/api/v1/inventory-items/${id}`);
 };
+
 export const callCreateInventoryItem = (data: IInventoryItem) => {
     const payload = {
         itemCode: data.itemCode,
         itemName: data.itemName,
         quantity: data.quantity,
         unitPrice: data.unitPrice,
+        image: data.image || null,
         unitId: Number(data.unit.id),
         deviceTypeId: Number(data.deviceType.id),
         warehouseId: Number(data.warehouse.id),
@@ -885,9 +888,10 @@ export const callCreateInventoryItem = (data: IInventoryItem) => {
     };
 
     return axios.post<IBackendRes<IInventoryItem>>(`/api/v1/inventory-items`, payload, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
     });
 };
+
 export const callUpdateInventoryItem = (data: IInventoryItem) => {
     const payload = {
         id: data.id,
@@ -895,6 +899,7 @@ export const callUpdateInventoryItem = (data: IInventoryItem) => {
         itemName: data.itemName,
         quantity: data.quantity,
         unitPrice: data.unitPrice,
+        image: data.image || null,
         unitId: Number(data.unit.id),
         deviceTypeId: Number(data.deviceType.id),
         warehouseId: Number(data.warehouse.id),
@@ -902,12 +907,14 @@ export const callUpdateInventoryItem = (data: IInventoryItem) => {
     };
 
     return axios.put<IBackendRes<IInventoryItem>>(`/api/v1/inventory-items`, payload, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
     });
 };
+
 export const callDeleteInventoryItem = (id: string | number) => {
     return axios.delete<IBackendRes<null>>(`/api/v1/inventory-items/${id}`);
 };
+
 /** ======================== Module Devices ======================== **/
 
 export const callFetchDevice = (query: string) => {
@@ -1110,7 +1117,11 @@ export const callFetchMyMaintenanceRequests = (query: string) => {
     );
 };
 
-
+export const callFetchMaintenanceRequestTimeline = (id: string) => {
+    return axios.get<IBackendRes<IResMaintenanceTimelineDTO>>(
+        `/api/v1/maintenance-requests/${id}/timeline`
+    );
+};
 
 
 // ======================= PHÂN CÔNG KỸ THUẬT VIÊN ======================= //
@@ -1480,15 +1491,6 @@ export const callFetchDeviceDepreciationReport = (
     );
 };
 
-export const callFetchPeriodicMaintenanceReport = (
-    filter: IPeriodicMaintenanceFilter,
-    query: string
-) => {
-    return axios.post<IBackendRes<IModelPaginate<IPeriodicMaintenanceReport>>>(
-        `/api/v1/maintenance-report/periodic-maintenance?${query}`,
-        filter
-    );
-};
 
 export const callFetchWarrantyProductReport = (
     filter: IWarrantyProductFilter,
@@ -1544,14 +1546,7 @@ export const callDownloadDeviceDepreciationReport = (
         responseType: "blob",
     });
 };
-export const callDownloadPeriodicMaintenanceReport = (
-    filter: IPeriodicMaintenanceFilter
-) => {
-    return axios.get(`/api/v1/report/export/periodic-maintenance`, {
-        params: filter,
-        responseType: "blob"
-    });
-};
+
 
 export const callDownloadWarrantyProductReport = (
     filter: IWarrantyProductFilter

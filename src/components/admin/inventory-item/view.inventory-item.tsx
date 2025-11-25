@@ -1,4 +1,12 @@
-import { Drawer, Descriptions, Typography, Badge, Divider, Spin, Empty } from "antd";
+import {
+    Drawer,
+    Descriptions,
+    Typography,
+    Divider,
+    Spin,
+    Empty,
+    Image,
+} from "antd";
 import dayjs from "dayjs";
 import { useInventoryItemByIdQuery } from "@/hooks/useInventoryItems";
 import { formatCurrency } from "@/config/format";
@@ -13,6 +21,7 @@ interface IProps {
 
 const ViewInventoryItem = ({ onClose, open, itemId }: IProps) => {
     const { data: item, isLoading, isError } = useInventoryItemByIdQuery(itemId || undefined);
+    const backendURL = import.meta.env.VITE_BACKEND_URL;
 
     return (
         <Drawer
@@ -20,7 +29,7 @@ const ViewInventoryItem = ({ onClose, open, itemId }: IProps) => {
             placement="right"
             onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            width={"45vw"}
             maskClosable={false}
             bodyStyle={{ paddingBottom: 40 }}
         >
@@ -32,6 +41,7 @@ const ViewInventoryItem = ({ onClose, open, itemId }: IProps) => {
                 <Empty description="Không tìm thấy dữ liệu vật tư" />
             ) : (
                 <>
+                    {/* ===== Thông tin cơ bản ===== */}
                     <Descriptions bordered size="middle" column={2}>
                         <Descriptions.Item label="Mã vật tư">
                             <Text strong>{item.itemCode}</Text>
@@ -51,7 +61,7 @@ const ViewInventoryItem = ({ onClose, open, itemId }: IProps) => {
                         <Descriptions.Item label="Loại thiết bị">
                             <Text>{item.deviceType?.typeName ?? "-"}</Text>
                         </Descriptions.Item>
-                        <Descriptions.Item label="Kho">
+                        <Descriptions.Item label="Kho chứa">
                             <Text>{item.warehouse?.warehouseName ?? "-"}</Text>
                         </Descriptions.Item>
                         <Descriptions.Item label="Nhà cung cấp">
@@ -67,6 +77,39 @@ const ViewInventoryItem = ({ onClose, open, itemId }: IProps) => {
 
                     <Divider />
 
+                    {/* ===== Ảnh vật tư ===== */}
+                    {item.image ? (
+                        <>
+                            <Title level={5}>Hình ảnh vật tư</Title>
+                            <div className="flex flex-wrap gap-3 mt-2">
+                                {item.image
+                                    .split(",")
+                                    .filter(Boolean)
+                                    .map((img: string, idx: number) => (
+                                        <Image
+                                            key={idx}
+                                            src={`${backendURL}/storage/inventory/${img}`}
+                                            alt={`image-${idx}`}
+                                            width={120}
+                                            height={120}
+                                            style={{
+                                                objectFit: "cover",
+                                                borderRadius: 8,
+                                                border: "1px solid #f0f0f0",
+                                            }}
+                                        />
+                                    ))}
+                            </div>
+                            <Divider />
+                        </>
+                    ) : (
+                        <div style={{ textAlign: "center", marginTop: 20 }}>
+                            <Text type="secondary">Không có hình ảnh cho vật tư này</Text>
+                            <Divider />
+                        </div>
+                    )}
+
+                    {/* ===== Người tạo / cập nhật ===== */}
                     <div style={{ textAlign: "right" }}>
                         <Text type="secondary">
                             Người tạo: <b>{item?.createdBy ?? "Không rõ"}</b> <br />

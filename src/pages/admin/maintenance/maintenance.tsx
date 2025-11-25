@@ -22,6 +22,7 @@ import ModalCreateMaintenance from "@/components/admin/maintenance/modal/modal.m
 import ButtonAssignTechnician from "@/components/admin/maintenance/button/button.assign-technician";
 import RejectLogsModal from "@/components/admin/maintenance/modal/modal.reject-logs";
 import ModalAutoAssignMaintenance from "@/components/admin/maintenance/modal/modal.maintenance-auto-assign";
+import MaintenanceTimelineModal from "@/components/admin/maintenance/modal/modal.timeline";
 
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
@@ -34,6 +35,10 @@ const MaintenancePage = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
     const [showAutoAssignModal, setShowAutoAssignModal] = useState(false);
+    const [showTimelineModal, setShowTimelineModal] = useState<{
+        id: string;
+        code?: string;
+    } | null>(null);
 
     const [page, setPage] = useState(1);
     const [query, setQuery] = useState("page=1&pageSize=10");
@@ -437,25 +442,36 @@ const MaintenancePage = () => {
                                                         Ngày tạo: {createdAt}
                                                     </div>
                                                     <div style={{ marginTop: 8 }}>
-
                                                         <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.GET_BY_ID} hideChildren>
                                                             <Button
                                                                 size="small"
                                                                 type="primary"
                                                                 style={{ marginRight: 6 }}
-                                                                onClick={() =>
-                                                                    setSelectedId(info.requestId!)
-                                                                }
+                                                                onClick={() => setSelectedId(info.requestId!)}
                                                             >
                                                                 Thông tin chi tiết
                                                             </Button>
                                                         </Access>
+
                                                         {info.status === "CHO_PHAN_CONG" && (
-                                                            <ButtonAssignTechnician
-                                                                requestId={info.requestId!}
-                                                            />
+                                                            <ButtonAssignTechnician requestId={info.requestId!} />
                                                         )}
+
+                                                        <Button
+                                                            size="small"
+                                                            type="default"
+                                                            style={{ marginLeft: 6 }}
+                                                            onClick={() =>
+                                                                setShowTimelineModal({
+                                                                    id: info.requestId!,
+                                                                    code: info.requestCode,
+                                                                })
+                                                            }
+                                                        >
+                                                            Xem nhật ký hoạt động
+                                                        </Button>
                                                     </div>
+
                                                 </div>
                                             </div>
                                         </Col>
@@ -516,6 +532,15 @@ const MaintenancePage = () => {
                 onClose={() => setShowCreateModal(false)}
                 onSuccess={() => setShowCreateModal(false)}
             />
+            {showTimelineModal && (
+                <MaintenanceTimelineModal
+                    open={!!showTimelineModal}
+                    onClose={() => setShowTimelineModal(null)}
+                    requestId={showTimelineModal.id}
+                    requestCode={showTimelineModal.code}
+                />
+            )}
+
         </div>
     );
 };

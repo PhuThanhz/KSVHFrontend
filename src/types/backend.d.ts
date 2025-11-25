@@ -444,9 +444,8 @@ export interface ITechnician {
     updatedBy?: string | null;
 }
 
-
 /** ==============================
- *   TECHNICIAN InventoryItem
+ *    InventoryItem
  *  ============================== */
 export interface IInventoryItem {
     id?: number | string;
@@ -454,6 +453,8 @@ export interface IInventoryItem {
     itemName: string;
     quantity: number;
     unitPrice: number;
+
+    image?: string | null;
 
     unit: {
         id: number | string;
@@ -483,6 +484,7 @@ export interface IInventoryItem {
     createdBy?: string | null;
     updatedBy?: string | null;
 }
+
 
 
 /* ============================================================
@@ -833,6 +835,20 @@ export interface IAutoAssignmentResponse {
 
 
 
+/** ================== Timeline phiếu bảo trì ===================== */
+export interface IResMaintenanceTimelineDTO {
+    requestId: string;
+    requestCode: string;
+    timeline: IMaintenanceTimelineItem[];
+}
+
+export interface IMaintenanceTimelineItem {
+    title: string;
+    description: string;
+    createdAt: string;
+    actor: string;
+    status: MaintenanceRequestStatus;
+}
 
 
 
@@ -1043,6 +1059,16 @@ export interface IReqMaintenancePlanDTO {
     note?: string | null;
     materials?: IReqMaintenancePlanMaterialItemDTO[];
 }
+export interface IReqMaintenancePlanMaterialItemDTO {
+    inventoryItemId?: number | null;
+    partCode?: string | null;
+    partName?: string | null;
+    quantity?: number | null;
+    image?: string | null;
+    isNewProposal?: boolean | null;
+    isShortage?: boolean | null;
+}
+
 export interface IResMaintenancePlanCreateDTO {
     planId: string;
     maintenanceRequestId: string;
@@ -1553,14 +1579,10 @@ export interface IMaintenanceScheduleDetail {
 
 
 
+// ==================== +++++++++++++++ BÁO CÁO THỐNG KÊ +++++++++++++++ ====================
 
+// ------------------------ REQUEST FILTERS ------------------------
 
-
-
-
-//====================+++++++++++++++++ BÁO CÁO THỐNG KÊ +++++++++++++++====================
-
-//REQUEST
 export interface IRequestMaintenanceFilter {
     fromDate?: string;
     toDate?: string;
@@ -1606,14 +1628,6 @@ export interface IDeviceDepreciationFilter {
 }
 
 
-export interface IPeriodicMaintenanceFilter {
-    companyId?: number | string;
-    departmentId?: number | string;
-    deviceCode?: string;
-    deviceName?: string;
-    startDate?: string;
-    endDate?: string;
-}
 
 export interface IWarrantyProductFilter {
     startDate?: string;
@@ -1626,7 +1640,8 @@ export interface IWarrantyProductFilter {
     solution?: string;
 }
 
-//RESPONSE
+// ------------------------ RESPONSE MODELS ------------------------
+
 export interface IDeviceDepreciationReport {
     deviceCode: string;
     deviceName: string;
@@ -1653,7 +1668,6 @@ export interface IDeviceDepreciationReport {
     status?: string;
 }
 
-
 export interface IDeviceMaintenanceHistory {
     maintenanceCount: number;
     deviceCode: string;
@@ -1676,7 +1690,6 @@ export interface IDeviceMaintenanceHistory {
     acceptanceUserName?: string;
     deviceStatusAfter?: string;
 }
-
 
 export interface IMaintenanceRequestReport {
     requestCode: string;
@@ -1707,8 +1720,6 @@ export interface IMaintenanceRequestReport {
     acceptanceUserName?: string;
 }
 
-
-
 export interface IMaterialUsageReport {
     partCode: string;
     partName: string;
@@ -1723,17 +1734,6 @@ export interface IMaterialUsageReport {
 }
 
 
-export interface IPeriodicMaintenanceReport {
-    maintenanceDate?: string;
-    deviceCode: string;
-    deviceName: string;
-    companyName: string;
-    departmentName: string;
-    location: string;
-    technicianName: string;
-    postMaintenanceStatus: string;
-    status: string;
-}
 
 export interface ITechnicianActivityReport {
     technicianCode: string;
@@ -1748,6 +1748,7 @@ export interface ITechnicianActivityReport {
     onTimeCount: number;
 }
 
+// ------------------------ WARRANTY PRODUCT REPORT ------------------------
 
 export interface IWarrantyProductReport {
     customerCode: string;
@@ -1757,7 +1758,7 @@ export interface IWarrantyProductReport {
 
     deviceCode: string;
     deviceName: string;
-    deviceType: string;
+    deviceType?: string;
     brand?: string;
     model?: string;
 
@@ -1768,11 +1769,10 @@ export interface IWarrantyProductReport {
 
     issue?: string;
     rootCause?: string;
-    solution?: string;
+    solutionMethods: string[];
     technicianName?: string;
 
     inWarranty?: boolean;
     warrantyRemainingDays?: number;
     warrantyStatusText?: string;
 }
-

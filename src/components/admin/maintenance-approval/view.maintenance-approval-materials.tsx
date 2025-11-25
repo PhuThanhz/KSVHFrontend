@@ -24,13 +24,13 @@ export default function ViewMaintenanceApprovalMaterials({ planId }: IProps) {
 
     const columns = [
         {
-            title: "Mã linh kiện",
+            title: "Mã vật tư",
             dataIndex: "partCode",
             key: "partCode",
             render: (v: string) => v || "—",
         },
         {
-            title: "Tên linh kiện",
+            title: "Tên vật tư",
             dataIndex: "partName",
             key: "partName",
             render: (v: string) => v || "—",
@@ -42,7 +42,7 @@ export default function ViewMaintenanceApprovalMaterials({ planId }: IProps) {
             render: (v: number) => v ?? "—",
         },
         {
-            title: "Kho",
+            title: "Kho hàng",
             dataIndex: "warehouseName",
             key: "warehouseName",
             render: (v: string) => v || "—",
@@ -54,39 +54,40 @@ export default function ViewMaintenanceApprovalMaterials({ planId }: IProps) {
             render: (v: number) => (v != null ? v : "—"),
         },
         {
-            title: "Trạng thái",
+            title: "Trạng thái vật tư",
             key: "status",
             render: (_: any, record: any) => {
                 if (record.isNewProposal)
-                    return <Tag color="blue">Đề xuất mới</Tag>;
+                    return <Tag color="blue">Đề xuất mua bổ sung</Tag>;
                 if (record.isShortage)
-                    return <Tag color="red">Thiếu hàng</Tag>;
-                return <Tag color="green">Đủ vật tư</Tag>;
+                    return <Tag color="orange">Thiếu hàng (đề xuất mua mới)</Tag>;
+                return <Tag color="green">Đủ vật tư </Tag>;
+
             },
         },
     ];
 
     return (
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-5">
             <h2 className="text-xl font-semibold mb-2">
-                Danh sách vật tư của kế hoạch - {requestCode}
+                Danh sách vật tư của kế hoạch – {requestCode}
             </h2>
 
-            {/* === Vật tư có sẵn === */}
-            <Card title="Vật tư đầy đủ">
+            {/* === Nhóm 1: Đủ vật tư trong kho === */}
+            <Card title="Vật tư đủ trong kho (đã trừ tồn)">
                 <Table
-                    rowKey="partCode"
+                    rowKey={(r) => r.partCode + "_avail"}
                     columns={columns}
                     dataSource={availableMaterials || []}
                     pagination={false}
-                    locale={{ emptyText: "Không có vật tư đầy đủ" }}
+                    locale={{ emptyText: "Không có vật tư đủ trong kho" }}
                 />
             </Card>
 
-            {/* === Vật tư thiếu === */}
-            <Card title="Vật tư thiếu">
+            {/* === Nhóm 2: Thiếu vật tư trong kho === */}
+            <Card title="Vật tư thiếu (đề xuất mua mới)">
                 <Table
-                    rowKey="partCode"
+                    rowKey={(r) => r.partCode + "_short"}
                     columns={columns}
                     dataSource={shortageMaterials || []}
                     pagination={false}
@@ -94,10 +95,10 @@ export default function ViewMaintenanceApprovalMaterials({ planId }: IProps) {
                 />
             </Card>
 
-            {/* === Vật tư đề xuất mới === */}
-            <Card title="Vật tư đề xuất mới">
+            {/* === Nhóm 3: Vật tư không có trong kho === */}
+            <Card title="Vật tư không có trong kho (đề xuất mua bổ sung)">
                 <Table
-                    rowKey="partCode"
+                    rowKey={(r) => r.partCode + "_new"}
                     columns={columns}
                     dataSource={newProposals || []}
                     pagination={false}

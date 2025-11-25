@@ -6,7 +6,6 @@ import {
     callFetchMaterialUsageReport,
     callFetchTechnicianActivityReport,
     callFetchDeviceDepreciationReport,
-    callFetchPeriodicMaintenanceReport,
     callFetchWarrantyProductReport,
 } from "@/config/api";
 
@@ -16,7 +15,6 @@ import type {
     IMaterialUsageFilter,
     ITechnicianActivityFilter,
     IDeviceDepreciationFilter,
-    IPeriodicMaintenanceFilter,
     IWarrantyProductFilter,
 
     IMaintenanceRequestReport,
@@ -24,7 +22,6 @@ import type {
     IMaterialUsageReport,
     ITechnicianActivityReport,
     IDeviceDepreciationReport,
-    IPeriodicMaintenanceReport,
     IWarrantyProductReport,
     IModelPaginate,
 } from "@/types/backend";
@@ -117,23 +114,6 @@ export const useDeviceDepreciationReportQuery = (
     });
 };
 
-/* ============================================================
- * 6) Báo cáo BẢO TRÌ ĐỊNH KỲ
- * ============================================================ */
-export const usePeriodicMaintenanceReportQuery = (
-    filter: IPeriodicMaintenanceFilter,
-    query: string
-) => {
-    return useQuery({
-        queryKey: ["periodic-maintenance-report", filter, query],
-        queryFn: async () => {
-            const res = await callFetchPeriodicMaintenanceReport(filter, query);
-            if (!res?.data)
-                throw new Error("Không thể lấy báo cáo bảo trì định kỳ");
-            return res.data as IModelPaginate<IPeriodicMaintenanceReport>;
-        },
-    });
-};
 
 /* ============================================================
  * 7) Báo cáo BẢO HÀNH SẢN PHẨM

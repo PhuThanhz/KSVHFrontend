@@ -63,7 +63,7 @@ const HomePlan = () => {
 
                         // Kiểm tra trạng thái từ chối
                         const isRejected = item.status === "TU_CHOI_PHE_DUYET";
-                        const cardBg = isRejected ? "#fff2f0" : "#ffffff"; // nền đỏ nhạt nếu bị từ chối
+                        const cardBg = isRejected ? "#fff2f0" : "#ffffff";
                         const borderColor = isRejected ? "#ffccc7" : "#f0f0f0";
 
                         return (

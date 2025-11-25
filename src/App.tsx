@@ -66,8 +66,7 @@ import DeviceHistorySection from "./pages/admin/maintenance-report/sections/Devi
 import MaintenanceRequestSection from "./pages/admin/maintenance-report/sections/MaintenanceRequest";
 // import MaterialUsageSection from "./pages/admin/maintenance-report/sections/MaterialUsage";
 // import TechnicianActivitySection from "./pages/admin/maintenance-report/sections/TechnicianActivity";
-// import PeriodicMaintenanceSection from "./pages/admin/maintenance-report/sections/PeriodicMaintenance";
-// import WarrantyProductSection from "./pages/admin/maintenance-report/sections/WarrantyProduct";
+import WarrantyProductSection from "./pages/admin/maintenance-report/sections/WarrantyProduct";
 import ScanResult from "./pages/ScanResult";
 
 
@@ -257,22 +256,15 @@ export default function App() {
             </ProtectedRoute>
           ),
         },
-        // {
-        //   path: PATHS.ADMIN.MAINTENANCE_REPORT_PERIODIC_MAINTENANCE,
-        //   element: (
-        //     <ProtectedRoute>
-        //       <PeriodicMaintenanceSection />
-        //     </ProtectedRoute>
-        //   ),
-        // },
-        // {
-        //   path: PATHS.ADMIN.MAINTENANCE_REPORT_WARRANTY_PRODUCT,
-        //   element: (
-        //     <ProtectedRoute>
-        //       <WarrantyProductSection />
-        //     </ProtectedRoute>
-        //   ),
-        // },
+
+        {
+          path: PATHS.ADMIN.MAINTENANCE_REPORT_WARRANTY_PRODUCT,
+          element: (
+            <ProtectedRoute>
+              <WarrantyProductSection />
+            </ProtectedRoute>
+          ),
+        },
 
         // ================== BÁO CÁO THỐNG KÊ ==================
 
