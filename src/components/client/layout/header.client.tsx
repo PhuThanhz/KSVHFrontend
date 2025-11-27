@@ -17,7 +17,6 @@ import {
     ConfigProvider,
 } from "antd";
 import type { MenuProps } from "antd";
-import styles from "@/styles/client.module.scss";
 import { isMobile } from "react-device-detect";
 import { FaReact } from "react-icons/fa";
 import { useLocation, useNavigate, Link } from "react-router-dom";
@@ -129,7 +128,7 @@ const Header = () => {
             {
                 label: (
                     <span
-                        style={{ cursor: "pointer" }}
+                        className="cursor-pointer"
                         onClick={() => setOpenManageAccount(true)}
                     >
                         Quản lý tài khoản
@@ -154,7 +153,7 @@ const Header = () => {
             {
                 label: (
                     <span
-                        style={{ cursor: "pointer" }}
+                        className="cursor-pointer"
                         onClick={handleLogout}
                     >
                         Đăng xuất
@@ -176,18 +175,23 @@ const Header = () => {
 
     return (
         <>
-            <div className={styles["header-section"]}>
-                <div className={styles["container"]}>
+            {/* Header Section */}
+            <div className="bg-[#222831] shadow-md sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {!isMobile ? (
-                        <div style={{ display: "flex", gap: 30 }}>
-                            <div className={styles["brand"]}>
+                        <div className="flex gap-8">
+                            {/* Brand Logo */}
+                            <div className="flex items-center py-4">
                                 <FaReact
                                     onClick={() => navigate(PATHS.CLIENT.HOME)}
                                     title="AMMS"
-                                    style={{ cursor: "pointer" }}
+                                    className="text-[#61dafb] text-3xl cursor-pointer hover:rotate-180 transition-transform duration-500"
                                 />
                             </div>
-                            <div className={styles["top-menu"]}>
+
+                            {/* Menu & User Section */}
+                            <div className="flex flex-1 items-center justify-between">
+                                {/* Top Menu */}
                                 <ConfigProvider
                                     theme={{
                                         token: {
@@ -202,28 +206,36 @@ const Header = () => {
                                         selectedKeys={[current]}
                                         mode="horizontal"
                                         items={items}
+                                        className="flex-1 border-0 bg-transparent"
                                     />
                                 </ConfigProvider>
 
-                                <div className={styles["extra"]}>
+                                {/* User Section */}
+                                <div className="flex items-center ml-6">
                                     {!isAuthenticated ? (
-                                        <Link to={PATHS.LOGIN}>Đăng Nhập</Link>
+                                        <Link
+                                            to={PATHS.LOGIN}
+                                            className="text-white hover:text-[#61dafb] transition-colors duration-200 px-4 py-2 rounded-md hover:bg-[#393E46]"
+                                        >
+                                            Đăng Nhập
+                                        </Link>
                                     ) : (
                                         <Dropdown
                                             menu={{ items: itemsDropdown }}
                                             trigger={["click"]}
                                         >
-                                            <Space style={{ cursor: "pointer" }}>
+                                            <Space className="cursor-pointer px-3 py-2 rounded-md hover:bg-[#393E46] transition-colors duration-200">
                                                 <Avatar
                                                     src={avatarUrl}
                                                     alt={user?.name}
+                                                    className="border-2 border-[#61dafb]"
                                                 >
                                                     {!avatarUrl &&
                                                         user?.name
                                                             ?.substring(0, 2)
                                                             ?.toUpperCase()}
                                                 </Avatar>
-                                                <span>
+                                                <span className="text-white font-medium">
                                                     {user?.name || "Người dùng"}
                                                 </span>
                                             </Space>
@@ -233,16 +245,21 @@ const Header = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className={styles["header-mobile"]}>
-                            <span>AMMS</span>
+                        /* Mobile Header */
+                        <div className="flex items-center justify-between py-4">
+                            <span className="text-white text-xl font-bold tracking-wider">
+                                AMMS
+                            </span>
                             <MenuFoldOutlined
                                 onClick={() => setOpenMobileMenu(true)}
+                                className="text-white text-2xl cursor-pointer hover:text-[#61dafb] transition-colors duration-200"
                             />
                         </div>
                     )}
                 </div>
             </div>
 
+            {/* Mobile Drawer */}
             <Drawer
                 title="Chức năng"
                 placement="right"
@@ -257,6 +274,7 @@ const Header = () => {
                 />
             </Drawer>
 
+            {/* Manage Account Modal */}
             <ManageAccount
                 open={openManageAccount}
                 onClose={setOpenManageAccount}

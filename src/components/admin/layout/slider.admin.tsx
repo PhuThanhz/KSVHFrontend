@@ -490,18 +490,55 @@ const SliderAdmin: React.FC<IProps> = ({
             onCollapse={setCollapsed}
             width={250}
             collapsedWidth={80}
+            style={{
+                position: "sticky",
+                top: 0,
+                height: "100vh",
+                overflow: "auto",
+                background: "#fff",
+                borderRight: "1px solid #f0f0f0",
+            }}
         >
+
             <div
                 style={{
-                    height: 32,
-                    margin: 16,
-                    textAlign: "center",
-                    fontWeight: 600,
-                    fontSize: 15,
+                    height: 45,
+                    margin: "20px 12px 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: collapsed ? "center" : "flex-start",
+                    gap: 12,
+                    paddingLeft: collapsed ? 0 : 2,
+                    borderBottom: "1px solid #f0f0f0",
+                    transition: "all 0.3s ease",
                 }}
             >
-                <BugOutlined /> AMMS
+                <img
+                    src="/logo/logo.png"
+                    alt="AMMS Logo"
+                    style={{
+                        width: collapsed ? 40 : 56,
+                        height: "auto",
+                        transition: "all 0.3s ease",
+                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.15))",
+                    }}
+                />
+                {!collapsed && (
+                    <span
+                        style={{
+                            fontWeight: 700,
+                            fontSize: 20,
+                            letterSpacing: 0.3,
+                            color: "#111",
+                            textShadow: "0 1px 1px rgba(0,0,0,0.05)",
+                            userSelect: "none",
+                        }}
+                    >
+                        AMMS
+                    </span>
+                )}
             </div>
+
             <Menu
                 selectedKeys={[activeMenu]}
                 mode="inline"
