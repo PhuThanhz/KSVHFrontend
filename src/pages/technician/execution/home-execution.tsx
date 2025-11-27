@@ -30,6 +30,7 @@ import ModalUpdateTasks from "./modal.update-tasks";
 import ViewExecutionDetail from "./view.execution-detail";
 
 import type { MaintenanceRequestStatus, IResExecutionCardDTO } from "@/types/backend";
+import ModalRequestSupport from "./modal.request-support";
 
 const { Title, Text } = Typography;
 
@@ -54,9 +55,10 @@ const HomeExecution = () => {
     const executions: IResExecutionCardDTO[] = data?.result || [];
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    /** Mở modal hành động */
+    const [openSupportModal, setOpenSupportModal] = useState(false);
+
     const handleOpenModal = (
-        type: "start" | "update" | "complete" | "view",
+        type: "start" | "update" | "complete" | "view" | "support",
         id: string,
         code?: string
     ) => {
@@ -67,7 +69,9 @@ const HomeExecution = () => {
         if (type === "update") setOpenUpdateModal(true);
         if (type === "complete") setOpenCompleteModal(true);
         if (type === "view") setOpenViewModal(true);
+        if (type === "support") setOpenSupportModal(true);
     };
+
 
     /** Load lại dữ liệu sau khi update */
     const handleActionSuccess = () => {
@@ -324,7 +328,12 @@ const HomeExecution = () => {
                                                 >
                                                     Cập nhật task
                                                 </Button>
-
+                                                <Button
+                                                    type="dashed"
+                                                    onClick={() => handleOpenModal("support", item.requestId, item.requestCode)}
+                                                >
+                                                    Gửi yêu cầu hỗ trợ
+                                                </Button>
                                                 <Button
                                                     danger
                                                     icon={<CheckCircleOutlined />}
@@ -353,6 +362,8 @@ const HomeExecution = () => {
                                         >
                                             Xem chi tiết
                                         </Button>
+
+
                                     </Space>
                                 </Col>
                             </Row>
@@ -376,6 +387,11 @@ const HomeExecution = () => {
                 requestId={selectedRequestId}
                 requestCode={selectedRequestCode}
                 onSuccess={handleActionSuccess}
+            />
+            <ModalRequestSupport
+                open={openSupportModal}
+                onClose={setOpenSupportModal}
+                requestId={selectedRequestId}
             />
 
             <ModalCompleteExecution

@@ -21,6 +21,7 @@ import { ALL_PERMISSIONS } from "@/config/permissions";
 import { useAdminExecutionsQuery } from "@/hooks/useAdminExecutions";
 import ViewAdminExecutionDetail from "@/components/admin/maintenance-execution/view.admin-maintenance-execution-detail";
 import ModalAdminMaintenanceExecutionFilter from "@/components/admin/maintenance-execution/modal.admin-maintenance-execution-filter";
+import ModalAdminSupportRequests from "@/components/admin/maintenance-execution/modal.admin-support-requests";
 
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;
@@ -32,14 +33,18 @@ export default function MaintenanceExecutionAdminPage() {
 
     const [openDetailModal, setOpenDetailModal] = useState(false);
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-
     const [openFilter, setOpenFilter] = useState(false);
+
+    // NEW - hiển thị modal yêu cầu hỗ trợ theo từng phiếu
+    const [openSupportModal, setOpenSupportModal] = useState(false);
+    const [selectedRequestIdForSupport, setSelectedRequestIdForSupport] = useState<string | null>(null);
 
     const { data, isLoading } = useAdminExecutionsQuery(query);
     const list = data?.result || [];
 
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
+    /** ====================== PHÂN TRANG ====================== */
     const handlePageChange = (newPage: number, newSize?: number) => {
         setPage(newPage);
         setPageSize(newSize || pageSize);
@@ -48,7 +53,6 @@ export default function MaintenanceExecutionAdminPage() {
 
     return (
         <div style={{ padding: 24 }}>
-
             {/* HEADER */}
             <div
                 style={{
@@ -89,10 +93,8 @@ export default function MaintenanceExecutionAdminPage() {
                 <RangePicker
                     onChange={(dates) => {
                         if (!dates || !dates[0] || !dates[1]) return;
-
                         const from = dates[0].toISOString();
                         const to = dates[1].toISOString();
-
                         setQuery(
                             `page=1&pageSize=${pageSize}&createdFrom=${from}&createdTo=${to}`
                         );
@@ -110,7 +112,6 @@ export default function MaintenanceExecutionAdminPage() {
                 <Empty description="Không có phiếu thi công nào" />
             ) : (
                 <>
-                    {/* LIST ITEMS */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                         {list.map((item) => {
                             const imgs = [
@@ -121,8 +122,8 @@ export default function MaintenanceExecutionAdminPage() {
 
                             const total = item.totalTasks ?? 0;
                             const done = item.completedTasks ?? 0;
-
-                            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+                            const percent =
+                                total > 0 ? Math.round((done / total) * 100) : 0;
 
                             return (
                                 <Card
@@ -132,11 +133,16 @@ export default function MaintenanceExecutionAdminPage() {
                                     style={{ borderRadius: 8 }}
                                 >
                                     <Row gutter={[12, 12]}>
-
-                                        {/* IMAGE BLOCK */}
+                                        {/* IMAGE */}
                                         <Col xs={24} sm={6} md={5}>
                                             {imgs.length > 0 ? (
-                                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                                <div
+                                                    style={{
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        gap: 8,
+                                                    }}
+                                                >
                                                     <Image
                                                         src={`${backendURL}/storage/DEVICE/${imgs[0]}`}
                                                         width="100%"
@@ -147,7 +153,6 @@ export default function MaintenanceExecutionAdminPage() {
                                                             border: "1px solid #e8e8e8",
                                                         }}
                                                     />
-
                                                     {imgs.length > 1 && (
                                                         <div style={{ display: "flex", gap: 8 }}>
                                                             {imgs.slice(1).map((img, idx) => (
@@ -185,7 +190,7 @@ export default function MaintenanceExecutionAdminPage() {
                                             )}
                                         </Col>
 
-                                        {/* INFO BLOCK */}
+                                        {/* INFO */}
                                         <Col xs={24} sm={18} md={19}>
                                             <div
                                                 style={{
@@ -195,40 +200,70 @@ export default function MaintenanceExecutionAdminPage() {
                                                     gap: 8,
                                                 }}
                                             >
-                                                {/* left side */}
+                                                {/* LEFT */}
                                                 <div>
                                                     <Text strong style={{ fontSize: 16 }}>
                                                         {item.deviceName}
                                                     </Text>{" "}
-                                                    <Text type="secondary">({item.deviceCode})</Text>
+                                                    <Text type="secondary">
+                                                        ({item.deviceCode})
+                                                    </Text>
 
-                                                    <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.6 }}>
+                                                    <div style={{ marginTop: 8, fontSize: 13 }}>
                                                         <p>
                                                             <Text type="secondary">Mã phiếu: </Text>
                                                             <Text strong>{item.requestCode}</Text>
                                                         </p>
-
                                                         <p>
-                                                            <Text type="secondary">Trạng thái phiếu: </Text>
+                                                            <Text type="secondary">Trạng thái: </Text>
                                                             <Tag color="gold">{item.status}</Tag>
                                                         </p>
-
                                                         <p>
-                                                            <Text type="secondary">Tiến độ công việc: </Text>
+                                                            <Text type="secondary">Tiến độ: </Text>
                                                             <Tag color="blue">
                                                                 {done}/{total} ({percent}%)
                                                             </Tag>
                                                         </p>
-
                                                         <p>
-                                                            <Text type="secondary">Kỹ thuật viên thực hiện: </Text>
-                                                            {item.technicianName || "—"}
+                                                            <Text type="secondary">Kỹ thuật viên: </Text>
+                                                            {item.technicians?.length ? (
+                                                                item.technicians.map((t: any) => (
+                                                                    <div key={t.id}>
+                                                                        <Text strong>{t.fullName}</Text>{" "}
+                                                                        {t.isMain ? (
+                                                                            <Tag color="blue">Chính</Tag>
+                                                                        ) : (
+                                                                            <Tag color="green">Hỗ trợ</Tag>
+                                                                        )}
+                                                                        {t.phone && (
+                                                                            <>
+                                                                                {" "}
+                                                                                - <Text type="secondary">{t.phone}</Text>
+                                                                            </>
+                                                                        )}
+                                                                        {t.email && (
+                                                                            <>
+                                                                                {" "}
+                                                                                - <Text type="secondary">{t.email}</Text>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                ))
+                                                            ) : (
+                                                                "—"
+                                                            )}
                                                         </p>
-
-                                                        <p style={{ fontSize: 12, color: "#888" }}>
+                                                        <p
+                                                            style={{
+                                                                fontSize: 12,
+                                                                color: "#888",
+                                                            }}
+                                                        >
                                                             Tạo lúc:{" "}
                                                             {item.createdAt
-                                                                ? dayjs(item.createdAt).format("DD/MM/YYYY HH:mm")
+                                                                ? dayjs(item.createdAt).format(
+                                                                    "DD/MM/YYYY HH:mm"
+                                                                )
                                                                 : "-"}
                                                         </p>
                                                     </div>
@@ -245,7 +280,9 @@ export default function MaintenanceExecutionAdminPage() {
                                                 >
                                                     <Access
                                                         permission={
-                                                            ALL_PERMISSIONS.MAINTENANCE_EXECUTION_ADMIN.GET_DETAIL
+                                                            ALL_PERMISSIONS
+                                                                .MAINTENANCE_EXECUTION_ADMIN
+                                                                .GET_DETAIL
                                                         }
                                                         hideChildren
                                                     >
@@ -259,6 +296,24 @@ export default function MaintenanceExecutionAdminPage() {
                                                             Xem chi tiết
                                                         </Button>
                                                     </Access>
+                                                    <Access
+                                                        permission={
+                                                            ALL_PERMISSIONS
+                                                                .MAINTENANCE_EXECUTION_ADMIN
+                                                                .GET_SUPPORT_REQUESTS
+                                                        }
+                                                        hideChildren
+                                                    >
+                                                        <Button
+                                                            onClick={() => {
+                                                                setSelectedRequestIdForSupport(item.requestId);
+                                                                setOpenSupportModal(true);
+                                                            }}
+                                                        >
+                                                            Xem yêu cầu hỗ trợ
+                                                        </Button>
+                                                    </Access>
+
                                                 </div>
                                             </div>
                                         </Col>
@@ -269,7 +324,13 @@ export default function MaintenanceExecutionAdminPage() {
                     </div>
 
                     {/* PAGINATION */}
-                    <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            marginTop: 24,
+                        }}
+                    >
                         <Pagination
                             current={data?.meta.page}
                             total={data?.meta.total}
@@ -301,6 +362,15 @@ export default function MaintenanceExecutionAdminPage() {
                     setPage(1);
                 }}
             />
+
+            {/* SUPPORT REQUEST MODAL */}
+            {openSupportModal && selectedRequestIdForSupport && (
+                <ModalAdminSupportRequests
+                    open={openSupportModal}
+                    onClose={() => setOpenSupportModal(false)}
+                    requestId={selectedRequestIdForSupport}
+                />
+            )}
         </div>
     );
 }

@@ -1,22 +1,23 @@
 import React, { useState } from "react";
-import { Dropdown, Space, Avatar, message } from "antd";
-import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
+import { Dropdown, Avatar, Badge, Tooltip, message } from "antd";
+import { LogoutOutlined, UserOutlined, BellOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { callLogout } from "@/config/api";
 import { setLogoutAction } from "@/redux/slice/accountSlide";
 import { PATHS } from "@/constants/paths";
+import NotificationPanel from "@/components/technician/NotificationPanel"; // thêm dòng này
 
 const HeaderTechnician: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { user } = useAppSelector((state) => state.account);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    /** ======================= LOGOUT ======================= */
     const handleLogout = async () => {
         try {
             await callLogout();
@@ -31,7 +32,6 @@ const HeaderTechnician: React.FC = () => {
         }
     };
 
-    /** ======================= MENU DROPDOWN ======================= */
     const dropdownItems: MenuProps["items"] = [
         {
             key: "info",
@@ -59,12 +59,10 @@ const HeaderTechnician: React.FC = () => {
         },
     ];
 
-    /** ======================= AVATAR XỬ LÝ ======================= */
     const avatarSrc = user?.avatar
         ? `${backendURL}/storage/AVATAR/${user.avatar}`
         : undefined;
 
-    /** ======================= RENDER ======================= */
     return (
         <header className="fixed top-0 left-0 right-0 bg-gradient-to-b from-pink-50 to-white z-50 px-6 pt-6 pb-4 shadow-sm">
             <div className="flex items-center justify-between">
@@ -78,28 +76,41 @@ const HeaderTechnician: React.FC = () => {
                     <p className="text-sm text-gray-500 mt-1">Have a nice day!</p>
                 </div>
 
-                <Dropdown
-                    menu={{ items: dropdownItems }}
-                    trigger={["click"]}
-                    open={menuOpen}
-                    onOpenChange={setMenuOpen}
-                    placement="bottomRight"
-                >
-                    <div className="cursor-pointer">
-                        <Avatar
-                            size={48}
-                            src={avatarSrc}
-                            icon={!avatarSrc && <UserOutlined />}
-                            className={`shadow-md ${avatarSrc
+                <div className="flex items-center gap-6">
+                    <Tooltip title="Thông báo" placement="bottomRight">
+                        <Badge dot>
+                            <BellOutlined
+                                className="text-xl text-gray-600 hover:text-pink-500 cursor-pointer transition-all"
+                                onClick={() => setShowNotifications(!showNotifications)}
+                            />
+                        </Badge>
+                    </Tooltip>
+
+                    <Dropdown
+                        menu={{ items: dropdownItems }}
+                        trigger={["click"]}
+                        open={menuOpen}
+                        onOpenChange={setMenuOpen}
+                        placement="bottomRight"
+                    >
+                        <div className="cursor-pointer">
+                            <Avatar
+                                size={48}
+                                src={avatarSrc}
+                                icon={!avatarSrc && <UserOutlined />}
+                                className={`shadow-md ${avatarSrc
                                     ? ""
                                     : "bg-gradient-to-br from-pink-400 to-orange-400 text-white font-bold"
-                                }`}
-                        >
-                            {!avatarSrc && user?.name?.charAt(0)?.toUpperCase()}
-                        </Avatar>
-                    </div>
-                </Dropdown>
+                                    }`}
+                            >
+                                {!avatarSrc && user?.name?.charAt(0)?.toUpperCase()}
+                            </Avatar>
+                        </div>
+                    </Dropdown>
+                </div>
             </div>
+
+            {showNotifications && <NotificationPanel onClose={() => setShowNotifications(false)} />}
         </header>
     );
 };

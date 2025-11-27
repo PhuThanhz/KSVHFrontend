@@ -5,16 +5,22 @@ import {
     callGetExecutionDetail,
     callStartExecution,
     callCompleteExecution,
-    callUpdateExecutionTask
+    callUpdateExecutionTask,
+    callFetchSupportRequests,
 } from "@/config/api";
 import type {
     IModelPaginate,
     IResExecutionCardDTO,
     IResExecutionDetailDTO,
-    IReqUpdateTaskDTO
+    IReqUpdateTaskDTO,
+    IReqSupportRequestDTO,
+    IReqSupportApproveDTO
 } from "@/types/backend";
 import { notify } from "@/components/common/notify";
-
+import {
+    callRequestSupport,
+    callApproveSupportRequest,
+} from "@/config/api";
 /** ========================= Danh sách thi công (Admin) ========================= */
 export const useMaintenanceExecutionsQuery = (query: string) => {
     return useQuery({
@@ -122,6 +128,85 @@ export const useCompleteExecutionMutation = () => {
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi hoàn thành thi công");
+        },
+    });
+};
+
+/** ========================= Gửi yêu cầu hỗ trợ (KTV) ========================= */
+export const useRequestSupportMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (params: { requestId: string; data: IReqSupportRequestDTO }) => {
+            const { requestId, data } = params;
+            const res = await callRequestSupport(requestId, data);
+
+            // Kiểm tra phản hồi hợp lệ
+            if (res.statusCode !== 200) {
+                throw new Error(res?.message || "Không thể gửi yêu cầu hỗ trợ");
+            }
+
+            return res.data;
+        },
+
+        onSuccess: (_, { requestId }) => {
+            notify.success("Đã gửi yêu cầu hỗ trợ thành công");
+            queryClient.invalidateQueries({
+                queryKey: ["maintenance-execution-detail", requestId],
+            });
+        },
+
+        onError: (error: any) => {
+            const messageText = error.message || "Lỗi khi gửi yêu cầu hỗ trợ";
+            if (messageText.includes("Chỉ kỹ thuật viên chính")) {
+                notify.warning(messageText);
+            } else if (messageText.includes("đã được gửi trước đó")) {
+                notify.warning(messageText);
+            } else {
+                notify.error(messageText);
+            }
+        },
+    });
+};
+
+/** ========================= Phê duyệt yêu cầu hỗ trợ (Admin) ========================= */
+export const useApproveSupportRequestMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (params: { supportId: string; data: IReqSupportApproveDTO }) => {
+            const { supportId, data } = params;
+            const res = await callApproveSupportRequest(supportId, data);
+
+            if (res.statusCode !== 200) {
+                throw new Error(res?.message || "Không thể phê duyệt yêu cầu hỗ trợ");
+            }
+
+            return res.data;
+        },
+
+        onSuccess: () => {
+            notify.success("Đã phê duyệt yêu cầu hỗ trợ");
+            queryClient.invalidateQueries({ queryKey: ["admin-support-requests"] });
+            queryClient.invalidateQueries({ queryKey: ["maintenance-executions"] });
+        },
+
+        onError: (error: any) => {
+            notify.error(error.message || "Lỗi khi phê duyệt yêu cầu hỗ trợ");
+        },
+    });
+};
+
+/** ========================= Danh sách yêu cầu hỗ trợ (Admin theo phiếu) ========================= */
+export const useSupportRequestsQuery = (requestId?: string) => {
+    return useQuery({
+        queryKey: ["admin-support-requests", requestId],
+        enabled: !!requestId,
+        queryFn: async () => {
+            if (!requestId) throw new Error("Thiếu requestId để lấy danh sách hỗ trợ");
+            const res = await callFetchSupportRequests(requestId);
+            if (!res?.data) throw new Error("Không thể lấy danh sách yêu cầu hỗ trợ");
+            return res.data;
         },
     });
 };

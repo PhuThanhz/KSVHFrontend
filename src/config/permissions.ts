@@ -237,6 +237,16 @@ export const ALL_PERMISSIONS = {
     MAINTENANCE_EXECUTION_ADMIN: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/admin/maintenance-executions", module: "MAINTENANCE_EXECUTION_ADMIN", },
         GET_DETAIL: { method: "GET", apiPath: "/api/v1/admin/maintenance-executions/{requestId}/detail", module: "MAINTENANCE_EXECUTION_ADMIN", },
+        GET_SUPPORT_REQUESTS: {
+            method: "GET",
+            apiPath: "/api/v1/admin/maintenance-executions/{requestId}/supports",
+            module: "MAINTENANCE_EXECUTION_ADMIN",
+        },
+        APPROVE_SUPPORT_REQUEST: {
+            method: "PUT",
+            apiPath: "/api/v1/admin/maintenance-executions/supports/{supportId}/approve",
+            module: "MAINTENANCE_EXECUTION_ADMIN",
+        },
     },
     MAINTENANCE_ACCEPTANCE: {
         GET_PENDING: {

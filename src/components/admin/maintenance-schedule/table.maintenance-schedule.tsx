@@ -1,38 +1,48 @@
-import DataTable from "@/components/admin/data-table";
-import type { IMaintenanceSchedule } from "@/types/backend";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Tag } from "antd";
 import { useState } from "react";
+import { Button, Space, Tag } from "antd";
+import type { ProColumns } from "@ant-design/pro-components";
 import queryString from "query-string";
+
+import DataTable from "@/components/admin/data-table";
+import DateRangeFilter from "@/components/common/DateRangeFilter";
+import { sfLike } from "spring-filter-query-builder";
+
 import {
     useMaintenanceSchedulesQuery,
     useGenerateDueRequestsMutation,
 } from "@/hooks/useMaintenanceSchedules";
+
+import type { IMaintenanceSchedule } from "@/types/backend";
 import { formatDate } from "@/config/format";
 
-import MaintenanceScheduleDetailDrawer from "./drawer.maintenance-schedule.detail";
+import MaintenanceScheduleDetailModal from "./modal.maintenance-schedule.detail";
 import GenerateRequestModal from "./modal.maintenance-schedule.generate";
 import GenerateAutoRequestModal from "./modal.maintenance-schedule.generate-auto";
 
-import { sfLike } from "spring-filter-query-builder";
-import DateRangeFilter from "@/components/common/DateRangeFilter";
 
-const statusColor = {
+// ==================================================================
+// COLOR MAP
+// ==================================================================
+const statusColor: Record<string, string> = {
     CHUA_THUC_HIEN: "orange",
     DA_TAO_PHIEU: "green",
     HOAN_THANH: "blue",
 };
 
+
+// ==================================================================
+// MAIN COMPONENT
+// ==================================================================
 const MaintenanceScheduleTable = () => {
-    const [openDrawer, setOpenDrawer] = useState(false);
-    const [drawerId, setDrawerId] = useState("");
+    const [openDetailModal, setOpenDetailModal] = useState(false);
+    const [selectedId, setSelectedId] = useState("");
 
     const [openGenerateModal, setOpenGenerateModal] = useState(false);
     const [generateId, setGenerateId] = useState("");
 
     const [openGenerateAuto, setOpenGenerateAuto] = useState(false);
 
-    const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
+    const [scheduledDateFilter, setScheduledDateFilter] = useState<string | null>(null);
 
     const [query, setQuery] = useState(() =>
         queryString.stringify(
@@ -48,70 +58,65 @@ const MaintenanceScheduleTable = () => {
     const { data, isFetching } = useMaintenanceSchedulesQuery(query);
     const { isPending: generatingAuto } = useGenerateDueRequestsMutation();
 
-    // ============================================================
-    // BUILD QUERY (Giống DepartmentPage)
-    // ============================================================
+
+    // ==================================================================
+    // BUILD QUERY (SEARCH & SORT)
+    // ==================================================================
     const buildQuery = (params: any, sort: any) => {
-        const q: any = {
-            page: params.current,
-            size: params.pageSize,
-            filter: "",
-        };
+        let filter = "";
 
         if (params.deviceCode)
-            q.filter = sfLike("device.deviceCode", params.deviceCode);
+            filter = sfLike("device.deviceCode", params.deviceCode).toString();
 
         if (params.deviceName)
-            q.filter = q.filter
-                ? `${q.filter} and ${sfLike("device.deviceName", params.deviceName)}`
-                : sfLike("device.deviceName", params.deviceName);
+            filter = filter
+                ? `${filter} and ${sfLike("device.deviceName", params.deviceName).toString()}`
+                : sfLike("device.deviceName", params.deviceName).toString();
 
         if (params.status)
-            q.filter = q.filter
-                ? `${q.filter} and status='${params.status}'`
+            filter = filter
+                ? `${filter} and status='${params.status}'`
                 : `status='${params.status}'`;
 
-        if (createdAtFilter)
-            q.filter = q.filter ? `${q.filter} and ${createdAtFilter}` : createdAtFilter;
+        if (scheduledDateFilter)
+            filter = filter ? `${filter} and ${scheduledDateFilter}` : scheduledDateFilter;
 
-        if (!q.filter) delete q.filter;
+        const q = {
+            page: params.current,
+            size: params.pageSize,
+            ...(filter && { filter }),
+        };
 
-        let temp = queryString.stringify(q, { encode: false });
+        const sortQuery =
+            sort?.scheduledDate === "ascend"
+                ? "sort=scheduledDate,asc"
+                : "sort=scheduledDate,desc";
 
-        // SORT
-        let sortBy = "sort=scheduledDate,desc";
-
-        if (sort?.scheduledDate)
-            sortBy =
-                sort.scheduledDate === "ascend"
-                    ? "sort=scheduledDate,asc"
-                    : "sort=scheduledDate,desc";
-
-        return `${temp}&${sortBy}`;
+        return `${queryString.stringify(q, { encode: false })}&${sortQuery}`;
     };
 
-    // ============================================================
-    // COLUMNS
-    // ============================================================
+
+
+    // ==================================================================
+    // TABLE COLUMNS
+    // ==================================================================
     const columns: ProColumns<IMaintenanceSchedule>[] = [
         {
             title: "STT",
-            key: "index",
             width: 60,
             align: "center",
-            hideInSearch: true,
             render: (_, __, index) =>
                 index + 1 + ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+            hideInSearch: true,
         },
         {
             title: "Mã thiết bị",
             dataIndex: "deviceCode",
-            sorter: true,
         },
         {
-            title: "Thiết bị",
+            title: "Tên thiết bị",
             dataIndex: "deviceName",
-            sorter: false,
+            hideInSearch: true,
         },
         {
             title: "Ngày bảo trì",
@@ -125,40 +130,47 @@ const MaintenanceScheduleTable = () => {
             dataIndex: "underWarranty",
             hideInSearch: true,
             render: (_, row) =>
-                row.underWarranty ? <Tag color="green">Còn BH</Tag> : <Tag>Tự túc</Tag>,
+                row.underWarranty ? (
+                    <Tag color="green">Còn BH</Tag>
+                ) : (
+                    <Tag color="default">Tự túc</Tag>
+                ),
         },
         {
             title: "Trạng thái",
             dataIndex: "status",
-            sorter: true,
-            render: (_, row) => <Tag color={statusColor[row.status]}>{row.status}</Tag>,
+            render: (_, row) => (
+                <Tag color={statusColor[row.status]}>{row.status}</Tag>
+            ),
         },
         {
             title: "Mã phiếu",
             dataIndex: "requestCode",
-            width: 140,
             hideInSearch: true,
             ellipsis: true,
         },
         {
             title: "Thao tác",
+            width: 200,
             hideInSearch: true,
-            width: 180,
             render: (_, row) => (
                 <Space>
                     <Button
-                        type="link"
+                        type="primary"
+                        ghost
                         onClick={() => {
-                            setDrawerId(row.id);
-                            setOpenDrawer(true);
+                            setSelectedId(row.id);
+                            setOpenDetailModal(true);
                         }}
                     >
-                        Xem
+                        Xem chi tiết
                     </Button>
 
                     {row.status === "CHUA_THUC_HIEN" && (
                         <Button
-                            type="link"
+                            type="primary"
+                            ghost
+                            danger
                             onClick={() => {
                                 setGenerateId(row.id);
                                 setOpenGenerateModal(true);
@@ -172,9 +184,10 @@ const MaintenanceScheduleTable = () => {
         },
     ];
 
-    // ============================================================
+
+    // ==================================================================
     // RENDER
-    // ============================================================
+    // ==================================================================
     return (
         <>
             <DataTable<IMaintenanceSchedule>
@@ -186,11 +199,7 @@ const MaintenanceScheduleTable = () => {
                 request={async (params, sort) => {
                     const newQuery = buildQuery(params, sort);
                     setQuery(newQuery);
-
-                    return {
-                        data: [],
-                        success: true,
-                    };
+                    return { data: [], success: true };
                 }}
                 pagination={{
                     defaultPageSize: 10,
@@ -201,24 +210,29 @@ const MaintenanceScheduleTable = () => {
                     showSizeChanger: true,
                 }}
                 toolBarRender={() => [
-                    <Space key="toolbar" size={12} align="center" wrap>
+                    <Space key="tools" size={12}>
                         <DateRangeFilter
                             label="Ngày bảo trì"
                             fieldName="scheduledDate"
-                            onChange={(filterStr) => setCreatedAtFilter(filterStr)}
+                            onChange={(filterStr) => setScheduledDateFilter(filterStr)}
                         />
 
-                        <Button type="primary" loading={generatingAuto} onClick={() => setOpenGenerateAuto(true)}>
+                        <Button
+                            type="primary"
+                            loading={generatingAuto}
+                            onClick={() => setOpenGenerateAuto(true)}
+                        >
                             Sinh phiếu tự động
                         </Button>
                     </Space>,
                 ]}
             />
 
-            <MaintenanceScheduleDetailDrawer
-                id={drawerId}
-                open={openDrawer}
-                onClose={() => setOpenDrawer(false)}
+            {/* MODALS */}
+            <MaintenanceScheduleDetailModal
+                id={selectedId}
+                open={openDetailModal}
+                onClose={() => setOpenDetailModal(false)}
             />
 
             <GenerateRequestModal

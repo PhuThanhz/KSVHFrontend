@@ -515,15 +515,16 @@ export interface IDevicePart {
     id: string;
     partCode: string;
     partName: string;
-    quantity: number;
     status: DevicePartStatus;
+    dateInUse: string | null;
+    dateExpired: string | null;
 }
-
 
 export interface ICreatePartRequest {
     partCode: string;
     partName: string;
-    quantity: number;
+    dateInUse?: string | null;
+    dateExpired?: string | null;
 }
 
 export interface IUpdatePartStatusRequest {
@@ -1327,6 +1328,23 @@ export interface IResExecutionDetailDTO {
 
 
 
+
+export interface ITechnicianSummary {
+    id: string;
+    fullName: string;
+    phone?: string | null;
+    email?: string | null;
+    isMain?: boolean | null;
+}
+
+export interface IReqSupportRequestDTO {
+    supporterId: string;
+    reason: string;
+}
+export interface IReqSupportApproveDTO {
+    approve: boolean;
+}
+
 export interface IResAdminExecutionCardDTO {
     requestId: string;
     requestCode: string;
@@ -1339,8 +1357,7 @@ export interface IResAdminExecutionCardDTO {
     deviceImage2?: string | null;
     deviceImage3?: string | null;
 
-    technicianName?: string | null;
-
+    technicians?: ITechnicianSummary[];
     totalTasks?: number | null;
     completedTasks?: number | null;
     progressPercent?: number | null;
@@ -1360,10 +1377,19 @@ export interface IResAdminExecutionDetailDTO {
     requestInfo: IResRequestCommonDTO;
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
-    technicianName?: string | null;
+    technicians?: ITechnicianSummary[];
     tasks?: IResExecutionTaskDTO[] | null;
 }
 
+export interface IResSupportRequestDTO {
+    id: string;
+    requestCode: string;
+    requesterName: string;
+    supporterName: string;
+    reason: string;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    createdAt?: string | null;
+}
 
 
 

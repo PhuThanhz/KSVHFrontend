@@ -57,6 +57,7 @@ import LayoutTechnician from "@/components/technician/layout/layout.technician";
 import MaintenanceApprovalPage from "@/pages/admin/maintenance/maintenance-approval";
 import MaintenanceExecutionAdminPage from "./pages/admin/maintenance/maintenance-execution-admin";
 import MaintenanceAcceptancePage from "./pages/admin/maintenance/maintenance-acceptance";
+import TechnicianProfilePage from "@/pages/technician/profile/index";
 
 import MaintenanceHistoryPage from "./pages/admin/maintenance/maintenance-histories";
 import AdminMaintenanceSchedulePage from "./pages/admin/maintenance/maintenance-schedule";
@@ -149,8 +150,10 @@ export default function App() {
         { path: "survey", element: <MaintenanceSurveyPage /> },
         { path: "plan", element: <HomePlanPage /> },
         { path: "execution", element: <HomeExecutionPage /> },
+        { path: "/technician/profile", element: <TechnicianProfilePage /> },
       ],
     },
+
 
     // ==========================  ADMIN =======================//
     {

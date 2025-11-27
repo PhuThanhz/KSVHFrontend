@@ -71,6 +71,9 @@ import type {
     IMaintenanceScheduleDetail,
     IMaintenanceScheduleByDevice,
     IResMaintenanceTimelineDTO,
+    IReqSupportRequestDTO,
+    IReqSupportApproveDTO,
+    IResSupportRequestDTO
 
 } from '@/types/backend';
 // THỐNG KÊ BÁO CÁO
@@ -1320,6 +1323,38 @@ export const callUpdateExecutionTask = (taskId: string, data: IReqUpdateTaskDTO)
 export const callCompleteExecution = (requestId: string) => {
     return axios.put<IBackendRes<IResExecutionDetailDTO>>(
         `/api/v1/maintenance-executions/${requestId}/complete`
+    );
+};
+
+/* ========== KTV gửi yêu cầu hỗ trợ ========== */
+export const callRequestSupport = (
+    requestId: string,
+    data: IReqSupportRequestDTO
+) => {
+    return axios.post<IBackendRes<any>>(
+        `/api/v1/maintenance-executions/${requestId}/support`,
+        data,
+        { headers: { "Content-Type": "application/json" } }
+    );
+};
+
+
+export const callFetchSupportRequests = (requestId: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResSupportRequestDTO>>>(
+        `/api/v1/admin/maintenance-executions/${requestId}/supports`
+    );
+};
+
+
+/* ========== Admin phê duyệt yêu cầu hỗ trợ ========== */
+export const callApproveSupportRequest = (
+    supportId: string,
+    data: IReqSupportApproveDTO
+) => {
+    return axios.put<IBackendRes<any>>(
+        `/api/v1/admin/maintenance-executions/supports/${supportId}/approve`,
+        data,
+        { headers: { "Content-Type": "application/json" } }
     );
 };
 

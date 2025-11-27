@@ -1,11 +1,13 @@
 import { Button, Divider, Form, Input } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { callLogin } from "@/config/api";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { setUserLoginInfo } from "@/redux/slice/accountSlide";
 import styles from "@/styles/auth.module.scss";
 import { notify } from "@/components/common/notify";
+import { PATHS } from "@/constants/paths";
+import { getRedirectPathByRole } from "@/constants/roleRedirects";
 
 const LoginPage = () => {
     const [isSubmit, setIsSubmit] = useState(false);
@@ -17,12 +19,7 @@ const LoginPage = () => {
     const params = new URLSearchParams(location.search);
     const callback = params.get("callback");
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            navigate("/", { replace: true });
-        }
-    }, [isAuthenticated, navigate]);
-
+    /** Xử lý đăng nhập */
     const handleLogin = async (username: string, password: string) => {
         setIsSubmit(true);
         try {
@@ -39,19 +36,23 @@ const LoginPage = () => {
                 return;
             }
 
+            // Lưu token và user vào Redux
             localStorage.setItem("access_token", access_token);
             dispatch(setUserLoginInfo(user));
             notify.success("Đăng nhập tài khoản thành công!");
 
-            // Điều hướng sau đăng nhập
+            // ===================== Điều hướng sau đăng nhập =====================
             if (callback && callback.startsWith("/")) {
                 navigate(callback, { replace: true });
             } else {
-                navigate("/", { replace: true });
+                const redirectPath = getRedirectPathByRole(user?.role?.name);
+                navigate(redirectPath, { replace: true });
             }
         } catch (error: any) {
             const message =
-                error?.response?.data?.message || error?.message || "Lỗi kết nối đến máy chủ. Vui lòng thử lại.";
+                error?.response?.data?.message ||
+                error?.message ||
+                "Lỗi kết nối đến máy chủ. Vui lòng thử lại.";
             notify.error(message);
         } finally {
             setIsSubmit(false);
@@ -101,7 +102,7 @@ const LoginPage = () => {
                                 <p>
                                     <span>Bạn quên mật khẩu hoặc chưa kích hoạt tài khoản?</span>
                                     <br />
-                                    <Link to="/forgot-password">Nhận mã xác nhận qua email</Link>
+                                    <Link to={PATHS.FORGOT_PASSWORD}>Nhận mã xác nhận qua email</Link>
                                 </p>
                             </div>
                         </Form>

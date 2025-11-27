@@ -16,6 +16,7 @@ import {
 import dayjs from "dayjs";
 import { useAdminExecutionDetailQuery } from "@/hooks/useAdminExecutions";
 
+
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
@@ -33,24 +34,19 @@ const ViewAdminExecutionDetail = ({ open, onClose, requestId }: IProps) => {
     const requestInfo = data?.requestInfo;
     const surveyInfo = data?.surveyInfo;
     const planInfo = data?.planInfo;
+    const technicians = data?.technicians || [];
 
     const backendURL = import.meta.env.VITE_BACKEND_URL;
-
     const device = requestInfo?.device;
 
-    const deviceImages = [
-        device?.image1,
-        device?.image2,
-        device?.image3,
-    ].filter(Boolean);
-
+    const deviceImages = [device?.image1, device?.image2, device?.image3].filter(Boolean);
     const surveyImages = [
         surveyInfo?.attachment1,
         surveyInfo?.attachment2,
         surveyInfo?.attachment3,
     ].filter(Boolean);
 
-    /** ===================== RENDER TASKS ADMIN ===================== */
+    /** ===================== RENDER TASKS ===================== */
     const renderTaskItem = (task: any) => {
         const attachments = [task.image1, task.image2, task.image3, task.video].filter(Boolean);
 
@@ -136,6 +132,39 @@ const ViewAdminExecutionDetail = ({ open, onClose, requestId }: IProps) => {
         );
     };
 
+    /** ===================== RENDER DANH SÁCH KTV ===================== */
+    const renderTechnicians = () => {
+        if (!technicians.length) return <Text type="secondary">Không có kỹ thuật viên</Text>;
+
+        return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {technicians.map((t) => (
+                    <div key={t.id}>
+                        <Text strong>{t.fullName}</Text>{" "}
+                        {t.isMain ? (
+                            <Tag color="blue">Chính</Tag>
+                        ) : (
+                            <Tag color="green">Hỗ trợ</Tag>
+                        )}
+                        {t.phone && (
+                            <>
+                                {" "}
+                                - <Text type="secondary">{t.phone}</Text>
+                            </>
+                        )}
+                        {t.email && (
+                            <>
+                                {" "}
+                                - <Text type="secondary">{t.email}</Text>
+                            </>
+                        )}
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
+
     /** ===================== RENDER TABS ===================== */
     const renderTabs = () => (
         <Tabs defaultActiveKey="1">
@@ -206,7 +235,7 @@ const ViewAdminExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                 {surveyInfo ? (
                     <>
                         <Descriptions bordered size="small" column={2}>
-                            <Descriptions.Item label="Kỹ thuật viên">
+                            <Descriptions.Item label="Kỹ thuật viên khảo sát">
                                 {surveyInfo.technicianName || "-"}
                             </Descriptions.Item>
 
@@ -308,11 +337,11 @@ const ViewAdminExecutionDetail = ({ open, onClose, requestId }: IProps) => {
                 )}
             </TabPane>
 
-            {/* TAB 4: TIẾN ĐỘ THI CÔNG + KTV */}
+            {/* TAB 4: TIẾN ĐỘ THI CÔNG */}
             <TabPane tab="Tiến độ thi công" key="4">
                 <Descriptions bordered size="small" column={1}>
-                    <Descriptions.Item label="Kỹ thuật viên thực hiện công việc">
-                        {data?.technicianName || "-"}
+                    <Descriptions.Item label="Kỹ thuật viên thực hiện">
+                        {renderTechnicians()}
                     </Descriptions.Item>
                 </Descriptions>
 
@@ -335,7 +364,7 @@ const ViewAdminExecutionDetail = ({ open, onClose, requestId }: IProps) => {
             onCancel={() => onClose(false)}
             footer={null}
             width={980}
-            title={<Title level={4}>Chi tiết thi công </Title>}
+            title={<Title level={4}>Chi tiết thi công</Title>}
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "40px 0" }}>
