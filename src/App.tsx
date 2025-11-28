@@ -118,15 +118,7 @@ export default function App() {
 
       ],
     },
-    {
-      path: "scan-result/:code",
-      element: (
-        <ProtectedRoute>
-          <ScanResult />
-        </ProtectedRoute>
-      ),
-    }
-    ,
+
     // ==================== TECHNICIAN =====================//
     {
       path: PATHS.TECHNICIAN.ROOT,
@@ -488,6 +480,15 @@ export default function App() {
       ],
     },
     // ================= AUTH =================//
+    {
+      path: "scan-result/:code",
+      element: (
+        <ProtectedRoute>
+          <ScanResult />
+        </ProtectedRoute>
+      ),
+    }
+    ,
     { path: PATHS.LOGIN, element: <LoginPage /> },
     { path: PATHS.FORGOT_PASSWORD, element: <ForgotPasswordPage /> },
     { path: PATHS.RESET_PASSWORD, element: <ResetPasswordPage /> },

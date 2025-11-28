@@ -20,6 +20,7 @@ import {
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { useMyTechnicianAvailabilitiesQuery } from "@/hooks/useTechnicianAvailability";
+import Breadcrumb from "@/components/Breadcrumb";
 
 dayjs.locale("vi");
 const { Text, Title } = Typography;
@@ -94,6 +95,8 @@ const HomeSchedulePage: React.FC = () => {
 
     return (
         <div className="p-6 min-h-screen bg-gradient-to-b from-gray-50 to-white">
+            <Breadcrumb />
+
             {/* Header */}
             <div className="mb-6">
                 <Space direction="vertical" size={2}>

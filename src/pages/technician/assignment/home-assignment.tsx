@@ -26,6 +26,8 @@ import queryString from "query-string";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 
+import Breadcrumb from "@/components/Breadcrumb";
+
 dayjs.locale("vi");
 const { Text, Title } = Typography;
 
@@ -51,6 +53,8 @@ const TechnicianAssignmentPage = () => {
 
     return (
         <div className="px-4 py-5 pb-24 bg-gradient-to-b from-pink-50 to-white min-h-screen sm:px-6 lg:px-8">
+            <Breadcrumb />
+
             {/* Header */}
             <div className="mb-6">
                 <Title level={4} className="m-0 text-lg sm:text-xl font-bold text-gray-800">
@@ -103,7 +107,7 @@ const TechnicianAssignmentPage = () => {
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                                     {/* Cột 1: Ảnh */}
                                     <div className="space-y-4">
-                                        {/* Ảnh phiếu */}
+                                        {/* Ảnh phiếu bảo trì */}
                                         <div>
                                             <Text strong className="block text-xs text-gray-600 mb-2">
                                                 Ảnh phiếu bảo trì

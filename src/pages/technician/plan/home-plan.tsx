@@ -22,6 +22,7 @@ import dayjs from "dayjs";
 import { useSurveyedRequestsQuery } from "@/hooks/maintenance/useMaintenancePlans";
 import ModalCreateMaintenancePlan from "./modal.create.plan";
 import ViewPlanDetail from "./view.plan.detail";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const { Text, Title } = Typography;
 
@@ -47,6 +48,9 @@ const HomePlan = () => {
 
     return (
         <div style={{ padding: "24px 36px" }}>
+
+            <Breadcrumb />
+
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
                 Danh sách phiếu đã khảo sát để lập kế hoạch
             </h2>

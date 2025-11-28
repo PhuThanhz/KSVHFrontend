@@ -73,7 +73,8 @@ import type {
     IResMaintenanceTimelineDTO,
     IReqSupportRequestDTO,
     IReqSupportApproveDTO,
-    IResSupportRequestDTO
+    IResSupportRequestDTO,
+    INotification
 
 } from '@/types/backend';
 // THỐNG KÊ BÁO CÁO
@@ -1591,3 +1592,15 @@ export const callDownloadWarrantyProductReport = (
         responseType: "blob"
     });
 };
+
+
+/** ======================== Module Notification  ======================== **/
+export const callFetchMyNotifications = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<INotification>>>(
+        `/api/v1/notifications?${query}`
+    );
+};
+export const callMarkNotificationAsRead = (id: string) => {
+    return axios.put<IBackendRes<null>>(`/api/v1/notifications/${id}/read`);
+};
+

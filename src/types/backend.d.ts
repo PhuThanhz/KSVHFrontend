@@ -16,6 +16,13 @@ export interface IModelPaginate<T> {
     },
     result: T[]
 }
+
+export interface IBreadcrumbItem {
+    path: string;
+    label: string;
+    isLast?: boolean;
+}
+
 export interface IResUploadFileDTO {
     fileName: string;
     uploadedAt: string;
@@ -1802,3 +1809,27 @@ export interface IWarrantyProductReport {
     warrantyRemainingDays?: number;
     warrantyStatusText?: string;
 }
+
+
+
+/** ========================= THONG BAO ====================================*/
+export type NotificationType =
+    | "REQUEST_ASSIGNED"     // Khi kỹ thuật viên được giao nhiệm vụ khảo sát / bảo trì
+    | "PLAN_APPROVED"        // Khi kế hoạch bảo trì được phê duyệt
+    | "PLAN_REJECTED"        // Khi kế hoạch bảo trì bị từ chối
+    | "ACCEPTANCE_APPROVED"  // Khi phiếu bảo trì được nghiệm thu
+    | "ACCEPTANCE_REJECTED"; // Khi phiếu bảo trì bị từ chối nghiệm thu
+
+/** ================================
+ *  THÔNG TIN MỘT THÔNG BÁO
+ *  ================================ */
+export interface INotification {
+    id: string;             // ID thông báo
+    title: string;          // Tiêu đề (VD: "Công việc mới được giao")
+    message: string;        // Nội dung chi tiết
+    type: NotificationType; // Loại thông báo
+    read: boolean;          // Đã đọc hay chưa
+    createdAt: string;      // Thời gian tạo (ISO)
+}
+
+

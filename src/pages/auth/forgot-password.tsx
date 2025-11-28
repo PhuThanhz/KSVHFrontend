@@ -1,9 +1,10 @@
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, Card, Row, Col, Typography, Space, Divider } from "antd";
 import { callRequestPasswordCode } from "@/config/api";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import styles from "styles/auth.module.scss";
 import { notify } from "@/components/common/notify";
+
+const { Title, Text } = Typography;
 
 const ForgotPasswordPage = () => {
     const [loading, setLoading] = useState(false);
@@ -31,33 +32,66 @@ const ForgotPasswordPage = () => {
     };
 
     return (
-        <div className={styles["login-page"]}>
-            <main className={styles.main}>
-                <div className={styles.container}>
-                    <section className={styles.wrapper}>
-                        <h2 className={styles.text}>Xác nhận qua email</h2>
-                        <Form onFinish={onFinish}>
+        <Row
+            justify="center"
+            align="middle"
+            style={{
+                minHeight: "100vh",
+                background: "linear-gradient(135deg, #f0f2f5 0%, #e6f7ff 100%)",
+                padding: 24,
+            }}
+        >
+            <Col xs={24} sm={18} md={12} lg={8} xl={6}>
+                <Card
+                    bordered={false}
+                    style={{
+                        borderRadius: 16,
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                        padding: "16px 24px",
+                    }}
+                >
+                    <Space direction="vertical" style={{ width: "100%" }} size="middle">
+                        <Title level={3} style={{ textAlign: "center", marginBottom: 0 }}>
+                            Xác nhận qua email
+                        </Title>
+                        <Divider />
+
+                        <Form layout="vertical" onFinish={onFinish} autoComplete="off">
                             <Form.Item
-                                labelCol={{ span: 24 }}
                                 label="Email"
                                 name="email"
-                                rules={[{ required: true, message: "Vui lòng nhập email!" }]}
+                                rules={[
+                                    { required: true, message: "Vui lòng nhập email!" },
+                                    { type: "email", message: "Email không hợp lệ!" },
+                                ]}
                             >
-                                <Input />
+                                <Input placeholder="Nhập địa chỉ email của bạn" size="large" />
                             </Form.Item>
+
                             <Form.Item>
-                                <Button type="primary" htmlType="submit" loading={loading}>
+                                <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    size="large"
+                                    loading={loading}
+                                    block
+                                >
                                     Gửi mã xác nhận
                                 </Button>
                             </Form.Item>
-                            <p>
-                                <Link to="/login">Quay lại đăng nhập</Link>
-                            </p>
                         </Form>
-                    </section>
-                </div>
-            </main>
-        </div>
+
+                        <Divider />
+
+                        <div style={{ textAlign: "center" }}>
+                            <Text>Đã nhớ mật khẩu?</Text>
+                            <br />
+                            <Link to="/login">Quay lại đăng nhập</Link>
+                        </div>
+                    </Space>
+                </Card>
+            </Col>
+        </Row>
     );
 };
 

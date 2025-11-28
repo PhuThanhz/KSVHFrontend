@@ -7,12 +7,17 @@ const RoleBaseRoute = (props: any) => {
     const user = useAppSelector(state => state.account.user);
     const userRole = user?.role?.name;
 
-    if (userRole !== 'SUPER_ADMIN' && userRole !== 'ADMIN_SUB' && userRole !== 'EMPLOYEE') {
+    if (
+        userRole !== 'SUPER_ADMIN' &&
+        userRole !== 'ADMIN_SUB' &&
+        userRole !== 'EMPLOYEE' &&
+        userRole !== 'TECHNICIAN'
+    ) {
         return <NotPermitted />;
     }
 
     return <>{props.children}</>;
-}
+};
 
 const ProtectedRoute = (props: any) => {
     const isAuthenticated = useAppSelector(state => state.account.isAuthenticated)

@@ -1,25 +1,25 @@
-import { Button, Divider, Form, Input } from "antd";
+import { Button, Card, Divider, Form, Input, Space, Typography, Row, Col } from "antd";
+import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { callLogin } from "@/config/api";
 import { useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useAppDispatch } from "@/redux/hooks";
 import { setUserLoginInfo } from "@/redux/slice/accountSlide";
-import styles from "@/styles/auth.module.scss";
 import { notify } from "@/components/common/notify";
 import { PATHS } from "@/constants/paths";
 import { getRedirectPathByRole } from "@/constants/roleRedirects";
 
+const { Title, Text } = Typography;
+
 const LoginPage = () => {
     const [isSubmit, setIsSubmit] = useState(false);
     const dispatch = useAppDispatch();
-    const isAuthenticated = useAppSelector((state) => state.account.isAuthenticated);
     const navigate = useNavigate();
     const location = useLocation();
 
     const params = new URLSearchParams(location.search);
     const callback = params.get("callback");
 
-    /** Xử lý đăng nhập */
     const handleLogin = async (username: string, password: string) => {
         setIsSubmit(true);
         try {
@@ -36,12 +36,10 @@ const LoginPage = () => {
                 return;
             }
 
-            // Lưu token và user vào Redux
             localStorage.setItem("access_token", access_token);
             dispatch(setUserLoginInfo(user));
             notify.success("Đăng nhập tài khoản thành công!");
 
-            // ===================== Điều hướng sau đăng nhập =====================
             if (callback && callback.startsWith("/")) {
                 navigate(callback, { replace: true });
             } else {
@@ -64,22 +62,39 @@ const LoginPage = () => {
     };
 
     return (
-        <div className={styles["login-page"]}>
-            <main className={styles.main}>
-                <div className={styles.container}>
-                    <section className={styles.wrapper}>
-                        <div className={styles.heading}>
-                            <h2 className={`${styles.text} ${styles["text-large"]}`}>Đăng nhập</h2>
-                            <Divider />
+        <Row
+            justify="center"
+            align="middle"
+            style={{ minHeight: "100vh", background: "#f0f2f5", padding: "20px" }}
+        >
+            <Col xs={22} sm={18} md={12} lg={8} xl={6}>
+                <Card>
+                    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+                        <div style={{ textAlign: "center" }}>
+                            <Title level={2}>Đăng nhập</Title>
                         </div>
 
-                        <Form name="login-form" onFinish={onFinish} autoComplete="off" layout="vertical">
+                        <Divider />
+
+                        <Form
+                            name="login-form"
+                            onFinish={onFinish}
+                            autoComplete="off"
+                            layout="vertical"
+                            size="large"
+                        >
                             <Form.Item
                                 label="Email"
                                 name="username"
-                                rules={[{ required: true, message: "Email không được để trống!" }]}
+                                rules={[
+                                    { required: true, message: "Email không được để trống!" },
+                                    { type: "email", message: "Email không hợp lệ!" }
+                                ]}
                             >
-                                <Input placeholder="Nhập email của bạn" />
+                                <Input
+                                    prefix={<MailOutlined />}
+                                    placeholder="Nhập email của bạn"
+                                />
                             </Form.Item>
 
                             <Form.Item
@@ -87,29 +102,36 @@ const LoginPage = () => {
                                 name="password"
                                 rules={[{ required: true, message: "Mật khẩu không được để trống!" }]}
                             >
-                                <Input.Password placeholder="Nhập mật khẩu" />
+                                <Input.Password
+                                    prefix={<LockOutlined />}
+                                    placeholder="Nhập mật khẩu"
+                                />
                             </Form.Item>
 
                             <Form.Item>
-                                <Button type="primary" htmlType="submit" loading={isSubmit} block>
+                                <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    loading={isSubmit}
+                                    block
+                                    size="large"
+                                >
                                     Đăng nhập
                                 </Button>
                             </Form.Item>
-
-                            <Divider />
-
-                            <div style={{ textAlign: "center" }}>
-                                <p>
-                                    <span>Bạn quên mật khẩu hoặc chưa kích hoạt tài khoản?</span>
-                                    <br />
-                                    <Link to={PATHS.FORGOT_PASSWORD}>Nhận mã xác nhận qua email</Link>
-                                </p>
-                            </div>
                         </Form>
-                    </section>
-                </div>
-            </main>
-        </div>
+
+                        <Divider />
+
+                        <div style={{ textAlign: "center" }}>
+                            <Text>Bạn quên mật khẩu hoặc chưa kích hoạt tài khoản?</Text>
+                            <br />
+                            <Link to={PATHS.FORGOT_PASSWORD}>Nhận mã xác nhận qua email</Link>
+                        </div>
+                    </Space>
+                </Card>
+            </Col>
+        </Row>
     );
 };
 

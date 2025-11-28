@@ -1,0 +1,16 @@
+export const adminBreadcrumb: Record<string, string> = {
+    "/admin": "Bảng điều khiển",
+    "/admin/maintenance": "Quản lý bảo trì",
+    "/admin/employee": "Nhân viên",
+    "/admin/device": "Thiết bị",
+    "/admin/company": "Công ty",
+    "/admin/department": "Phòng ban",
+    "/admin/issue": "Sự cố",
+    "/admin/skill": "Kỹ năng",
+    "/admin/warehouse": "Kho hàng",
+    "/admin/unit": "Đơn vị",
+    "/admin/reject-reason": "Lý do từ chối",
+    "/admin/maintenance-report/request": "Báo cáo yêu cầu bảo trì",
+    "/admin/maintenance-report/device-history": "Lịch sử thiết bị",
+    "/admin/maintenance-report/device-depreciation": "Khấu hao thiết bị",
+};

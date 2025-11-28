@@ -299,8 +299,7 @@ export default function MaintenanceExecutionAdminPage() {
                                                     <Access
                                                         permission={
                                                             ALL_PERMISSIONS
-                                                                .MAINTENANCE_EXECUTION_ADMIN
-                                                                .GET_SUPPORT_REQUESTS
+                                                                .MAINTENANCE_EXECUTION_ADMIN.GET_SUPPORT_REQUESTS
                                                         }
                                                         hideChildren
                                                     >

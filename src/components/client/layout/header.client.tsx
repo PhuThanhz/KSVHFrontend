@@ -18,7 +18,6 @@ import {
 } from "antd";
 import type { MenuProps } from "antd";
 import { isMobile } from "react-device-detect";
-import { FaReact } from "react-icons/fa";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { callLogout } from "@/config/api";
@@ -141,9 +140,7 @@ const Header = () => {
                 ? [
                     {
                         label: (
-                            <Link to={PATHS.ADMIN.ROOT}>
-                                Trang Quản Trị
-                            </Link>
+                            <Link to={PATHS.ADMIN.ROOT}>Trang Quản Trị</Link>
                         ),
                         key: "admin",
                         icon: <FireOutlined />,
@@ -152,10 +149,7 @@ const Header = () => {
                 : []),
             {
                 label: (
-                    <span
-                        className="cursor-pointer"
-                        onClick={handleLogout}
-                    >
+                    <span className="cursor-pointer" onClick={handleLogout}>
                         Đăng xuất
                     </span>
                 ),
@@ -176,22 +170,30 @@ const Header = () => {
     return (
         <>
             {/* Header Section */}
-            <div className="bg-[#222831] shadow-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {!isMobile ? (
-                        <div className="flex gap-8">
-                            {/* Brand Logo */}
-                            <div className="flex items-center py-4">
-                                <FaReact
-                                    onClick={() => navigate(PATHS.CLIENT.HOME)}
-                                    title="AMMS"
-                                    className="text-[#61dafb] text-3xl cursor-pointer hover:rotate-180 transition-transform duration-500"
-                                />
-                            </div>
+            <header className="bg-[#222831] sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                    {/* Logo + Text */}
+                    <div
+                        className="flex items-center gap-2 cursor-pointer"
+                        onClick={() => navigate(PATHS.CLIENT.HOME)}
+                    >
+                        <img
+                            src="/logo/logo.png"
+                            alt="AMMS Logo"
+                            className="h-10 w-auto object-contain hover:opacity-80 transition-opacity duration-200"
+                        />
+                        {!isMobile && (
+                            <span className="text-white font-bold text-lg leading-none">
+                                AMMS
+                            </span>
+                        )}
+                    </div>
 
-                            {/* Menu & User Section */}
-                            <div className="flex flex-1 items-center justify-between">
-                                {/* Top Menu */}
+                    {/* Desktop Menu & User */}
+                    {!isMobile && (
+                        <div className="flex items-center gap-6">
+                            {/* Top Menu */}
+                            {items.length > 0 && (
                                 <ConfigProvider
                                     theme={{
                                         token: {
@@ -206,58 +208,53 @@ const Header = () => {
                                         selectedKeys={[current]}
                                         mode="horizontal"
                                         items={items}
-                                        className="flex-1 border-0 bg-transparent"
+                                        className="border-0 bg-transparent"
                                     />
                                 </ConfigProvider>
+                            )}
 
-                                {/* User Section */}
-                                <div className="flex items-center ml-6">
-                                    {!isAuthenticated ? (
-                                        <Link
-                                            to={PATHS.LOGIN}
-                                            className="text-white hover:text-[#61dafb] transition-colors duration-200 px-4 py-2 rounded-md hover:bg-[#393E46]"
+                            {/* User */}
+                            {isAuthenticated ? (
+                                <Dropdown
+                                    menu={{ items: itemsDropdown }}
+                                    trigger={["click"]}
+                                >
+                                    <Space className="cursor-pointer px-3 py-2 rounded-md hover:bg-[#393E46] transition-colors duration-200">
+                                        <Avatar
+                                            src={avatarUrl}
+                                            alt={user?.name}
+                                            className="border-2 border-[#61dafb]"
                                         >
-                                            Đăng Nhập
-                                        </Link>
-                                    ) : (
-                                        <Dropdown
-                                            menu={{ items: itemsDropdown }}
-                                            trigger={["click"]}
-                                        >
-                                            <Space className="cursor-pointer px-3 py-2 rounded-md hover:bg-[#393E46] transition-colors duration-200">
-                                                <Avatar
-                                                    src={avatarUrl}
-                                                    alt={user?.name}
-                                                    className="border-2 border-[#61dafb]"
-                                                >
-                                                    {!avatarUrl &&
-                                                        user?.name
-                                                            ?.substring(0, 2)
-                                                            ?.toUpperCase()}
-                                                </Avatar>
-                                                <span className="text-white font-medium">
-                                                    {user?.name || "Người dùng"}
-                                                </span>
-                                            </Space>
-                                        </Dropdown>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        /* Mobile Header */
-                        <div className="flex items-center justify-between py-4">
-                            <span className="text-white text-xl font-bold tracking-wider">
-                                AMMS
-                            </span>
-                            <MenuFoldOutlined
-                                onClick={() => setOpenMobileMenu(true)}
-                                className="text-white text-2xl cursor-pointer hover:text-[#61dafb] transition-colors duration-200"
-                            />
+                                            {!avatarUrl &&
+                                                user?.name
+                                                    ?.substring(0, 2)
+                                                    ?.toUpperCase()}
+                                        </Avatar>
+                                        <span className="text-white font-medium">
+                                            {user?.name || "Người dùng"}
+                                        </span>
+                                    </Space>
+                                </Dropdown>
+                            ) : (
+                                <Link
+                                    to={PATHS.LOGIN}
+                                    className="text-white hover:text-[#61dafb] transition-colors duration-200 px-4 py-2 rounded-md hover:bg-[#393E46]"
+                                >
+                                    Đăng Nhập
+                                </Link>
+                            )}
                         </div>
                     )}
+
+                    {/* Mobile Menu Button */}
+                    {isMobile && (
+                        <MenuFoldOutlined
+                            onClick={() => setOpenMobileMenu(true)}
+                            className="text-white text-2xl cursor-pointer hover:text-[#61dafb] transition-colors duration-200"
+                        />
+                    )}
                 </div>
-            </div>
+            </header>
 
             {/* Mobile Drawer */}
             <Drawer

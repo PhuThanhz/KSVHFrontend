@@ -387,7 +387,6 @@ export const ALL_PERMISSIONS = {
             module: "REPORT_EXPORT",
         },
     },
-
 };
 
 export const ALL_MODULES = {
@@ -426,5 +425,4 @@ export const ALL_MODULES = {
     MAINTENANCE_SCHEDULE: "MAINTENANCE_SCHEDULE",
     MAINTENANCE_REPORT: "MAINTENANCE_REPORT",
     REPORT_EXPORT: "REPORT_EXPORT",
-
 };

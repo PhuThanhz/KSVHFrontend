@@ -13,6 +13,7 @@ import {
     Steps,
     Spin,
     message,
+    Tabs,
 } from "antd";
 import {
     PlayCircleOutlined,
@@ -28,9 +29,10 @@ import ModalStartExecution from "./modal.start-execution";
 import ModalCompleteExecution from "./modal.complete-execution";
 import ModalUpdateTasks from "./modal.update-tasks";
 import ViewExecutionDetail from "./view.execution-detail";
+import ModalRequestSupport from "./modal.request-support";
+import Breadcrumb from "@/components/Breadcrumb";
 
 import type { MaintenanceRequestStatus, IResExecutionCardDTO } from "@/types/backend";
-import ModalRequestSupport from "./modal.request-support";
 
 const { Title, Text } = Typography;
 
@@ -39,6 +41,7 @@ const HomeExecution = () => {
     const [openUpdateModal, setOpenUpdateModal] = useState(false);
     const [openCompleteModal, setOpenCompleteModal] = useState(false);
     const [openViewModal, setOpenViewModal] = useState(false);
+    const [openSupportModal, setOpenSupportModal] = useState(false);
 
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [selectedRequestCode, setSelectedRequestCode] = useState<string | null>(null);
@@ -55,8 +58,7 @@ const HomeExecution = () => {
     const executions: IResExecutionCardDTO[] = data?.result || [];
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    const [openSupportModal, setOpenSupportModal] = useState(false);
-
+    /** Modal handler */
     const handleOpenModal = (
         type: "start" | "update" | "complete" | "view" | "support",
         id: string,
@@ -64,7 +66,6 @@ const HomeExecution = () => {
     ) => {
         setSelectedRequestId(id);
         setSelectedRequestCode(code || null);
-
         if (type === "start") setOpenStartModal(true);
         if (type === "update") setOpenUpdateModal(true);
         if (type === "complete") setOpenCompleteModal(true);
@@ -72,14 +73,13 @@ const HomeExecution = () => {
         if (type === "support") setOpenSupportModal(true);
     };
 
-
-    /** Load lại dữ liệu sau khi update */
+    /** Reload data */
     const handleActionSuccess = () => {
         message.success("Cập nhật trạng thái thành công!");
         refetch();
     };
 
-    /** Status → Step index */
+    /** Step logic */
     const getStepIndex = (status: MaintenanceRequestStatus): number => {
         switch (status) {
             case "DA_PHE_DUYET":
@@ -96,7 +96,7 @@ const HomeExecution = () => {
         }
     };
 
-    /** Status → Tag color */
+    /** Status color */
     const getStatusColor = (status: MaintenanceRequestStatus): string => {
         switch (status) {
             case "DA_PHE_DUYET":
@@ -114,24 +114,21 @@ const HomeExecution = () => {
         }
     };
 
-    return (
-        <div style={{ padding: "24px 36px" }}>
-            <Title level={3} style={{ marginBottom: 24 }}>
-                Danh sách phiếu được duyệt để thi công
-            </Title>
-
-            {isFetching && (
+    /** Render card list by filter */
+    const renderList = (filter: (item: IResExecutionCardDTO) => boolean) => {
+        const filtered = executions.filter(filter);
+        if (isFetching)
+            return (
                 <div style={{ textAlign: "center", padding: "60px 0" }}>
                     <Spin tip="Đang tải dữ liệu..." />
                 </div>
-            )}
+            );
+        if (filtered.length === 0)
+            return <Empty description="Không có phiếu nào phù hợp" />;
 
-            {!isFetching && executions.length === 0 && (
-                <Empty description="Không có phiếu thi công nào" />
-            )}
-
+        return (
             <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                {executions.map((item) => {
+                {filtered.map((item) => {
                     const deviceImages = [
                         item.deviceImage1,
                         item.deviceImage2,
@@ -149,7 +146,7 @@ const HomeExecution = () => {
                             bodyStyle={{ padding: 20 }}
                         >
                             <Row gutter={16} align="top">
-                                {/* ==== HÌNH ẢNH ==== */}
+                                {/* IMAGE */}
                                 <Col xs={24} md={7} style={{ textAlign: "center" }}>
                                     {deviceImages.length > 0 ? (
                                         <Image.PreviewGroup>
@@ -181,8 +178,8 @@ const HomeExecution = () => {
                                     )}
                                 </Col>
 
+                                {/* CONTENT */}
                                 <Col xs={24} md={17}>
-                                    {/* ==== TAG ==== */}
                                     <Space size="small" wrap>
                                         <Tag color="blue">{item.requestCode}</Tag>
                                         <Tag color={getStatusColor(item.status)}>
@@ -203,37 +200,43 @@ const HomeExecution = () => {
 
                                     <Row gutter={[8, 8]}>
                                         <Col span={12}>
-                                            <Text strong>Thiết bị:</Text> {item.deviceCode || "-"}
+                                            <Text strong>Thiết bị:</Text>{" "}
+                                            {item.deviceCode || "-"}
                                         </Col>
                                         <Col span={12}>
-                                            <Text strong>Vị trí:</Text> {item.locationDetail || "-"}
+                                            <Text strong>Vị trí:</Text>{" "}
+                                            {item.locationDetail || "-"}
                                         </Col>
                                         <Col span={12}>
-                                            <Text strong>Đơn vị:</Text> {item.companyName || "-"}
+                                            <Text strong>Đơn vị:</Text>{" "}
+                                            {item.companyName || "-"}
                                         </Col>
                                         <Col span={12}>
-                                            <Text strong>Phòng ban:</Text> {item.departmentName || "-"}
+                                            <Text strong>Phòng ban:</Text>{" "}
+                                            {item.departmentName || "-"}
                                         </Col>
                                     </Row>
 
-                                    {/* ==== TIẾN ĐỘ ==== */}
-                                    {typeof item.totalTasks === "number" && typeof item.completedTasks === "number" && (
-                                        <div style={{ marginTop: 10 }}>
-                                            <Text strong>Tiến độ công việc: </Text>
-                                            <Tag color="blue">
-                                                {item.completedTasks}/{item.totalTasks} (
-                                                {item.totalTasks > 0
-                                                    ? Math.round((item.completedTasks / item.totalTasks) * 100)
-                                                    : 0}
-                                                %)
-                                            </Tag>
-                                        </div>
-                                    )}
+                                    {typeof item.totalTasks === "number" &&
+                                        typeof item.completedTasks === "number" && (
+                                            <div style={{ marginTop: 10 }}>
+                                                <Text strong>Tiến độ công việc: </Text>
+                                                <Tag color="blue">
+                                                    {item.completedTasks}/{item.totalTasks} (
+                                                    {item.totalTasks > 0
+                                                        ? Math.round(
+                                                            (item.completedTasks /
+                                                                item.totalTasks) *
+                                                            100
+                                                        )
+                                                        : 0}
+                                                    %)
+                                                </Tag>
+                                            </div>
+                                        )}
 
                                     <Divider style={{ margin: "10px 0" }} />
 
-
-                                    {/* ==== STEPS ==== */}
                                     <Steps
                                         size="small"
                                         current={getStepIndex(item.status)}
@@ -250,7 +253,6 @@ const HomeExecution = () => {
                                         ]}
                                     />
 
-                                    {/* ==== BOX RED WHEN REJECTED ==== */}
                                     {item.rejectInfo && (
                                         <div
                                             style={{
@@ -264,7 +266,6 @@ const HomeExecution = () => {
                                             <Text strong style={{ color: "#cf1322" }}>
                                                 Phiếu bị từ chối nghiệm thu
                                             </Text>
-
                                             <div style={{ marginTop: 6 }}>
                                                 <p>
                                                     <Text strong>Lý do:</Text>{" "}
@@ -274,7 +275,6 @@ const HomeExecution = () => {
                                                     <Text strong>Ghi chú:</Text>{" "}
                                                     {item.rejectInfo.note || "-"}
                                                 </p>
-
                                                 <p
                                                     style={{
                                                         marginTop: 6,
@@ -285,7 +285,8 @@ const HomeExecution = () => {
                                                     {dayjs(item.rejectInfo.rejectedAt).format(
                                                         "DD/MM/YYYY HH:mm"
                                                     )}{" "}
-                                                    – Người từ chối: {item.rejectInfo.rejectedBy}
+                                                    – Người từ chối:{" "}
+                                                    {item.rejectInfo.rejectedBy}
                                                 </p>
                                             </div>
                                         </div>
@@ -293,7 +294,6 @@ const HomeExecution = () => {
 
                                     <Divider style={{ margin: "10px 0" }} />
 
-                                    {/* ==== NÚT HÀNH ĐỘNG ==== */}
                                     <Space wrap>
                                         {(item.status === "DA_PHE_DUYET" ||
                                             item.status === "TU_CHOI_NGHIEM_THU") && (
@@ -330,7 +330,13 @@ const HomeExecution = () => {
                                                 </Button>
                                                 <Button
                                                     type="dashed"
-                                                    onClick={() => handleOpenModal("support", item.requestId, item.requestCode)}
+                                                    onClick={() =>
+                                                        handleOpenModal(
+                                                            "support",
+                                                            item.requestId,
+                                                            item.requestCode
+                                                        )
+                                                    }
                                                 >
                                                     Gửi yêu cầu hỗ trợ
                                                 </Button>
@@ -362,8 +368,6 @@ const HomeExecution = () => {
                                         >
                                             Xem chi tiết
                                         </Button>
-
-
                                     </Space>
                                 </Col>
                             </Row>
@@ -371,8 +375,46 @@ const HomeExecution = () => {
                     );
                 })}
             </Space>
+        );
+    };
 
-            {/* ===== Modal ===== */}
+    return (
+        <div style={{ padding: "24px 36px" }}>
+            <Breadcrumb />
+            <Title level={3} style={{ marginBottom: 24 }}>
+                Danh sách phiếu thi công
+            </Title>
+
+            <Tabs
+                defaultActiveKey="processing"
+                items={[
+                    {
+                        key: "processing",
+                        label: "Đang xử lý",
+                        children: renderList(
+                            (item) =>
+                                item.status === "DA_PHE_DUYET" ||
+                                item.status === "DANG_BAO_TRI"
+                        ),
+                    },
+                    {
+                        key: "rejected",
+                        label: "Từ chối nghiệm thu",
+                        children: renderList(
+                            (item) => item.status === "TU_CHOI_NGHIEM_THU"
+                        ),
+                    },
+                    {
+                        key: "completed",
+                        label: "Hoàn thành",
+                        children: renderList(
+                            (item) => item.status === "HOAN_THANH"
+                        ),
+                    },
+                ]}
+            />
+
+            {/* ==== MODALS ==== */}
             <ModalStartExecution
                 open={openStartModal}
                 onClose={setOpenStartModal}
@@ -388,6 +430,7 @@ const HomeExecution = () => {
                 requestCode={selectedRequestCode}
                 onSuccess={handleActionSuccess}
             />
+
             <ModalRequestSupport
                 open={openSupportModal}
                 onClose={setOpenSupportModal}

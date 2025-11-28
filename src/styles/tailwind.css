@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 /* file: src/index.css hoặc globals.css */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
