@@ -17,12 +17,12 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useMaintenanceRequestsQuery } from "@/hooks/maintenance/useMaintenanceRequests";
-import ViewMaintenanceDetail from "@/components/admin/maintenance/view/view.maintenance-detail";
-import ModalCreateMaintenance from "@/components/admin/maintenance/modal/modal.maintenance-create";
-import ButtonAssignTechnician from "@/components/admin/maintenance/button/button.assign-technician";
-import RejectLogsModal from "@/components/admin/maintenance/modal/modal.reject-logs";
-import ModalAutoAssignMaintenance from "@/components/admin/maintenance/modal/modal.maintenance-auto-assign";
-import MaintenanceTimelineModal from "@/components/admin/maintenance/modal/modal.timeline";
+import ViewMaintenanceDetail from "@/pages/admin/maintenance/view/view.maintenance-detail";
+import ModalCreateMaintenance from "@/pages/admin/maintenance/modal/modal.maintenance-create";
+import ButtonAssignTechnician from "./button/button.assign-technician";
+import RejectLogsModal from "@/pages/admin/maintenance/modal/modal.reject-logs";
+import ModalAutoAssignMaintenance from "@/pages/admin/maintenance/modal/modal.maintenance-auto-assign";
+import MaintenanceTimelineModal from "@/pages/admin/maintenance/modal/modal.timeline";
 
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";

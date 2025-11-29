@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 
 import DeviceHistoryFilter from "../filters/DeviceHistoryFilter";
 import ExportExcelButton from "@/pages/admin/maintenance-report/export-excel/ExportExcelButton";
-import DataTable from "@/components/admin/data-table";
+import DataTable from "@/components/common/data-table";
 import Access from "@/components/share/access";
 
 import { useDeviceHistoryReportQuery } from "@/hooks/useMaintenanceReports";

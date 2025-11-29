@@ -1,69 +1,57 @@
 import DataTable from "@/components/common/data-table";
-import type { IWarehouse } from "@/types/backend";
-import { EditOutlined, DeleteOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ProColumns, ActionType } from "@ant-design/pro-components";
-import { Button, Popconfirm, Space } from "antd";
-import { useRef, useState } from "react";
+import type { IMaterialSupplier } from "@/types/backend";
+import { EditOutlined, EyeOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import type { ProColumns } from "@ant-design/pro-components";
+import { Button, Popconfirm, Space, Tag } from "antd";
+import { useState } from "react";
 import queryString from "query-string";
+import dayjs from "dayjs";
+import ModalMaterialSupplier from "@/pages/admin/material-supplier/modal.materialSupplier";
+import ViewMaterialSupplier from "@/pages/admin/material-supplier/view.materialSupplier";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import {
-    useWarehousesQuery,
-    useDeleteWarehouseMutation,
-} from "@/hooks/useWarehouses";
-import ModalWarehouse from "@/pages/admin/warehouse/modal.warehouse";
-import ViewDetailWarehouse from "@/pages/admin/warehouse/view.warehouse";
-import dayjs from "dayjs";
+import { useMaterialSuppliersQuery, useDeleteMaterialSupplierMutation } from "@/hooks/useMaterialSuppliers";
 
-const WarehousePage = () => {
+const MaterialSupplierPage = () => {
     const [openModal, setOpenModal] = useState(false);
-    const [dataInit, setDataInit] = useState<IWarehouse | null>(null);
+    const [dataInit, setDataInit] = useState<IMaterialSupplier | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
     const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
 
-    const tableRef = useRef<ActionType>(null);
-
-    const { data, isFetching } = useWarehousesQuery(query);
-    const deleteMutation = useDeleteWarehouseMutation();
+    const { data, isFetching } = useMaterialSuppliersQuery(query);
+    const deleteMutation = useDeleteMaterialSupplierMutation();
 
     const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
-    const warehouses = data?.result ?? [];
+    const suppliers = data?.result ?? [];
 
-    const handleDelete = async (id?: number | string) => {
-        if (!id) return;
-        await deleteMutation.mutateAsync(id, {
-            onSuccess: () => reloadTable(),
-        });
+    const handleDelete = async (id: string | number) => {
+        await deleteMutation.mutateAsync(id);
     };
 
-    const reloadTable = () => {
-        setQuery("page=1&size=10&sort=createdAt,desc");
-    };
-
+    /** ==================== Build query (phân trang, sort, filter) ==================== */
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
             size: params.pageSize,
         };
 
-        if (params.warehouseName) {
-            q.filter = `warehouseName ~ '${params.warehouseName}'`;
-        }
+        if (params.supplierCode) q.supplierCode = params.supplierCode;
+        if (params.supplierName) q.supplierName = params.supplierName;
 
         let temp = queryString.stringify(q, { encode: false });
 
-        if (sort?.warehouseName) {
-            const dir = sort.warehouseName === "ascend" ? "asc" : "desc";
-            temp += `&sort=warehouseName,${dir}`;
-        } else {
-            temp += "&sort=createdAt,desc";
-        }
+        // Sort
+        const sortField =
+            sort?.supplierName
+                ? `sort=supplierName,${sort.supplierName === "ascend" ? "asc" : "desc"}`
+                : "sort=createdAt,desc";
 
-        return temp;
+        return `${temp}&${sortField}`;
     };
 
-    const columns: ProColumns<IWarehouse>[] = [
+    /** ==================== Columns ==================== */
+    const columns: ProColumns<IMaterialSupplier>[] = [
         {
             title: "STT",
             key: "index",
@@ -73,16 +61,12 @@ const WarehousePage = () => {
                 (index + 1) + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
-        {
-            title: "Tên kho",
-            dataIndex: "warehouseName",
-            sorter: true,
-        },
-        {
-            title: "Địa chỉ",
-            dataIndex: "address",
-            hideInSearch: true,
-        },
+        { title: "Mã NCC", dataIndex: "supplierCode", sorter: true },
+        { title: "Tên NCC", dataIndex: "supplierName", sorter: true },
+        { title: "Người đại diện", dataIndex: "representative", hideInSearch: true },
+        { title: "Số điện thoại", dataIndex: "phone", hideInSearch: true },
+        { title: "Email", dataIndex: "email", hideInSearch: true },
+        { title: "Địa chỉ", dataIndex: "address", hideInSearch: true },
         {
             title: "Ngày tạo",
             dataIndex: "createdAt",
@@ -100,23 +84,23 @@ const WarehousePage = () => {
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 120,
+            width: 140,
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.GET_BY_ID} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_BY_ID} hideChildren>
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
                             onClick={() => {
-                                setSelectedId(Number(entity.id));
+                                setSelectedSupplierId(Number(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.UPDATE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#ffa500", cursor: "pointer" }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
@@ -124,10 +108,11 @@ const WarehousePage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.DELETE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.DELETE} hideChildren>
                         <Popconfirm
-                            title="Xác nhận xóa kho"
-                            description="Bạn có chắc chắn muốn xóa kho này không?"
+                            placement="topLeft"
+                            title="Xác nhận xóa nhà cung cấp vật tư"
+                            description="Bạn có chắc chắn muốn xóa nhà cung cấp này không?"
                             okText="Xóa"
                             cancelText="Hủy"
                             onConfirm={() => handleDelete(entity.id!)}
@@ -144,31 +129,23 @@ const WarehousePage = () => {
 
     return (
         <div>
-            <Access permission={ALL_PERMISSIONS.WAREHOUSE.GET_PAGINATE}>
-                <DataTable<IWarehouse>
-                    headerTitle="Danh sách kho"
-                    actionRef={tableRef}
+            <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_PAGINATE}>
+                <DataTable<IMaterialSupplier>
+                    headerTitle="Danh sách nhà cung cấp vật tư"
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={warehouses}
-                    request={async (params, sort) => {
-                        const q = buildQuery(params, sort);
-                        setQuery(q);
-                        return Promise.resolve({
-                            data: warehouses || [],
-                            success: true,
-                            total: meta.total || 0,
-                        });
+                    dataSource={suppliers}
+                    request={async (params, sort): Promise<any> => {
+                        const newQuery = buildQuery(params, sort);
+                        setQuery(newQuery);
                     }}
                     pagination={{
-                        defaultPageSize: 10,
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
-                        showSizeChanger: true,
-                        total: data?.meta?.total,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
+                        total: meta.total,
                         showQuickJumper: true,
-                        size: "default",
+                        showSizeChanger: true,
                         showTotal: (total, range) => (
                             <div style={{ fontSize: 13, color: "#595959" }}>
                                 <span style={{ fontWeight: 500, color: "#000" }}>
@@ -178,7 +155,7 @@ const WarehousePage = () => {
                                 <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
-                                kho
+                                nhà cung cấp
                             </div>
                         ),
                         style: {
@@ -193,8 +170,9 @@ const WarehousePage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.WAREHOUSE.CREATE} hideChildren>
+                        <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.CREATE} hideChildren>
                             <Button
+                                key="create"
                                 icon={<PlusOutlined />}
                                 type="primary"
                                 onClick={() => {
@@ -209,20 +187,20 @@ const WarehousePage = () => {
                 />
             </Access>
 
-            <ModalWarehouse
+            <ModalMaterialSupplier
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 dataInit={dataInit}
                 setDataInit={setDataInit}
             />
 
-            <ViewDetailWarehouse
+            <ViewMaterialSupplier
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
-                warehouseId={selectedId}
+                supplierId={selectedSupplierId}
             />
         </div>
     );
 };
 
-export default WarehousePage;
+export default MaterialSupplierPage;

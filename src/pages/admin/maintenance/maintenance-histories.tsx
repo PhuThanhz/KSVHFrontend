@@ -17,7 +17,7 @@ import {
 import dayjs from "dayjs";
 
 import { useMaintenanceHistoryQuery } from "@/hooks/maintenance/useMaintenanceHistory";
-import ViewMaintenanceHistoryDetail from "@/components/admin/maintenance/view-maintenance-history-detail";
+import ViewMaintenanceHistoryDetail from "@/pages/admin/maintenance/view-maintenance-history-detail";
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;

@@ -1,4 +1,4 @@
-import MaintenanceScheduleTable from "@/components/admin/maintenance-schedule/table.maintenance-schedule";
+import MaintenanceScheduleTable from "@/pages/admin/maintenance-schedule/table.maintenance-schedule";
 
 const AdminMaintenanceSchedulePage = () => {
     return <MaintenanceScheduleTable />;

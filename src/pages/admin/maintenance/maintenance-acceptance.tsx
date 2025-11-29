@@ -25,9 +25,9 @@ import {
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 
-import ModalApproveAcceptance from "@/components/admin/maintenance-acceptance/modal.approve-acceptance";
-import ModalRejectAcceptance from "@/components/admin/maintenance-acceptance/modal.reject-acceptanc";
-import ViewDetailAcceptance from "@/components/admin/maintenance-acceptance/view-detail-acceptance";
+import ModalApproveAcceptance from "@/pages/admin/maintenance-acceptance/modal.approve-acceptance";
+import ModalRejectAcceptance from "@/pages/admin/maintenance-acceptance/modal.reject-acceptanc";
+import ViewDetailAcceptance from "@/pages/admin/maintenance-acceptance/view-detail-acceptance";
 
 const { Title, Text } = Typography;
 

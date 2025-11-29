@@ -1,5 +1,5 @@
 import DataTable from "@/components/common/data-table";
-import type { IWarehouse } from "@/types/backend";
+import type { IUnit } from "@/types/backend";
 import { EditOutlined, DeleteOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import { Button, Popconfirm, Space } from "antd";
@@ -8,37 +8,36 @@ import queryString from "query-string";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import {
-    useWarehousesQuery,
-    useDeleteWarehouseMutation,
-} from "@/hooks/useWarehouses";
-import ModalWarehouse from "@/pages/admin/warehouse/modal.warehouse";
-import ViewDetailWarehouse from "@/pages/admin/warehouse/view.warehouse";
+    useUnitsQuery,
+    useDeleteUnitMutation,
+} from "@/hooks/useUnits";
+import ModalUnit from "@/pages/admin/unit/modal.unit";
+import ViewDetailUnit from "@/pages/admin/unit/view.unit";
 import dayjs from "dayjs";
 
-const WarehousePage = () => {
+const UnitPage = () => {
     const [openModal, setOpenModal] = useState(false);
-    const [dataInit, setDataInit] = useState<IWarehouse | null>(null);
+    const [dataInit, setDataInit] = useState<IUnit | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
-
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
+    );
     const tableRef = useRef<ActionType>(null);
 
-    const { data, isFetching } = useWarehousesQuery(query);
-    const deleteMutation = useDeleteWarehouseMutation();
+    const { data, isFetching } = useUnitsQuery(query);
+    const deleteMutation = useDeleteUnitMutation();
 
     const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
-    const warehouses = data?.result ?? [];
+    const units = data?.result ?? [];
 
     const handleDelete = async (id?: number | string) => {
         if (!id) return;
-        await deleteMutation.mutateAsync(id, {
-            onSuccess: () => reloadTable(),
-        });
-    };
-
-    const reloadTable = () => {
-        setQuery("page=1&size=10&sort=createdAt,desc");
+        await deleteMutation.mutateAsync(id);
     };
 
     const buildQuery = (params: any, sort: any) => {
@@ -47,15 +46,15 @@ const WarehousePage = () => {
             size: params.pageSize,
         };
 
-        if (params.warehouseName) {
-            q.filter = `warehouseName ~ '${params.warehouseName}'`;
+        if (params.name) {
+            q.filter = `name ~ '${params.name}'`;
         }
 
-        let temp = queryString.stringify(q, { encode: false });
+        let temp = queryString.stringify(q);
 
-        if (sort?.warehouseName) {
-            const dir = sort.warehouseName === "ascend" ? "asc" : "desc";
-            temp += `&sort=warehouseName,${dir}`;
+        if (sort?.name) {
+            const dir = sort.name === "ascend" ? "asc" : "desc";
+            temp += `&sort=name,${dir}`;
         } else {
             temp += "&sort=createdAt,desc";
         }
@@ -63,7 +62,7 @@ const WarehousePage = () => {
         return temp;
     };
 
-    const columns: ProColumns<IWarehouse>[] = [
+    const columns: ProColumns<IUnit>[] = [
         {
             title: "STT",
             key: "index",
@@ -74,14 +73,9 @@ const WarehousePage = () => {
             hideInSearch: true,
         },
         {
-            title: "Tên kho",
-            dataIndex: "warehouseName",
+            title: "Tên đơn vị",
+            dataIndex: "name",
             sorter: true,
-        },
-        {
-            title: "Địa chỉ",
-            dataIndex: "address",
-            hideInSearch: true,
         },
         {
             title: "Ngày tạo",
@@ -104,7 +98,7 @@ const WarehousePage = () => {
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.GET_BY_ID} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.UNIT.GET_BY_ID} hideChildren>
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
                             onClick={() => {
@@ -114,7 +108,7 @@ const WarehousePage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.UPDATE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.UNIT.UPDATE} hideChildren>
                         <EditOutlined
                             style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
                             onClick={() => {
@@ -124,10 +118,10 @@ const WarehousePage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.DELETE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.UNIT.DELETE} hideChildren>
                         <Popconfirm
-                            title="Xác nhận xóa kho"
-                            description="Bạn có chắc chắn muốn xóa kho này không?"
+                            title="Xác nhận xóa đơn vị"
+                            description="Bạn có chắc chắn muốn xóa đơn vị này không?"
                             okText="Xóa"
                             cancelText="Hủy"
                             onConfirm={() => handleDelete(entity.id!)}
@@ -144,19 +138,19 @@ const WarehousePage = () => {
 
     return (
         <div>
-            <Access permission={ALL_PERMISSIONS.WAREHOUSE.GET_PAGINATE}>
-                <DataTable<IWarehouse>
-                    headerTitle="Danh sách kho"
+            <Access permission={ALL_PERMISSIONS.UNIT.GET_PAGINATE}>
+                <DataTable<IUnit>
+                    headerTitle="Danh sách đơn vị"
                     actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={warehouses}
+                    dataSource={units}
                     request={async (params, sort) => {
                         const q = buildQuery(params, sort);
                         setQuery(q);
                         return Promise.resolve({
-                            data: warehouses || [],
+                            data: units || [],
                             success: true,
                             total: meta.total || 0,
                         });
@@ -165,10 +159,9 @@ const WarehousePage = () => {
                         defaultPageSize: 10,
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
-                        showSizeChanger: true,
                         total: data?.meta?.total,
                         showQuickJumper: true,
-                        size: "default",
+                        showSizeChanger: true,
                         showTotal: (total, range) => (
                             <div style={{ fontSize: 13, color: "#595959" }}>
                                 <span style={{ fontWeight: 500, color: "#000" }}>
@@ -178,7 +171,7 @@ const WarehousePage = () => {
                                 <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
-                                kho
+                                đơn vị
                             </div>
                         ),
                         style: {
@@ -193,7 +186,7 @@ const WarehousePage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.WAREHOUSE.CREATE} hideChildren>
+                        <Access key="create" permission={ALL_PERMISSIONS.UNIT.CREATE} hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"
@@ -209,20 +202,22 @@ const WarehousePage = () => {
                 />
             </Access>
 
-            <ModalWarehouse
+            {/* Modal thêm/sửa */}
+            <ModalUnit
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 dataInit={dataInit}
                 setDataInit={setDataInit}
             />
 
-            <ViewDetailWarehouse
+            {/* Drawer xem chi tiết */}
+            <ViewDetailUnit
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
-                warehouseId={selectedId}
+                unitId={selectedId}
             />
         </div>
     );
 };
 
-export default WarehousePage;
+export default UnitPage;

@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { callLogout, callFetchMyNotifications } from "@/config/api";
 import { setLogoutAction } from "@/redux/slice/accountSlide";
 import { PATHS } from "@/constants/paths";
-import NotificationPanel from "@/components/technician/NotificationPanel";
+import NotificationPanel from "@/components/common/notification/NotificationPanel";
 import type { INotification, IModelPaginate } from "@/types/backend";
 
 const HeaderTechnician: React.FC = () => {

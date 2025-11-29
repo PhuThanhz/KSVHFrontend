@@ -1,8 +1,6 @@
 import { PATHS } from "@/constants/paths";
 
-/**
- * Map tên role backend (viết hoa hoặc thường) → path điều hướng sau đăng nhập
- */
+
 export const ROLE_REDIRECTS: Record<string, string> = {
     super_admin: PATHS.ADMIN.DASHBOARD,       // Quản trị toàn quyền
     admin_sub: PATHS.ADMIN.DASHBOARD,         // Admin phụ
@@ -11,9 +9,6 @@ export const ROLE_REDIRECTS: Record<string, string> = {
     customer: PATHS.CLIENT.HOME,              // Khách hàng
 };
 
-/**
- * Hàm tiện ích: nhận roleName từ Redux hoặc API và trả về path điều hướng phù hợp
- */
 export const getRedirectPathByRole = (roleName?: string): string => {
     if (!roleName) return PATHS.HOME;
 

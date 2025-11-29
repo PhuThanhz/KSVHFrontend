@@ -1,34 +1,42 @@
 import DataTable from "@/components/common/data-table";
-import type { IWarehouse } from "@/types/backend";
+import type { ISolution } from "@/types/backend";
 import { EditOutlined, DeleteOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ProColumns, ActionType } from "@ant-design/pro-components";
-import { Button, Popconfirm, Space } from "antd";
+import type { ProColumns } from "@ant-design/pro-components";
+import { Button, Popconfirm, Space, Tag } from "antd";
 import { useRef, useState } from "react";
 import queryString from "query-string";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import {
-    useWarehousesQuery,
-    useDeleteWarehouseMutation,
-} from "@/hooks/useWarehouses";
-import ModalWarehouse from "@/pages/admin/warehouse/modal.warehouse";
-import ViewDetailWarehouse from "@/pages/admin/warehouse/view.warehouse";
+    useSolutionsQuery,
+    useDeleteSolutionMutation,
+} from "@/hooks/useSolutions";
+import ModalSolution from "@/pages/admin/solution/modal.solution";
+import ViewDetailSolution from "@/pages/admin/solution/view.solution";
+import type { ActionType } from "@ant-design/pro-components";
 import dayjs from "dayjs";
 
-const WarehousePage = () => {
+const SolutionPage = () => {
     const [openModal, setOpenModal] = useState(false);
-    const [dataInit, setDataInit] = useState<IWarehouse | null>(null);
+    const [dataInit, setDataInit] = useState<ISolution | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
 
+
+    const [query, setQuery] = useState(() =>
+        queryString.stringify({
+            page: 1,
+            size: 10,
+            sort: "createdAt,desc",
+        }, { encode: false })
+    );
     const tableRef = useRef<ActionType>(null);
 
-    const { data, isFetching } = useWarehousesQuery(query);
-    const deleteMutation = useDeleteWarehouseMutation();
+    const { data, isFetching } = useSolutionsQuery(query);
+    const deleteMutation = useDeleteSolutionMutation();
 
     const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
-    const warehouses = data?.result ?? [];
+    const solutions = data?.result ?? [];
 
     const handleDelete = async (id?: number | string) => {
         if (!id) return;
@@ -47,15 +55,15 @@ const WarehousePage = () => {
             size: params.pageSize,
         };
 
-        if (params.warehouseName) {
-            q.filter = `warehouseName ~ '${params.warehouseName}'`;
+        if (params.solutionName) {
+            q.filter = `solutionName ~ '${params.solutionName}'`;
         }
 
         let temp = queryString.stringify(q, { encode: false });
 
-        if (sort?.warehouseName) {
-            const dir = sort.warehouseName === "ascend" ? "asc" : "desc";
-            temp += `&sort=warehouseName,${dir}`;
+        if (sort?.solutionName) {
+            const dir = sort.solutionName === "ascend" ? "asc" : "desc";
+            temp += `&sort=solutionName,${dir}`;
         } else {
             temp += "&sort=createdAt,desc";
         }
@@ -63,25 +71,21 @@ const WarehousePage = () => {
         return temp;
     };
 
-    const columns: ProColumns<IWarehouse>[] = [
+    const columns: ProColumns<ISolution>[] = [
         {
             title: "STT",
             key: "index",
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) + ((meta.page || 1) - 1) * (meta.pageSize || 10),
+                (index + 1) +
+                ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
         {
-            title: "Tên kho",
-            dataIndex: "warehouseName",
+            title: "Tên phương án xử lý",
+            dataIndex: "solutionName",
             sorter: true,
-        },
-        {
-            title: "Địa chỉ",
-            dataIndex: "address",
-            hideInSearch: true,
         },
         {
             title: "Ngày tạo",
@@ -104,7 +108,7 @@ const WarehousePage = () => {
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.GET_BY_ID} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.SOLUTION.GET_BY_ID} hideChildren>
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
                             onClick={() => {
@@ -114,7 +118,7 @@ const WarehousePage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.UPDATE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.SOLUTION.UPDATE} hideChildren>
                         <EditOutlined
                             style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
                             onClick={() => {
@@ -124,10 +128,10 @@ const WarehousePage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.DELETE} hideChildren>
+                    <Access permission={ALL_PERMISSIONS.SOLUTION.DELETE} hideChildren>
                         <Popconfirm
-                            title="Xác nhận xóa kho"
-                            description="Bạn có chắc chắn muốn xóa kho này không?"
+                            title="Xác nhận xóa phương án xử lý"
+                            description="Bạn có chắc chắn muốn xóa phương án này không?"
                             okText="Xóa"
                             cancelText="Hủy"
                             onConfirm={() => handleDelete(entity.id!)}
@@ -144,25 +148,26 @@ const WarehousePage = () => {
 
     return (
         <div>
-            <Access permission={ALL_PERMISSIONS.WAREHOUSE.GET_PAGINATE}>
-                <DataTable<IWarehouse>
-                    headerTitle="Danh sách kho"
+            <Access permission={ALL_PERMISSIONS.SOLUTION.GET_PAGINATE}>
+                <DataTable<ISolution>
+                    headerTitle="Danh sách phương án xử lý"
                     actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={warehouses}
+                    dataSource={solutions}
                     request={async (params, sort) => {
                         const q = buildQuery(params, sort);
                         setQuery(q);
                         return Promise.resolve({
-                            data: warehouses || [],
+                            data: solutions || [],
                             success: true,
                             total: meta.total || 0,
                         });
                     }}
                     pagination={{
                         defaultPageSize: 10,
+
                         current: data?.meta?.page,
                         pageSize: data?.meta?.pageSize,
                         showSizeChanger: true,
@@ -178,7 +183,7 @@ const WarehousePage = () => {
                                 <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
-                                kho
+                                phương án
                             </div>
                         ),
                         style: {
@@ -193,7 +198,7 @@ const WarehousePage = () => {
                     }}
                     rowSelection={false}
                     toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.WAREHOUSE.CREATE} hideChildren>
+                        <Access key="create" permission={ALL_PERMISSIONS.SOLUTION.CREATE} hideChildren>
                             <Button
                                 icon={<PlusOutlined />}
                                 type="primary"
@@ -208,21 +213,19 @@ const WarehousePage = () => {
                     ]}
                 />
             </Access>
-
-            <ModalWarehouse
+            <ModalSolution
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 dataInit={dataInit}
                 setDataInit={setDataInit}
             />
-
-            <ViewDetailWarehouse
+            <ViewDetailSolution
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
-                warehouseId={selectedId}
+                solutionId={selectedId}
             />
         </div>
     );
 };
 
-export default WarehousePage;
+export default SolutionPage;
