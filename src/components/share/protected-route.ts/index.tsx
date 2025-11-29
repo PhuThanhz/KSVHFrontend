@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
 import NotPermitted from "../not-permitted";
-import Loading from "../loading";
+import Loading from "@/components/common/loading/loading";
 
 const RoleBaseRoute = (props: any) => {
     const user = useAppSelector(state => state.account.user);

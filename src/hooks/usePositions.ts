@@ -7,7 +7,7 @@ import {
     callDeletePosition,
 } from "@/config/api";
 import type { IPosition, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách chức vụ ========================= */
 export const usePositionsQuery = (query: string) => {

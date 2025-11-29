@@ -7,7 +7,7 @@ import {
     callDeleteDeviceType,
 } from "@/config/api";
 import type { IDeviceType, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách loại thiết bị ========================= */
 export const useDeviceTypesQuery = (query: string) => {

@@ -18,7 +18,7 @@ import type {
     IResMaintenanceRejectDTO,
     IResMaintenanceTimelineDTO
 } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 
 /** ========================= Lấy danh sách phiếu bảo trì ========================= */

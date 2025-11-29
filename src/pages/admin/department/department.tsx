@@ -14,7 +14,7 @@ import {
     useDepartmentsQuery,
     useDeleteDepartmentMutation,
 } from "@/hooks/useDepartments";
-import DateRangeFilter from "@/components/common/DateRangeFilter";
+import DateRangeFilter from "@/components/common/filter/DateRangeFilter";
 
 const DepartmentPage = () => {
     const [openModal, setOpenModal] = useState(false);

@@ -7,7 +7,7 @@ import {
 } from "@/config/api";
 import type { ICompany, IModelPaginate } from "@/types/backend";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 // Lấy danh sách công ty
 export const useCompaniesQuery = (query: string) => {

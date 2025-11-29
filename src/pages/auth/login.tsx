@@ -5,7 +5,7 @@ import { callLogin } from "@/config/api";
 import { useState } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import { setUserLoginInfo } from "@/redux/slice/accountSlide";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 import { PATHS } from "@/constants/paths";
 import { getRedirectPathByRole } from "@/constants/roleRedirects";
 

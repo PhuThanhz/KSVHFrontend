@@ -14,7 +14,7 @@ import type {
 } from "@/types/backend";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /* ============================================================
  * 1. Lấy danh sách lịch bảo trì (pagination)

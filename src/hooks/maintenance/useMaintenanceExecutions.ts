@@ -16,7 +16,7 @@ import type {
     IReqSupportRequestDTO,
     IReqSupportApproveDTO
 } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 import {
     callRequestSupport,
     callApproveSupportRequest,

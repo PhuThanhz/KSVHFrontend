@@ -10,7 +10,7 @@ import type {
     IResMaintenanceSurveyListDTO,
 } from "@/types/backend";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Danh sách phiếu đang xử lý để khảo sát ========================= */
 export const useMaintenanceSurveysInProgressQuery = (query: string) => {

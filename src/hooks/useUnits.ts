@@ -7,7 +7,7 @@ import {
     callUpdateUnit,
     callDeleteUnit,
 } from "@/config/api";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 
 export const useUnitsQuery = (query: string) => {

@@ -3,7 +3,7 @@ import { useDeviceByCodeQuery } from "@/hooks/useDevices";
 import { Spin, Alert, Tag, Divider, Card, Row, Col, Typography, Image, Empty, Space } from "antd";
 import { UserOutlined, CalendarOutlined, HomeOutlined, TagOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { formatCurrency } from "@/config/format";
+import { formatCurrency } from "@/utils/format";
 
 const { Title, Text } = Typography;
 

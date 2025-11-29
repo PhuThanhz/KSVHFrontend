@@ -12,7 +12,7 @@ import type {
     IModelPaginate,
     IResMaintenanceRequestDTO,
 } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= ADMIN: Lấy danh sách lịch sử mua hàng ========================= */
 export const useCustomerPurchaseHistoriesQuery = (query: string) => {

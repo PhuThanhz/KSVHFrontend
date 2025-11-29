@@ -18,7 +18,7 @@ import {
 import dayjs from "dayjs";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 import {
     useMaintenanceApprovalsQuery,
     useApprovePlanMutation,

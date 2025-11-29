@@ -7,7 +7,7 @@ import {
     callUpdateShiftTemplate,
     callDeleteShiftTemplate,
 } from "@/config/api";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách ca mẫu ========================= */
 export const useShiftTemplatesQuery = (query: string) => {

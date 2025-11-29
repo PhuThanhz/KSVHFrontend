@@ -9,7 +9,7 @@ import {
 } from "antd";
 import { useTechniciansQuery } from "@/hooks/user/useTechnicians";
 import { useRequestSupportMutation } from "@/hooks/maintenance/useMaintenanceExecutions";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 const { TextArea } = Input;
 const { Title } = Typography;

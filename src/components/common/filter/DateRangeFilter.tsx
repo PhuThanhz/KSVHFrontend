@@ -14,9 +14,9 @@ interface DateRangeFilterProps {
     onChange?: (filter: string | null) => void;
     format?: string;
     fieldName?: string;
-    width?: number;           // NEW: chỉnh chiều rộng
-    size?: "small" | "middle" | "large"; // NEW: chỉnh size
-    className?: string;       // NEW: cho phép custom class
+    width?: number;
+    size?: "small" | "middle" | "large";
+    className?: string;
 }
 
 const DateRangeFilter = ({

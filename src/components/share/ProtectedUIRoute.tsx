@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAppSelector } from "@/redux/hooks";
 import { usePermission } from "@/hooks/usePermission";
-import Loading from "./loading";
+import Loading from "@/components/common/loading/loading";
 import NotPermitted from "./not-permitted";
 
 interface IProps {

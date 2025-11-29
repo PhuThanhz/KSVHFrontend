@@ -20,7 +20,7 @@ import {
 } from "@/hooks/useTechnicianAvailability";
 import { useTechniciansQuery } from "@/hooks/user/useTechnicians";
 import { useShiftTemplatesQuery } from "@/hooks/useShiftTemplate";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 interface IProps {
     openModal: boolean;

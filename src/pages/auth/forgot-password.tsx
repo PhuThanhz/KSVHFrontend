@@ -2,7 +2,7 @@ import { Button, Form, Input, Card, Row, Col, Typography, Space, Divider } from 
 import { callRequestPasswordCode } from "@/config/api";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 const { Title, Text } = Typography;
 

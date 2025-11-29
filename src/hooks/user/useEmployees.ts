@@ -6,7 +6,7 @@ import {
     callUpdateEmployee,
 } from "@/config/api";
 import type { IEmployee, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách nhân viên ========================= */
 export const useEmployeesQuery = (query: string) => {

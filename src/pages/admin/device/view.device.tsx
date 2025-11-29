@@ -1,7 +1,7 @@
 import { Drawer, Descriptions, Divider, Tag, Table, Spin, Row, Col, Card, Image } from "antd";
 import { useDeviceByIdQuery } from "@/hooks/useDevices";
 import { useDevicePartsQuery } from "@/hooks/useDeviceParts";
-import { formatCurrency } from "@/config/format";
+import { formatCurrency } from "@/utils/format";
 import dayjs from "dayjs";
 import React from "react";
 

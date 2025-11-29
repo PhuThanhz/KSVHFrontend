@@ -7,7 +7,7 @@ import {
     callUpdateWarehouse,
     callDeleteWarehouse,
 } from "@/config/api";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 
 export const useWarehousesQuery = (query: string) => {

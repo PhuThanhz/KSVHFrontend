@@ -7,7 +7,7 @@ import {
 } from "@/config/api";
 import type { IAssetType, IModelPaginate } from "@/types/backend";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 
 export const useAssetTypesQuery = (query: string) => {

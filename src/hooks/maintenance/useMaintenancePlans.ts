@@ -12,7 +12,7 @@ import type {
     IReqMaintenancePlanDTO,
     IResMaintenancePlanCreateDTO,
 } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách phiếu đã khảo sát ========================= */
 export const useSurveyedRequestsQuery = (query: string) => {

@@ -7,7 +7,7 @@ import {
     callUpdateSkill,
     callDeleteSkill,
 } from "@/config/api";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách kỹ năng ========================= */
 export const useSkillsQuery = (query: string) => {

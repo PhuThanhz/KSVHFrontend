@@ -15,7 +15,7 @@ import type {
     IResAcceptanceDTO,
     IModelPaginate
 } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 
 export const useAcceptancePendingQuery = (query: string) => {

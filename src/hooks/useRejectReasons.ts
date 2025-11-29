@@ -7,7 +7,7 @@ import {
     callDeleteRejectReason,
 } from "@/config/api";
 import type { IRejectReason, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách lý do từ chối ========================= */
 export const useRejectReasonsQuery = (query: string) => {

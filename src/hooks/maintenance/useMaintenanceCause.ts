@@ -5,7 +5,7 @@ import {
     callUpdateMaintenanceCause,
 } from "@/config/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 import type { IMaintenanceCause, IModelPaginate } from "@/types/backend";
 
 /** ========================= Lấy danh sách nguyên nhân ========================= */

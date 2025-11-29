@@ -15,7 +15,7 @@ import type {
     IUpdateDeviceRequest,
 } from "@/types/backend";
 
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ===================== Danh sách thiết bị ===================== **/
 export const useDevicesQuery = (query: string) => {

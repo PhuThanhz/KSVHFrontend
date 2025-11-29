@@ -7,7 +7,7 @@ import {
     callDeleteRole,
 } from "@/config/api";
 import type { IRole, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 // Lấy danh sách vai trò (phân trang, tìm kiếm, sắp xếp,...)
 export const useRolesQuery = (query: string) => {

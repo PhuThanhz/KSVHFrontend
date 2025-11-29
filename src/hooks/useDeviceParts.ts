@@ -12,7 +12,7 @@ import type {
     IUpdatePartStatusRequest,
 } from "@/types/backend";
 
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /* ============================================================
    Lấy danh sách linh kiện của 1 thiết bị

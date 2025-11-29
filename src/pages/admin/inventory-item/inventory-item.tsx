@@ -21,12 +21,12 @@ import {
 } from "@/hooks/useInventoryItems";
 import ModalInventoryItem from "@/pages/admin/inventory-item/modal.inventory-item";
 import ViewInventoryItem from "@/pages/admin/inventory-item/view.inventory-item";
-import { formatCurrency } from "@/config/format";
+import { formatCurrency } from "@/utils/format";
 import { useUnitsQuery } from "@/hooks/useUnits";
 import { useDeviceTypesQuery } from "@/hooks/useDeviceTypes";
 import { useWarehousesQuery } from "@/hooks/useWarehouses";
 import { useMaterialSuppliersQuery } from "@/hooks/useMaterialSuppliers";
-import DateRangeFilter from "@/components/common/DateRangeFilter";
+import DateRangeFilter from "@/components/common/filter/DateRangeFilter";
 
 const InventoryItemPage = () => {
     /** ==================== STATE ==================== */

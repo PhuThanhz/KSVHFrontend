@@ -7,7 +7,7 @@ import {
     callDeleteInventoryItem,
 } from "@/config/api";
 import type { IInventoryItem, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách vật tư tồn kho ========================= */
 export const useInventoryItemsQuery = (query: string) => {

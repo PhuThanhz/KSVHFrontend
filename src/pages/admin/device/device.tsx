@@ -15,7 +15,7 @@ import Access from "@/components/share/access";
 import { useDevicesQuery } from "@/hooks/useDevices";
 import { useDepartmentsQuery } from "@/hooks/useDepartments";
 import { useCompaniesQuery } from "@/hooks/useCompanies";
-import DateRangeFilter from "@/components/common/DateRangeFilter";
+import DateRangeFilter from "@/components/common/filter/DateRangeFilter";
 import type { IDeviceList } from "@/types/backend";
 import type { ProColumns } from "@ant-design/pro-components";
 const DeviceMaintenanceScheduleModal = lazy(() =>

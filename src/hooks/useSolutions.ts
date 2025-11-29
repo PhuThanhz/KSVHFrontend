@@ -7,7 +7,7 @@ import {
     callUpdateSolution,
     callDeleteSolution,
 } from "@/config/api";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách phương án xử lý ========================= */
 export const useSolutionsQuery = (query: string) => {

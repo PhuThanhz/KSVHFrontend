@@ -7,7 +7,7 @@ import {
     callDeleteIssue,
 } from "@/config/api";
 import type { IIssue, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách vấn đề ========================= */
 export const useIssuesQuery = (query: string) => {

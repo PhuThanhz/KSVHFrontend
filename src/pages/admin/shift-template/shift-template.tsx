@@ -11,7 +11,7 @@ import { useShiftTemplatesQuery, useDeleteShiftTemplateMutation } from "@/hooks/
 import type { IShiftTemplate } from "@/types/backend";
 import ModalShiftTemplate from "@/pages/admin/shift-template/modal.shift-template";
 import ViewDetailShiftTemplate from "@/pages/admin/shift-template/view.shift-template";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 const PageShiftTemplate = () => {
     /** ========================= STATE ========================= */

@@ -1,43 +1,50 @@
-// ===================== HeaderAdmin.tsx =====================
-import React from 'react';
-import { Button, Dropdown, Space, Avatar, message, Badge } from 'antd';
+import React, { useEffect, useState } from "react";
+import { Button, Dropdown, Space, Avatar, message, Badge, Tooltip } from "antd";
 import {
-    MenuFoldOutlined,
-    MenuUnfoldOutlined,
     BellOutlined,
     UserOutlined,
     LogoutOutlined,
-    HomeOutlined
-} from '@ant-design/icons';
-import { Link, useNavigate } from 'react-router-dom';
-import { isMobile } from 'react-device-detect';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { callLogout } from '@/config/api';
-import { setLogoutAction } from '@/redux/slice/accountSlide';
-import { PATHS } from '@/constants/paths';
+    HomeOutlined,
+} from "@ant-design/icons";
+import { Link, useNavigate } from "react-router-dom";
+import { isMobile } from "react-device-detect";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { callLogout, callFetchMyNotifications } from "@/config/api";
+import { setLogoutAction } from "@/redux/slice/accountSlide";
+import { PATHS } from "@/constants/paths";
+import NotificationPanel from "@/components/common/notification/NotificationPanel";
+import type { INotification, IModelPaginate } from "@/types/backend";
 
 interface IProps {
     collapsed: boolean;
     setCollapsed: (val: boolean) => void;
-    mobileOpen?: boolean;
-    setMobileOpen?: (val: boolean) => void;
+    mobileOpen: boolean;
+    setMobileOpen: (val: boolean) => void;
 }
 
 const HeaderAdmin: React.FC<IProps> = ({
     collapsed,
     setCollapsed,
     mobileOpen,
-    setMobileOpen
+    setMobileOpen,
 }) => {
-    const user = useAppSelector((state) => state.account.user);
+    const user = useAppSelector((s) => s.account.user);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const avatarSrc = user?.avatar
+        ? `${backendURL}/storage/AVATAR/${user.avatar}`
+        : undefined;
+
+    /** ======== Logout ======== */
     const handleLogout = async () => {
         try {
             await callLogout();
-        } catch {
         } finally {
             localStorage.removeItem("access_token");
             sessionStorage.clear();
@@ -47,92 +54,121 @@ const HeaderAdmin: React.FC<IProps> = ({
         }
     };
 
-    const itemsDropdown = [
+    /** ======== Gọi API lấy thông báo chưa đọc ======== */
+    const fetchUnreadCount = async () => {
+        try {
+            const res = await callFetchMyNotifications(`page=0&size=50&sort=createdAt,desc`);
+            const data = res.data as IModelPaginate<INotification>;
+            if (data?.result) {
+                const unread = data.result.filter((n) => !n.read).length;
+                setUnreadCount(unread);
+            }
+        } catch (err) {
+            console.error("Lỗi khi lấy số thông báo chưa đọc:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    /** ======== Dropdown user ======== */
+    const menuItems = [
         {
-            label: <Link to={'/'} className="flex items-center gap-2">
-                <HomeOutlined />
-                <span>Trang chủ</span>
-            </Link>,
-            key: 'home',
+            key: "home",
+            label: (
+                <Link to="/" className="flex items-center gap-2">
+                    <HomeOutlined /> Trang chủ
+                </Link>
+            ),
         },
         {
+            key: "logout",
             label: (
                 <div
-                    className="flex items-center gap-2 cursor-pointer"
-                    onClick={() => handleLogout()}
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 cursor-pointer text-red-500"
                 >
-                    <LogoutOutlined />
-                    <span>Đăng xuất</span>
+                    <LogoutOutlined /> Đăng xuất
                 </div>
             ),
-            key: 'logout',
         },
     ];
 
-    const unreadCount = 3;
-
-    const avatarSrc = user?.avatar
-        ? `${backendURL}/storage/AVATAR/${user.avatar}`
-        : undefined;
-
+    /** ======== JSX ======== */
     return (
-        <header className="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-200">
+        <header
+            className="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-200 
+                rounded-bl-xl rounded-br-xl transition-all duration-300"
+        >
             <div className="flex items-center justify-between h-16 px-4 sm:px-6">
-                {/* Left Section - Menu Toggle */}
-                <div className="flex items-center gap-4">
+                {/* ===== LEFT: Toggle / Brand ===== */}
+                <div className="flex items-center gap-3">
                     <Button
                         type="text"
-                        icon={
-                            isMobile
-                                ? <MenuFoldOutlined className="text-lg sm:text-xl" />
-                                : collapsed
-                                    ? <MenuUnfoldOutlined className="text-lg sm:text-xl" />
-                                    : <MenuFoldOutlined className="text-lg sm:text-xl" />
+                        onClick={() =>
+                            window.innerWidth < 1024
+                                ? setMobileOpen(!mobileOpen)
+                                : setCollapsed(!collapsed)
                         }
-                        onClick={() => {
-                            if (isMobile && setMobileOpen) {
-                                setMobileOpen(!mobileOpen);
-                            } else {
-                                setCollapsed(!collapsed);
-                            }
-                        }}
-                        className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 hover:bg-gray-100 rounded-lg transition-colors"
-                    />
+                        className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 transition-all"
+                        style={{ border: "none" }}
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2.6}
+                            stroke="currentColor"
+                            className="w-7 h-7 text-gray-700"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3.5 6.5h17M3.5 12h17m-17 5.5h17"
+                            />
+                        </svg>
+                    </Button>
 
-                    {/* Brand on Mobile */}
                     {isMobile && (
-                        <div className="flex items-center gap-2 text-blue-600 font-bold text-base sm:text-lg">
-                            <span>AMMS Admin</span>
-                        </div>
+                        <span className="text-blue-600 font-bold text-base">AMMS Admin</span>
                     )}
                 </div>
 
-                {/* Right Section - Notifications & User Menu */}
-                <Space size={isMobile ? 12 : 20} align="center">
-                    {/* Notifications */}
-                    <Badge
-                        count={unreadCount}
-                        size={isMobile ? "small" : "default"}
-                        offset={[-2, 2]}
-                    >
-                        <div
-                            className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
-                            onClick={() => message.info('Mở danh sách thông báo')}
+                {/* ===== RIGHT: Notification + User ===== */}
+                <Space size={isMobile ? 10 : 20} align="center">
+                    {/* Thông báo */}
+                    <Tooltip title="Thông báo" placement="bottomRight">
+                        <Badge
+                            count={unreadCount}
+                            overflowCount={99}
+                            offset={[-2, 5]}
+                            style={{
+                                backgroundColor: "#ff4d4f",
+                                fontWeight: 600,
+                            }}
                         >
-                            <BellOutlined className="text-lg sm:text-xl text-gray-600 hover:text-blue-600 transition-colors" />
-                        </div>
-                    </Badge>
+                            <BellOutlined
+                                className="text-xl text-gray-600 hover:text-blue-500 cursor-pointer transition-all"
+                                onClick={() => setShowNotifications(!showNotifications)}
+                            />
+                        </Badge>
+                    </Tooltip>
 
-                    {/* User Menu */}
+                    {/* User Dropdown */}
                     <Dropdown
-                        menu={{ items: itemsDropdown }}
-                        trigger={['click']}
+                        menu={{ items: menuItems }}
+                        trigger={["click"]}
+                        open={menuOpen}
+                        onOpenChange={setMenuOpen}
                         placement="bottomRight"
                     >
-                        <Space className="cursor-pointer hover:bg-gray-100 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-colors">
+                        <Space className="cursor-pointer hover:bg-gray-100 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-all">
                             {!isMobile && (
-                                <span className="text-sm font-medium text-gray-700 max-w-[120px] sm:max-w-[150px] truncate">
-                                    {user?.name || 'Admin'}
+                                <span className="text-sm font-medium text-gray-700 truncate max-w-[150px]">
+                                    {user?.name || "Admin"}
                                 </span>
                             )}
                             <Avatar
@@ -141,7 +177,7 @@ const HeaderAdmin: React.FC<IProps> = ({
                                 icon={!avatarSrc && <UserOutlined />}
                                 className="border-2 border-blue-500"
                                 style={{
-                                    backgroundColor: avatarSrc ? 'transparent' : '#1890ff'
+                                    backgroundColor: avatarSrc ? "transparent" : "#1890ff",
                                 }}
                             >
                                 {!avatarSrc && user?.name?.substring(0, 2)?.toUpperCase()}
@@ -150,6 +186,16 @@ const HeaderAdmin: React.FC<IProps> = ({
                     </Dropdown>
                 </Space>
             </div>
+
+            {/* ===== Notification Panel ===== */}
+            {showNotifications && (
+                <NotificationPanel
+                    onClose={() => {
+                        setShowNotifications(false);
+                        fetchUnreadCount();
+                    }}
+                />
+            )}
         </header>
     );
 };

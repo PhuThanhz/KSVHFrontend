@@ -6,7 +6,7 @@ import {
     callUpdateCustomer,
 } from "@/config/api";
 import type { ICustomer, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách khách hàng ========================= */
 export const useCustomersQuery = (query: string) => {

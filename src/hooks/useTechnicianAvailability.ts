@@ -12,7 +12,7 @@ import {
     callDeleteTechnicianAvailability,
     callFetchMyTechnicianAvailability,
 } from "@/config/api";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách ca làm việc kỹ thuật viên ========================= */
 export const useTechnicianAvailabilitiesQuery = (query: string) => {

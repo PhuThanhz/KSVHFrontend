@@ -9,7 +9,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useInventoryItemByIdQuery } from "@/hooks/useInventoryItems";
-import { formatCurrency } from "@/config/format";
+import { formatCurrency } from "@/utils/format";
 
 const { Text, Title } = Typography;
 

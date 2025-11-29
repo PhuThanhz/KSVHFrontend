@@ -6,7 +6,7 @@ import {
     callCreateTechnician,
     callUpdateTechnician,
 } from "@/config/api";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách kỹ thuật viên ========================= */
 export const useTechniciansQuery = (query: string) => {

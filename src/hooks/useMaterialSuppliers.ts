@@ -7,7 +7,7 @@ import {
     callDeleteMaterialSupplier,
 } from "@/config/api";
 import type { IMaterialSupplier, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** ========================= Lấy danh sách nhà cung cấp vật tư ========================= */
 export const useMaterialSuppliersQuery = (query: string) => {

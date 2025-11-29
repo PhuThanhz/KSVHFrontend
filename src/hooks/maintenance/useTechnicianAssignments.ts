@@ -10,7 +10,7 @@ import type {
     IReqRejectAssignmentDTO,
     IResTechnicianAssignmentDTO,
 } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 /** =========================
  * Lấy danh sách công việc được phân công cho kỹ thuật viên

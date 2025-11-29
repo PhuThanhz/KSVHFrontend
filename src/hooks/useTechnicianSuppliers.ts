@@ -7,7 +7,7 @@ import {
     callDeleteTechnicianSupplier,
 } from "@/config/api";
 import type { ITechnicianSupplier, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 
 export const useTechnicianSuppliersQuery = (query: string) => {

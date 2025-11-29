@@ -7,7 +7,7 @@ import {
     callDeletePermission,
 } from "@/config/api";
 import type { IPermission, IModelPaginate } from "@/types/backend";
-import { notify } from "@/components/common/notify";
+import { notify } from "@/components/common/notification/notify";
 
 // Lấy danh sách quyền
 export const usePermissionsQuery = (query: string) => {
