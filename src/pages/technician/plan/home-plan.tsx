@@ -22,7 +22,7 @@ import dayjs from "dayjs";
 import { useSurveyedRequestsQuery } from "@/hooks/maintenance/useMaintenancePlans";
 import ModalCreateMaintenancePlan from "./modal.create.plan";
 import ViewPlanDetail from "./view.plan.detail";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/navigation/Breadcrumb";
 
 const { Text, Title } = Typography;
 

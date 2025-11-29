@@ -20,7 +20,7 @@ import {
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { useMyTechnicianAvailabilitiesQuery } from "@/hooks/useTechnicianAvailability";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/navigation/Breadcrumb";
 
 dayjs.locale("vi");
 const { Text, Title } = Typography;

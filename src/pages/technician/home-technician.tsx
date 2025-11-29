@@ -25,7 +25,7 @@ import { useTechnicianAssignmentsQuery } from "@/hooks/maintenance/useTechnician
 import { useMaintenanceSurveysInProgressQuery } from "@/hooks/maintenance/useMaintenanceSurveys";
 import { useSurveyedRequestsQuery } from "@/hooks/maintenance/useMaintenancePlans";
 import { useApprovedExecutionsQuery } from "@/hooks/maintenance/useMaintenanceExecutions";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/navigation/Breadcrumb";
 
 dayjs.locale("vi");
 

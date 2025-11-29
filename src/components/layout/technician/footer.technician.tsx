@@ -8,7 +8,7 @@ import {
     QrcodeOutlined,
 } from "@ant-design/icons";
 import { Tooltip } from "antd";
-import ScannerModal from "@/components/scanner/ScannerModal";
+import ScannerModal from "@/pages/technician/scanner/ScannerModal";
 
 const FooterTechnician: React.FC = () => {
     const navigate = useNavigate();
@@ -41,8 +41,8 @@ const FooterTechnician: React.FC = () => {
                             >
                                 <div
                                     className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isActive
-                                            ? "bg-pink-100 text-pink-500 shadow-md"
-                                            : "bg-gray-100 hover:bg-gray-200"
+                                        ? "bg-pink-100 text-pink-500 shadow-md"
+                                        : "bg-gray-100 hover:bg-gray-200"
                                         }`}
                                 >
                                     {React.cloneElement(item.icon, {

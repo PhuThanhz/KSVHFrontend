@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
     Card,
     Row,
@@ -30,13 +30,15 @@ import ModalCompleteExecution from "./modal.complete-execution";
 import ModalUpdateTasks from "./modal.update-tasks";
 import ViewExecutionDetail from "./view.execution-detail";
 import ModalRequestSupport from "./modal.request-support";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/navigation/Breadcrumb";
 
 import type { MaintenanceRequestStatus, IResExecutionCardDTO } from "@/types/backend";
 
 const { Title, Text } = Typography;
 
 const HomeExecution = () => {
+    const [activeTab, setActiveTab] = useState<string>("approved");
+
     const [openStartModal, setOpenStartModal] = useState(false);
     const [openUpdateModal, setOpenUpdateModal] = useState(false);
     const [openCompleteModal, setOpenCompleteModal] = useState(false);
@@ -46,14 +48,38 @@ const HomeExecution = () => {
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [selectedRequestCode, setSelectedRequestCode] = useState<string | null>(null);
 
-    const [query] = useState<string>(() =>
-        queryString.stringify({
+    /** Build query theo tab */
+    const query = useMemo(() => {
+        let filter = "";
+        switch (activeTab) {
+            case "approved":
+                filter = "status='DA_PHE_DUYET'";
+                break;
+            case "maintaining":
+                filter = "status='DANG_BAO_TRI'";
+                break;
+            case "waitingAcceptance":
+                filter = "status='CHO_NGHIEM_THU'";
+                break;
+            case "rejected":
+                filter = "status='TU_CHOI_NGHIEM_THU'";
+                break;
+            case "completed":
+                filter = "status='HOAN_THANH'";
+                break;
+            default:
+                filter = "";
+        }
+
+        return queryString.stringify({
             page: 1,
             size: 20,
             sort: "createdAt,desc",
-        })
-    );
+            filter,
+        });
+    }, [activeTab]);
 
+    /** Fetch API */
     const { data, isFetching, refetch } = useApprovedExecutionsQuery(query);
     const executions: IResExecutionCardDTO[] = data?.result || [];
     const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -73,7 +99,6 @@ const HomeExecution = () => {
         if (type === "support") setOpenSupportModal(true);
     };
 
-    /** Reload data */
     const handleActionSuccess = () => {
         message.success("Cập nhật trạng thái thành công!");
         refetch();
@@ -96,7 +121,6 @@ const HomeExecution = () => {
         }
     };
 
-    /** Status color */
     const getStatusColor = (status: MaintenanceRequestStatus): string => {
         switch (status) {
             case "DA_PHE_DUYET":
@@ -114,21 +138,21 @@ const HomeExecution = () => {
         }
     };
 
-    /** Render card list by filter */
-    const renderList = (filter: (item: IResExecutionCardDTO) => boolean) => {
-        const filtered = executions.filter(filter);
+    /** Render list */
+    const renderList = () => {
         if (isFetching)
             return (
                 <div style={{ textAlign: "center", padding: "60px 0" }}>
                     <Spin tip="Đang tải dữ liệu..." />
                 </div>
             );
-        if (filtered.length === 0)
+
+        if (executions.length === 0)
             return <Empty description="Không có phiếu nào phù hợp" />;
 
         return (
             <Space direction="vertical" size={20} style={{ width: "100%" }}>
-                {filtered.map((item) => {
+                {executions.map((item) => {
                     const deviceImages = [
                         item.deviceImage1,
                         item.deviceImage2,
@@ -146,7 +170,6 @@ const HomeExecution = () => {
                             bodyStyle={{ padding: 20 }}
                         >
                             <Row gutter={16} align="top">
-                                {/* IMAGE */}
                                 <Col xs={24} md={7} style={{ textAlign: "center" }}>
                                     {deviceImages.length > 0 ? (
                                         <Image.PreviewGroup>
@@ -178,7 +201,6 @@ const HomeExecution = () => {
                                     )}
                                 </Col>
 
-                                {/* CONTENT */}
                                 <Col xs={24} md={17}>
                                     <Space size="small" wrap>
                                         <Tag color="blue">{item.requestCode}</Tag>
@@ -188,9 +210,7 @@ const HomeExecution = () => {
                                                 : item.status}
                                         </Tag>
                                         <Tag color="gold">
-                                            {item.createdAt
-                                                ? dayjs(item.createdAt).format("DD/MM/YYYY")
-                                                : "-"}
+                                            {dayjs(item.createdAt).format("DD/MM/YYYY")}
                                         </Tag>
                                     </Space>
 
@@ -200,20 +220,16 @@ const HomeExecution = () => {
 
                                     <Row gutter={[8, 8]}>
                                         <Col span={12}>
-                                            <Text strong>Thiết bị:</Text>{" "}
-                                            {item.deviceCode || "-"}
+                                            <Text strong>Thiết bị:</Text> {item.deviceCode || "-"}
                                         </Col>
                                         <Col span={12}>
-                                            <Text strong>Vị trí:</Text>{" "}
-                                            {item.locationDetail || "-"}
+                                            <Text strong>Vị trí:</Text> {item.locationDetail || "-"}
                                         </Col>
                                         <Col span={12}>
-                                            <Text strong>Đơn vị:</Text>{" "}
-                                            {item.companyName || "-"}
+                                            <Text strong>Đơn vị:</Text> {item.companyName || "-"}
                                         </Col>
                                         <Col span={12}>
-                                            <Text strong>Phòng ban:</Text>{" "}
-                                            {item.departmentName || "-"}
+                                            <Text strong>Phòng ban:</Text> {item.departmentName || "-"}
                                         </Col>
                                     </Row>
 
@@ -241,14 +257,9 @@ const HomeExecution = () => {
                                         size="small"
                                         current={getStepIndex(item.status)}
                                         items={[
-                                            { title: "Chờ thi công" },
-                                            { title: "Đang bảo trì" },
-                                            {
-                                                title:
-                                                    item.status === "TU_CHOI_NGHIEM_THU"
-                                                        ? "Bị từ chối - Làm lại"
-                                                        : "Chờ nghiệm thu",
-                                            },
+                                            { title: "Phê duyệt" },
+                                            { title: "Thi công" },
+                                            { title: "Chờ nghiệm thu" },
                                             { title: "Hoàn thành" },
                                         ]}
                                     />
@@ -295,24 +306,21 @@ const HomeExecution = () => {
                                     <Divider style={{ margin: "10px 0" }} />
 
                                     <Space wrap>
-                                        {(item.status === "DA_PHE_DUYET" ||
-                                            item.status === "TU_CHOI_NGHIEM_THU") && (
-                                                <Button
-                                                    type="primary"
-                                                    icon={<PlayCircleOutlined />}
-                                                    onClick={() =>
-                                                        handleOpenModal(
-                                                            "start",
-                                                            item.requestId,
-                                                            item.requestCode
-                                                        )
-                                                    }
-                                                >
-                                                    {item.status === "TU_CHOI_NGHIEM_THU"
-                                                        ? "Làm lại thi công"
-                                                        : "Bắt đầu thi công"}
-                                                </Button>
-                                            )}
+                                        {item.status === "DA_PHE_DUYET" && (
+                                            <Button
+                                                type="primary"
+                                                icon={<PlayCircleOutlined />}
+                                                onClick={() =>
+                                                    handleOpenModal(
+                                                        "start",
+                                                        item.requestId,
+                                                        item.requestCode
+                                                    )
+                                                }
+                                            >
+                                                Bắt đầu thi công
+                                            </Button>
+                                        )}
 
                                         {item.status === "DANG_BAO_TRI" && (
                                             <>
@@ -386,31 +394,14 @@ const HomeExecution = () => {
             </Title>
 
             <Tabs
-                defaultActiveKey="processing"
+                activeKey={activeTab}
+                onChange={setActiveTab}
                 items={[
-                    {
-                        key: "processing",
-                        label: "Đang xử lý",
-                        children: renderList(
-                            (item) =>
-                                item.status === "DA_PHE_DUYET" ||
-                                item.status === "DANG_BAO_TRI"
-                        ),
-                    },
-                    {
-                        key: "rejected",
-                        label: "Từ chối nghiệm thu",
-                        children: renderList(
-                            (item) => item.status === "TU_CHOI_NGHIEM_THU"
-                        ),
-                    },
-                    {
-                        key: "completed",
-                        label: "Hoàn thành",
-                        children: renderList(
-                            (item) => item.status === "HOAN_THANH"
-                        ),
-                    },
+                    { key: "approved", label: "Đã phê duyệt", children: renderList() },
+                    { key: "maintaining", label: "Đang bảo trì", children: renderList() },
+                    { key: "waitingAcceptance", label: "Chờ nghiệm thu", children: renderList() },
+                    { key: "rejected", label: "Từ chối nghiệm thu", children: renderList() },
+                    { key: "completed", label: "Hoàn thành", children: renderList() },
                 ]}
             />
 

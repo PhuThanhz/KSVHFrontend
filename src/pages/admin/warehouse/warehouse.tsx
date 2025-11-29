@@ -11,8 +11,8 @@ import {
     useWarehousesQuery,
     useDeleteWarehouseMutation,
 } from "@/hooks/useWarehouses";
-import ModalWarehouse from "@/components/admin/warehouse/modal.warehouse";
-import ViewDetailWarehouse from "@/components/admin/warehouse/view.warehouse";
+import ModalWarehouse from "@/pages/admin/warehouse/modal.warehouse";
+import ViewDetailWarehouse from "@/pages/admin/warehouse/view.warehouse";
 import dayjs from "dayjs";
 
 const WarehousePage = () => {

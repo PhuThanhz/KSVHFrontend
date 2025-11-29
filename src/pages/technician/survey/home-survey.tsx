@@ -15,7 +15,7 @@ import ViewMaintenanceSurvey from "./view.survey";
 import queryString from "query-string";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/navigation/Breadcrumb";
 
 dayjs.locale("vi");
 const { Text, Title } = Typography;

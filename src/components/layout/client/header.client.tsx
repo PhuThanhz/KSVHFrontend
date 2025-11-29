@@ -22,7 +22,7 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { callLogout } from "@/config/api";
 import { setLogoutAction } from "@/redux/slice/accountSlide";
-import ManageAccount from "../modal/manage.account";
+import ManageAccount from "../../client/modal/manage.account";
 import { PATHS } from "@/constants/paths";
 import { usePermission } from "@/hooks/usePermission";
 
