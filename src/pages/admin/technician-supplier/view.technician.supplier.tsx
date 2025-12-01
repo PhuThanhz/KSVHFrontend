@@ -1,5 +1,6 @@
-import { Badge, Descriptions, Drawer, Typography, Divider, Spin, Empty } from "antd";
+import { Modal, Descriptions, Typography, Divider, Spin, Empty, Badge } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useTechnicianSupplierByIdQuery } from "@/hooks/useTechnicianSuppliers";
 
 const { Text, Title } = Typography;
@@ -14,18 +15,24 @@ const ViewDetailTechnicianSupplier = ({ onClose, open, supplierId }: IProps) => 
     const { data: supplier, isLoading, isError } = useTechnicianSupplierByIdQuery(supplierId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={
                 <Title level={4} style={{ margin: 0 }}>
                     Thông tin nhà cung cấp kỹ thuật viên
                 </Title>
             }
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            centered
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            width={isMobile ? "100%" : 750}
+            bodyStyle={{
+                maxHeight: "70vh",
+                overflowY: "auto",
+                padding: isMobile ? "12px 16px" : "20px 24px",
+            }}
+            destroyOnClose
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -94,10 +101,13 @@ const ViewDetailTechnicianSupplier = ({ onClose, open, supplierId }: IProps) => 
                             Người tạo: <b>{supplier?.createdBy ?? "Không rõ"}</b> <br />
                             Người cập nhật: <b>{supplier?.updatedBy ?? "Không rõ"}</b>
                         </Text>
+                        <div style={{ marginTop: 8 }}>
+                            <Badge status="processing" text="Module: TECHNICIAN_SUPPLIER" />
+                        </div>
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

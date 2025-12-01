@@ -1,5 +1,15 @@
-import { Badge, Descriptions, Drawer, Typography, Divider, Spin, Empty } from "antd";
+import { useEffect } from "react";
+import {
+    Modal,
+    Descriptions,
+    Typography,
+    Spin,
+    Empty,
+    Divider,
+    Badge,
+} from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useUserByIdQuery } from "@/hooks/user/useUsers";
 
 const { Text, Title } = Typography;
@@ -11,21 +21,34 @@ interface IProps {
 }
 
 const ViewDetailUser = ({ onClose, open, userId }: IProps) => {
-    const { data: user, isLoading, isError } = useUserByIdQuery(userId || undefined);
+    const { data: user, isLoading, isError, refetch } = useUserByIdQuery(
+        userId || undefined
+    );
+
+    /** Tự động refetch khi mở modal */
+    useEffect(() => {
+        if (open && userId) refetch();
+    }, [open, userId, refetch]);
 
     return (
-        <Drawer
+        <Modal
             title={
                 <Title level={4} style={{ margin: 0 }}>
                     Thông tin người dùng
                 </Title>
             }
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
-            maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "95%" : 800}
+            centered
+            bodyStyle={{
+                maxHeight: isMobile ? "70vh" : "75vh",
+                overflowY: "auto",
+                paddingBottom: 16,
+                background: "#fff",
+            }}
+            destroyOnClose
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -38,7 +61,7 @@ const ViewDetailUser = ({ onClose, open, userId }: IProps) => {
                     <Descriptions
                         bordered
                         size="middle"
-                        column={2}
+                        column={isMobile ? 1 : 2}
                         layout="vertical"
                         labelStyle={{
                             fontWeight: 600,
@@ -109,7 +132,7 @@ const ViewDetailUser = ({ onClose, open, userId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

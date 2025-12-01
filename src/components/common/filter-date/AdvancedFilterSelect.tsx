@@ -12,11 +12,19 @@ export interface FilterField {
 interface AdvancedFilterSelectProps {
     fields: FilterField[];
     onChange: (filters: Record<string, any>) => void;
+    resetSignal?: number;
 }
 
-const AdvancedFilterSelect: React.FC<AdvancedFilterSelectProps> = ({ fields, onChange }) => {
+const AdvancedFilterSelect: React.FC<AdvancedFilterSelectProps> = ({ fields, onChange, resetSignal }) => {
     const [activeFilters, setActiveFilters] = React.useState<Record<string, any>>({});
     const [openDropdownKey, setOpenDropdownKey] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        if (resetSignal !== undefined) {
+            setActiveFilters({});
+            onChange({});
+        }
+    }, [resetSignal]);
 
     const handleSelect = (fieldKey: string, value: any) => {
         const newFilters = { ...activeFilters, [fieldKey]: value };
@@ -93,7 +101,6 @@ const AdvancedFilterSelect: React.FC<AdvancedFilterSelectProps> = ({ fields, onC
             {Object.entries(activeFilters).map(([key, val]) => {
                 const field = fields.find((f) => f.key === key);
                 const option = field?.options?.find((o) => o.value === val);
-
                 return (
                     <Tag
                         key={key}

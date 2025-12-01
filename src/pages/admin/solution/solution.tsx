@@ -1,10 +1,21 @@
-import DataTable from "@/components/common/data-table";
-import type { ISolution } from "@/types/backend";
-import { EditOutlined, DeleteOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Popconfirm, Space, Tag } from "antd";
 import { useRef, useState } from "react";
+import { Button, Popconfirm, Space } from "antd";
+import {
+    EditOutlined,
+    DeleteOutlined,
+    EyeOutlined,
+    PlusOutlined,
+} from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
+import dayjs from "dayjs";
 import queryString from "query-string";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+import CustomPagination from "@/components/common/pagination/CustomPagination";
+
+import type { ISolution } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import {
@@ -13,8 +24,7 @@ import {
 } from "@/hooks/useSolutions";
 import ModalSolution from "@/pages/admin/solution/modal.solution";
 import ViewDetailSolution from "@/pages/admin/solution/view.solution";
-import type { ActionType } from "@ant-design/pro-components";
-import dayjs from "dayjs";
+import { PAGINATION_CONFIG } from "@/config/pagination";
 
 const SolutionPage = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -22,22 +32,23 @@ const SolutionPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
-
-    const [query, setQuery] = useState(() =>
-        queryString.stringify({
-            page: 1,
-            size: 10,
-            sort: "createdAt,desc",
-        }, { encode: false })
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
     );
+
     const tableRef = useRef<ActionType>(null);
 
     const { data, isFetching } = useSolutionsQuery(query);
     const deleteMutation = useDeleteSolutionMutation();
 
-    const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
     const solutions = data?.result ?? [];
 
+    /** Xử lý xóa phương án */
     const handleDelete = async (id?: number | string) => {
         if (!id) return;
         await deleteMutation.mutateAsync(id, {
@@ -45,14 +56,18 @@ const SolutionPage = () => {
         });
     };
 
+    /** Reload lại bảng */
     const reloadTable = () => {
-        setQuery("page=1&size=10&sort=createdAt,desc");
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
+        );
     };
 
+    /** Build query cho sort/pagination */
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
-            size: params.pageSize,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
         };
 
         if (params.solutionName) {
@@ -65,12 +80,13 @@ const SolutionPage = () => {
             const dir = sort.solutionName === "ascend" ? "asc" : "desc";
             temp += `&sort=solutionName,${dir}`;
         } else {
-            temp += "&sort=createdAt,desc";
+            temp += `&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`;
         }
 
         return temp;
     };
 
+    /** Cấu hình cột */
     const columns: ProColumns<ISolution>[] = [
         {
             title: "STT",
@@ -78,8 +94,7 @@ const SolutionPage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) +
-                ((meta.page || 1) - 1) * (meta.pageSize || 10),
+                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
             hideInSearch: true,
         },
         {
@@ -92,14 +107,18 @@ const SolutionPage = () => {
             dataIndex: "createdAt",
             hideInSearch: true,
             render: (_, record) =>
-                record.createdAt ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm") : "-",
+                record.createdAt
+                    ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm")
+                    : "-",
         },
         {
             title: "Ngày cập nhật",
             dataIndex: "updatedAt",
             hideInSearch: true,
             render: (_, record) =>
-                record.updatedAt ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm") : "-",
+                record.updatedAt
+                    ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm")
+                    : "-",
         },
         {
             title: "Hành động",
@@ -147,10 +166,28 @@ const SolutionPage = () => {
     ];
 
     return (
-        <div>
+        <PageContainer
+            title="Quản lý phương án xử lý"
+            filter={
+                <SearchFilter
+                    searchPlaceholder="Tìm theo tên phương án..."
+                    addLabel="Thêm phương án"
+                    showFilterButton={false}
+                    onSearch={(val) =>
+                        setQuery(
+                            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=solutionName~'${val}'`
+                        )
+                    }
+                    onReset={() => reloadTable()}
+                    onAddClick={() => {
+                        setDataInit(null);
+                        setOpenModal(true);
+                    }}
+                />
+            }
+        >
             <Access permission={ALL_PERMISSIONS.SOLUTION.GET_PAGINATE}>
                 <DataTable<ISolution>
-                    headerTitle="Danh sách phương án xử lý"
                     actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
@@ -165,66 +202,37 @@ const SolutionPage = () => {
                             total: meta.total || 0,
                         });
                     }}
-                    pagination={{
-                        defaultPageSize: 10,
-
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
-                        showSizeChanger: true,
-                        total: data?.meta?.total,
-                        showQuickJumper: true,
-                        size: "default",
-                        showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
-                                    {range[0]}–{range[1]}
-                                </span>{" "}
-                                trên{" "}
-                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
-                                    {total.toLocaleString()}
-                                </span>{" "}
-                                phương án
-                            </div>
-                        ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
-                    }}
+                    pagination={false}
+                    footer={() => (
+                        <CustomPagination
+                            current={meta.page}
+                            pageSize={meta.pageSize}
+                            total={meta.total}
+                            onChange={(page, size) => {
+                                setQuery(`page=${page}&size=${size}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`);
+                            }}
+                            showTotalText="phương án"
+                        />
+                    )}
                     rowSelection={false}
-                    toolBarRender={() => [
-                        <Access key="create" permission={ALL_PERMISSIONS.SOLUTION.CREATE} hideChildren>
-                            <Button
-                                icon={<PlusOutlined />}
-                                type="primary"
-                                onClick={() => {
-                                    setDataInit(null);
-                                    setOpenModal(true);
-                                }}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Access>,
-                    ]}
                 />
             </Access>
+
+            {/* Modal thêm/sửa */}
             <ModalSolution
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 dataInit={dataInit}
                 setDataInit={setDataInit}
             />
+
+            {/* Modal xem chi tiết */}
             <ViewDetailSolution
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
                 solutionId={selectedId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

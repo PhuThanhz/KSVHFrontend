@@ -21,6 +21,10 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
     showQuickJumper = true,
     showSizeChanger = true,
 }) => {
+    // ✅ Tính đúng dải hiển thị (vd: 1–20 trên 23)
+    const start = total === 0 ? 0 : (current - 1) * pageSize + 1;
+    const end = Math.min(current * pageSize, total);
+
     return (
         <div
             style={{
@@ -39,10 +43,10 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
                 total={total}
                 showQuickJumper={showQuickJumper}
                 showSizeChanger={showSizeChanger}
-                showTotal={(total, range) => (
+                showTotal={() => (
                     <div style={{ fontSize: 13, color: "#595959" }}>
                         <span style={{ fontWeight: 500, color: "#000" }}>
-                            {range[0]}–{range[1]}
+                            {total === 0 ? "0–0" : `${start}–${end}`}
                         </span>{" "}
                         trên{" "}
                         <span style={{ fontWeight: 600, color: "#1677ff" }}>

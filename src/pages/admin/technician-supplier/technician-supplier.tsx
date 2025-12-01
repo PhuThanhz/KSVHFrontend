@@ -1,16 +1,30 @@
-import DataTable from "@/components/common/data-table";
-import type { ITechnicianSupplier } from "@/types/backend";
-import { EditOutlined, PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Popconfirm, Tag } from "antd";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Button, Popconfirm, Space } from "antd";
+import {
+    EditOutlined,
+    DeleteOutlined,
+    EyeOutlined,
+    PlusOutlined,
+} from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
+import dayjs from "dayjs";
 import queryString from "query-string";
-import ModalTechnicianSupplier from "@/pages/admin/technician-supplier/modal.technician.supplier";
-import ViewDetailTechnicianSupplier from "@/pages/admin/technician-supplier/view.technician.supplier";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+import CustomPagination from "@/components/common/pagination/CustomPagination";
+
+import type { ITechnicianSupplier } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import { useTechnicianSuppliersQuery, useDeleteTechnicianSupplierMutation } from "@/hooks/useTechnicianSuppliers";
-import dayjs from "dayjs";
+import {
+    useTechnicianSuppliersQuery,
+    useDeleteTechnicianSupplierMutation,
+} from "@/hooks/useTechnicianSuppliers";
+import ModalTechnicianSupplier from "@/pages/admin/technician-supplier/modal.technician.supplier";
+import ViewDetailTechnicianSupplier from "@/pages/admin/technician-supplier/view.technician.supplier";
+import { PAGINATION_CONFIG } from "@/config/pagination";
 
 const TechnicianSupplierPage = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -18,49 +32,63 @@ const TechnicianSupplierPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
 
-
-    const [query, setQuery] = useState(() =>
-        queryString.stringify({
-            page: 1,
-            size: 10,
-            sort: "createdAt,desc",
-        }, { encode: false })
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
     );
+
+    const tableRef = useRef<ActionType>(null);
 
     const { data, isFetching } = useTechnicianSuppliersQuery(query);
     const deleteMutation = useDeleteTechnicianSupplierMutation();
 
-    const handleDelete = async (id: number | string) => {
-        await deleteMutation.mutateAsync(id);
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
+    const suppliers = data?.result ?? [];
+
+    /** ================== Xử lý xóa ================== */
+    const handleDelete = async (id?: number | string) => {
+        if (!id) return;
+        await deleteMutation.mutateAsync(id, {
+            onSuccess: () => reloadTable(),
+        });
     };
 
+    /** ================== Reload table ================== */
+    const reloadTable = () => {
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
+        );
+    };
+
+    /** ================== Build query ================== */
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
-            size: params.pageSize,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
         };
 
-        if (params.name) q.filter = `name ~ '${params.name}'`;
-        if (params.supplierCode)
-            q.filter = q.filter
-                ? `${q.filter} and supplierCode ~ '${params.supplierCode}'`
-                : `supplierCode ~ '${params.supplierCode}'`;
+        const filters: string[] = [];
+
+        if (params.name) filters.push(`name~'${params.name}'`);
+        if (params.email) filters.push(`email~'${params.email}'`);
+        if (params.phone) filters.push(`phone~'${params.phone}'`);
+
+        if (filters.length > 0) q.filter = filters.join(" and ");
 
         let temp = queryString.stringify(q, { encode: false });
 
-        // Sort
         let sortBy = "";
         if (sort?.name)
             sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
-        else if (sort?.supplierCode)
-            sortBy = sort.supplierCode === "ascend"
-                ? "sort=supplierCode,asc"
-                : "sort=supplierCode,desc";
-        else sortBy = "sort=createdAt,desc";
+        else sortBy = `sort=${PAGINATION_CONFIG.DEFAULT_SORT}`;
 
         return `${temp}&${sortBy}`;
     };
 
+    /** ================== Cột bảng ================== */
     const columns: ProColumns<ITechnicianSupplier>[] = [
         {
             title: "STT",
@@ -68,8 +96,7 @@ const TechnicianSupplierPage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) +
-                ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
         {
@@ -111,7 +138,7 @@ const TechnicianSupplierPage = () => {
                 <Space>
                     <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_BY_ID} hideChildren>
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
                             onClick={() => {
                                 setSelectedSupplierId(Number(entity.id));
                                 setOpenViewDetail(true);
@@ -123,7 +150,7 @@ const TechnicianSupplierPage = () => {
                         <EditOutlined
                             style={{
                                 fontSize: 18,
-                                color: "#ffa500",
+                                color: "#fa8c16",
                                 cursor: "pointer",
                             }}
                             onClick={() => {
@@ -137,10 +164,10 @@ const TechnicianSupplierPage = () => {
                         <Popconfirm
                             placement="leftTop"
                             title="Xác nhận xóa nhà cung cấp"
-                            description="Bạn có chắc chắn muốn xóa nhà cung cấp này?"
-                            onConfirm={() => handleDelete(entity.id!)}
-                            okText="Xác nhận"
+                            description="Bạn có chắc chắn muốn xóa nhà cung cấp này không?"
+                            okText="Xóa"
                             cancelText="Hủy"
+                            onConfirm={() => handleDelete(entity.id!)}
                         >
                             <DeleteOutlined
                                 style={{
@@ -157,66 +184,84 @@ const TechnicianSupplierPage = () => {
     ];
 
     return (
-        <div>
+        <PageContainer
+            title="Quản lý nhà cung cấp kỹ thuật viên"
+            filter={
+                <SearchFilter
+                    searchPlaceholder="Tìm theo tên hoặc mã nhà cung cấp..."
+                    addLabel="Thêm nhà cung cấp"
+                    filterFields={[
+                        {
+                            name: "email",
+                            label: "Email",
+                            placeholder: "Nhập email...",
+                        },
+                        {
+                            name: "phone",
+                            label: "Số điện thoại",
+                            placeholder: "Nhập số điện thoại...",
+                        },
+                    ]}
+                    onSearch={(val) =>
+                        setQuery(
+                            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=(name~'${val}' or supplierCode~'${val}')`
+                        )
+                    }
+                    onFilterApply={(filters) => {
+                        const filterParts: string[] = [];
+                        if (filters.email)
+                            filterParts.push(`email~'${filters.email}'`);
+                        if (filters.phone)
+                            filterParts.push(`phone~'${filters.phone}'`);
+
+                        if (filterParts.length > 0) {
+                            const builtFilter = filterParts.join(" and ");
+                            setQuery(
+                                `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=${builtFilter}`
+                            );
+                        }
+                    }}
+                    onReset={() => reloadTable()}
+                    onAddClick={() => {
+                        setDataInit(null);
+                        setOpenModal(true);
+                    }}
+                />
+            }
+        >
             <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_PAGINATE}>
                 <DataTable<ITechnicianSupplier>
-                    headerTitle="Danh sách nhà cung cấp kỹ thuật viên"
+                    actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={data?.result || []}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                    dataSource={suppliers}
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: suppliers,
+                            success: true,
+                            total: meta.total,
+                        });
                     }}
-                    pagination={{
-                        defaultPageSize: 10,
-
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
-                        showSizeChanger: true,
-                        total: data?.meta?.total,
-                        showQuickJumper: true,
-                        size: "default",
-                        showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
-                                    {range[0]}–{range[1]}
-                                </span>{" "}
-                                trên{" "}
-                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
-                                    {total.toLocaleString()}
-                                </span>{" "}
-                                nhà cung cấp
-                            </div>
-                        ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
-                    }}
-                    toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.CREATE} key="create" hideChildren>
-                            <Button
-                                icon={<PlusOutlined />}
-                                type="primary"
-                                onClick={() => {
-                                    setDataInit(null);
-                                    setOpenModal(true);
-                                }}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Access>,
-                    ]}
+                    pagination={false}
+                    footer={() => (
+                        <CustomPagination
+                            current={meta.page}
+                            pageSize={meta.pageSize}
+                            total={meta.total}
+                            onChange={(page, size) => {
+                                setQuery(`page=${page}&size=${size}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`);
+                            }}
+                            showTotalText="nhà cung cấp"
+                        />
+                    )}
+                    rowSelection={false}
                 />
             </Access>
 
+            {/* Modal thêm/sửa */}
             <ModalTechnicianSupplier
                 openModal={openModal}
                 setOpenModal={setOpenModal}
@@ -224,12 +269,13 @@ const TechnicianSupplierPage = () => {
                 setDataInit={setDataInit}
             />
 
+            {/* Modal xem chi tiết */}
             <ViewDetailTechnicianSupplier
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
                 supplierId={selectedSupplierId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

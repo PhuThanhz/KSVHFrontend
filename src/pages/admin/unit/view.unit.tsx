@@ -1,5 +1,15 @@
-import { Drawer, Descriptions, Typography, Spin, Empty, Divider, Badge } from "antd";
+import { useEffect } from "react";
+import {
+    Modal,
+    Descriptions,
+    Typography,
+    Spin,
+    Empty,
+    Divider,
+    Badge,
+} from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useUnitByIdQuery } from "@/hooks/useUnits";
 
 const { Title, Text } = Typography;
@@ -11,17 +21,34 @@ interface IProps {
 }
 
 const ViewDetailUnit = ({ onClose, open, unitId }: IProps) => {
-    const { data: unit, isLoading, isError } = useUnitByIdQuery(unitId || undefined);
+    const { data: unit, isLoading, isError, refetch } = useUnitByIdQuery(
+        unitId || undefined
+    );
+
+    /** Tự động refetch khi mở modal */
+    useEffect(() => {
+        if (open && unitId) refetch();
+    }, [open, unitId, refetch]);
 
     return (
-        <Drawer
-            title={<Title level={4} style={{ margin: 0 }}>Thông tin đơn vị</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
+        <Modal
+            title={
+                <Title level={4} style={{ margin: 0 }}>
+                    Thông tin đơn vị
+                </Title>
+            }
             open={open}
-            width={"40vw"}
-            maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "95%" : 700}
+            centered
+            bodyStyle={{
+                maxHeight: isMobile ? "70vh" : "75vh",
+                overflowY: "auto",
+                paddingBottom: 16,
+                background: "#fff",
+            }}
+            destroyOnClose
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -33,9 +60,19 @@ const ViewDetailUnit = ({ onClose, open, unitId }: IProps) => {
                 <>
                     <Descriptions
                         bordered
-                        column={2}
+                        size="middle"
+                        column={isMobile ? 1 : 2}
                         layout="vertical"
-                        labelStyle={{ fontWeight: 600, background: "#fafafa" }}
+                        labelStyle={{
+                            fontWeight: 600,
+                            color: "#595959",
+                            background: "#fafafa",
+                        }}
+                        contentStyle={{
+                            fontSize: 14,
+                            color: "#262626",
+                            padding: "10px 12px",
+                        }}
                     >
                         <Descriptions.Item label="Tên đơn vị">
                             <Text strong>{unit.name ?? "-"}</Text>
@@ -63,12 +100,13 @@ const ViewDetailUnit = ({ onClose, open, unitId }: IProps) => {
                     </Descriptions>
 
                     <Divider />
-                    <div style={{ textAlign: "right" }}>
+
+                    <div style={{ textAlign: "right", marginTop: 8 }}>
                         <Badge status="processing" text="Module: UNIT" />
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

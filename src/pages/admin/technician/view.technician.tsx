@@ -1,6 +1,7 @@
-import { Drawer, Descriptions, Divider, Spin, Empty, Badge, Typography } from "antd";
+import { Modal, Descriptions, Divider, Spin, Empty, Badge, Typography } from "antd";
 import { useTechnicianByIdQuery } from "@/hooks/user/useTechnicians";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { formatCurrency } from "@/utils/format";
 
 const { Text, Title } = Typography;
@@ -13,22 +14,23 @@ interface IProps {
 
 const ViewTechnician = ({ onClose, open, technicianId }: IProps) => {
     const { data: technician, isLoading, isError } = useTechnicianByIdQuery(technicianId || undefined);
-
     const isOutsource = technician?.technicianType === "OUTSOURCE";
 
     return (
-        <Drawer
-            title={
-                <Title level={4} style={{ margin: 0 }}>
-                    Thông tin kỹ thuật viên
-                </Title>
-            }
-            placement="right"
-            onClose={() => onClose(false)}
+        <Modal
+            title={<Title level={4} style={{ margin: 0 }}>Thông tin kỹ thuật viên</Title>}
             open={open}
-            width={"45vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            centered
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            width={isMobile ? "100%" : 750}
+            bodyStyle={{
+                maxHeight: "70vh",
+                overflowY: "auto",
+                padding: isMobile ? "12px 16px" : "20px 24px",
+            }}
+            destroyOnClose
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -144,7 +146,7 @@ const ViewTechnician = ({ onClose, open, technicianId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

@@ -47,12 +47,6 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
         setOpen(false);
     };
 
-    const handleReset = () => {
-        form.resetFields();
-        setOpen(false);
-        onReset?.();
-    };
-
     const content = (
         <div className="w-64">
             <Form layout="vertical" form={form}>
@@ -63,11 +57,11 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
                         name={f.name}
                         className="mb-3 text-sm font-medium"
                     >
-                        <Input placeholder={f.placeholder || `Enter ${f.label.toLowerCase()}...`} />
+                        <Input placeholder={f.placeholder || `Nhập ${f.label.toLowerCase()}...`} />
                     </Form.Item>
                 ))}
                 <div className="flex justify-between gap-2 mt-2">
-                    <Button onClick={handleReset} className="flex-1">
+                    <Button onClick={onReset} className="flex-1">
                         Reset
                     </Button>
                     <Button type="primary" onClick={handleApply} className="flex-1">
@@ -81,7 +75,6 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
     return (
         <div className="flex flex-col gap-3 bg-transparent w-full">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full flex-wrap">
-                {/* Search Input */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-[250px]">
                     <Input
                         placeholder={searchPlaceholder}
@@ -90,7 +83,6 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
                         className="h-10 rounded-md flex-1"
                     />
 
-                    {/* Buttons: Filter + Refresh + Add */}
                     <div className="flex flex-row items-center gap-2 sm:gap-3 flex-wrap justify-start sm:justify-end">
                         {showFilterButton && (
                             <Popover
@@ -104,7 +96,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
                                     icon={<FilterOutlined />}
                                     className="h-9 text-sm flex items-center justify-center px-4 w-auto"
                                 >
-                                    Filter
+                                    Bộ Lọc
                                 </Button>
                             </Popover>
                         )}
@@ -112,10 +104,9 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
                         {showResetButton && (
                             <Button
                                 icon={<ReloadOutlined />}
-                                onClick={handleReset}
+                                onClick={onReset}
                                 className="h-9 text-sm flex items-center justify-center px-4 w-auto"
-                            >
-                            </Button>
+                            />
                         )}
 
                         {showAddButton && (

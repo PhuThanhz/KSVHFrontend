@@ -1,7 +1,7 @@
 // src/components/common/DateRangeFilter.tsx
-import { DatePicker, Typography } from "antd";
-import type { RangePickerProps } from "antd/es/date-picker";
-import dayjs from "dayjs";
+import { DatePicker, Typography, Space } from "antd";
+import type { DatePickerProps } from "antd/es/date-picker";
+import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useEffect, useState } from "react";
 
@@ -20,56 +20,94 @@ interface DateRangeFilterProps {
 }
 
 const DateRangeFilter = ({
-    label = "Lọc theo ngày tạo",
     defaultValue,
     onChange,
     format = "YYYY-MM-DD",
     fieldName = "createdAt",
-    width = 320,
+    width = 150,
     size = "middle",
     className,
 }: DateRangeFilterProps) => {
-    const [range, setRange] = useState<[string | null, string | null]>(
-        defaultValue || [null, null]
-    );
+    const [startDate, setStartDate] = useState<Dayjs | null>(null);
+    const [endDate, setEndDate] = useState<Dayjs | null>(null);
 
     useEffect(() => {
-        if (defaultValue) setRange(defaultValue);
+        if (defaultValue) {
+            setStartDate(defaultValue[0] ? dayjs(defaultValue[0]) : null);
+            setEndDate(defaultValue[1] ? dayjs(defaultValue[1]) : null);
+        }
     }, [defaultValue]);
 
-    const handleChange: RangePickerProps["onChange"] = (dates) => {
-        if (!dates) {
-            setRange([null, null]);
+    const handleStartChange: DatePickerProps["onChange"] = (date) => {
+        setStartDate(date);
+        updateFilter(date, endDate);
+    };
+
+    const handleEndChange: DatePickerProps["onChange"] = (date) => {
+        setEndDate(date);
+        updateFilter(startDate, date);
+    };
+
+    const updateFilter = (start: Dayjs | null, end: Dayjs | null) => {
+        if (!start && !end) {
             onChange?.(null);
             return;
         }
-        const start = dates[0]?.startOf("day").utc().toISOString() ?? null;
-        const end = dates[1]?.endOf("day").utc().toISOString() ?? null;
-        setRange([start, end]);
 
-        if (start && end) {
-            const filter = `(${fieldName}>='${start}' and ${fieldName}<='${end}')`;
+        const startISO = start?.startOf("day").utc().toISOString() ?? null;
+        const endISO = end?.endOf("day").utc().toISOString() ?? null;
+
+        if (startISO && endISO) {
+            const filter = `(${fieldName}>='${startISO}' and ${fieldName}<='${endISO}')`;
+            onChange?.(filter);
+        } else if (startISO) {
+            const filter = `(${fieldName}>='${startISO}')`;
+            onChange?.(filter);
+        } else if (endISO) {
+            const filter = `(${fieldName}<='${endISO}')`;
             onChange?.(filter);
         } else {
             onChange?.(null);
         }
     };
 
+    const disabledStartDate = (current: Dayjs) => {
+        if (!endDate) return false;
+        return current && current.isAfter(endDate, "day");
+    };
+
+    const disabledEndDate = (current: Dayjs) => {
+        if (!startDate) return false;
+        return current && current.isBefore(startDate, "day");
+    };
+
     return (
-        <div className={className} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Text style={{ margin: 0, whiteSpace: "nowrap" }}>{label}</Text>
-            <DatePicker.RangePicker
-                size={size}
-                format={format}
-                placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
-                style={{ width }}
-                value={
-                    range[0] && range[1] ? [dayjs(range[0]), dayjs(range[1])] : undefined
-                }
-                onChange={handleChange}
-                allowClear
-                inputReadOnly
-            />
+        <div className={className} style={{ display: "flex", alignItems: "center" }}>
+            {<Text style={{ margin: 0, whiteSpace: "nowrap" }}>{ }</Text>}
+            <Space.Compact>
+                <DatePicker
+                    size={size}
+                    format={format}
+                    placeholder="Ngày bắt đầu"
+                    style={{ width }}
+                    value={startDate}
+                    onChange={handleStartChange}
+                    disabledDate={disabledStartDate}
+                    allowClear
+                    inputReadOnly
+                />
+                <DatePicker
+                    size={size}
+                    format={format}
+                    placeholder="Ngày kết thúc"
+                    style={{ width }}
+                    value={endDate}
+                    onChange={handleEndChange}
+                    disabledDate={disabledEndDate}
+                    allowClear
+                    inputReadOnly
+                />
+            </Space.Compact>
         </div>
     );
 };

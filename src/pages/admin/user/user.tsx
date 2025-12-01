@@ -256,7 +256,6 @@ const UserPage = () => {
                             }}
                         />
                         <DateRangeFilter
-                            label="Ngày tạo"
                             fieldName="createdAt"
                             onChange={(filter) => setCreatedAtFilter(filter)}
                         />
