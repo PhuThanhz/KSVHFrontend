@@ -1,9 +1,13 @@
 import React, { useState } from "react";
-import { Input, Button, Popover, Form, Space } from "antd";
-import { FilterOutlined, SearchOutlined, PlusOutlined } from "@ant-design/icons";
-import RefreshButton from "./RefreshButton";
+import { Input, Button, Popover, Form } from "antd";
+import {
+    FilterOutlined,
+    SearchOutlined,
+    PlusOutlined,
+    ReloadOutlined,
+} from "@ant-design/icons";
 
-export interface FilterField {
+interface FilterField {
     name: string;
     label: string;
     placeholder?: string;
@@ -23,13 +27,13 @@ interface SearchFilterProps {
 }
 
 const SearchFilter: React.FC<SearchFilterProps> = ({
-    searchPlaceholder = "Tìm kiếm...",
+    searchPlaceholder = "Search...",
     filterFields = [],
     onSearch,
     onFilterApply,
     onReset,
     onAddClick,
-    addLabel = "Thêm mới",
+    addLabel = "Add Item",
     showAddButton = true,
     showFilterButton = true,
     showResetButton = true,
@@ -45,57 +49,89 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
 
     const handleReset = () => {
         form.resetFields();
-        onReset?.();
         setOpen(false);
+        onReset?.();
     };
 
     const content = (
-        <div style={{ width: 260 }}>
+        <div className="w-64">
             <Form layout="vertical" form={form}>
                 {filterFields.map((f) => (
-                    <Form.Item key={f.name} label={f.label} name={f.name}>
-                        <Input placeholder={`Nhập ${f.label.toLowerCase()}`} />
+                    <Form.Item
+                        key={f.name}
+                        label={f.label}
+                        name={f.name}
+                        className="mb-3 text-sm font-medium"
+                    >
+                        <Input placeholder={f.placeholder || `Enter ${f.label.toLowerCase()}...`} />
                     </Form.Item>
                 ))}
-                <Space style={{ justifyContent: "space-between", width: "100%" }}>
-                    <Button onClick={handleReset}>Làm mới</Button>
-                    <Button type="primary" onClick={handleApply}>
-                        Áp dụng
+                <div className="flex justify-between gap-2 mt-2">
+                    <Button onClick={handleReset} className="flex-1">
+                        Reset
                     </Button>
-                </Space>
+                    <Button type="primary" onClick={handleApply} className="flex-1">
+                        Apply
+                    </Button>
+                </div>
             </Form>
         </div>
     );
 
     return (
-        <Space wrap>
-            <Input
-                placeholder={searchPlaceholder}
-                prefix={<SearchOutlined />}
-                onPressEnter={(e) => onSearch?.((e.target as HTMLInputElement).value)}
-                style={{ width: 240 }}
-            />
+        <div className="flex flex-col gap-3 bg-transparent w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full flex-wrap">
+                {/* Search Input */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-[250px]">
+                    <Input
+                        placeholder={searchPlaceholder}
+                        prefix={<SearchOutlined className="text-gray-400" />}
+                        onPressEnter={(e) => onSearch?.((e.target as HTMLInputElement).value)}
+                        className="h-10 rounded-md flex-1"
+                    />
 
-            {showFilterButton && (
-                <Popover
-                    open={open}
-                    onOpenChange={setOpen}
-                    trigger="click"
-                    placement="bottomRight"
-                    content={content}
-                >
-                    <Button icon={<FilterOutlined />}>Bộ lọc</Button>
-                </Popover>
-            )}
+                    {/* Buttons: Filter + Refresh + Add */}
+                    <div className="flex flex-row items-center gap-2 sm:gap-3 flex-wrap justify-start sm:justify-end">
+                        {showFilterButton && (
+                            <Popover
+                                open={open}
+                                onOpenChange={setOpen}
+                                trigger="click"
+                                placement="bottomRight"
+                                content={content}
+                            >
+                                <Button
+                                    icon={<FilterOutlined />}
+                                    className="h-9 text-sm flex items-center justify-center px-4 w-auto"
+                                >
+                                    Bộ Lọc
+                                </Button>
+                            </Popover>
+                        )}
 
-            {showResetButton && <RefreshButton onReset={handleReset} />}
+                        {showResetButton && (
+                            <Button
+                                icon={<ReloadOutlined />}
+                                onClick={handleReset}
+                                className="h-9 text-sm flex items-center justify-center px-4 w-auto"
+                            >
+                            </Button>
+                        )}
 
-            {showAddButton && (
-                <Button type="primary" icon={<PlusOutlined />} onClick={onAddClick}>
-                    {addLabel}
-                </Button>
-            )}
-        </Space>
+                        {showAddButton && (
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={onAddClick}
+                                className="h-9 text-sm flex items-center justify-center px-4 w-auto sm:ml-0"
+                            >
+                                {addLabel}
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 
