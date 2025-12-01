@@ -12,7 +12,7 @@ import queryString from "query-string";
 
 import PageContainer from "@/components/common/data-table/PageContainer";
 import DataTable from "@/components/common/data-table";
-import SearchFilter from "@/components/common/data-table/SearchFilter";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
 import type { IWarehouse } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";

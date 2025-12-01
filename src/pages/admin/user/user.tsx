@@ -4,8 +4,6 @@ import {
     EditOutlined,
     EyeOutlined,
     PlusOutlined,
-    TagOutlined,
-    UserSwitchOutlined,
 } from "@ant-design/icons";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import queryString from "query-string";
@@ -16,16 +14,17 @@ import DataTable from "@/components/common/data-table";
 import SearchFilter from "@/components/common/filter-date/SearchFilter";
 import AdvancedFilterSelect from "@/components/common/filter-date/AdvancedFilterSelect";
 import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
+import CustomPagination from "@/components/common/pagination/CustomPagination";
 
+import type { IUser } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import { PAGINATION_CONFIG } from "@/config/pagination";
+import { sfLike } from "spring-filter-query-builder";
 import { useUsersQuery } from "@/hooks/user/useUsers";
 import { useRolesQuery } from "@/hooks/user/useRoles";
 import ModalUser from "@/pages/admin/user/modal.user";
 import ViewDetailUser from "@/pages/admin/user/view.user";
-
-import type { IUser } from "@/types/backend";
-import { PAGINATION_CONFIG } from "@/config/pagination";
 
 const UserPage = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -33,8 +32,14 @@ const UserPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-    const [filters, setFilters] = useState<Record<string, any>>({});
-    const [query, setQuery] = useState(
+    const [roleFilter, setRoleFilter] = useState<string | null>(null);
+    const [activeFilter, setActiveFilter] = useState<boolean | null>(null);
+    const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
+    const [searchValue, setSearchValue] = useState<string>("");
+
+    const [roleOptions, setRoleOptions] = useState<{ label: string; value: string; color?: string }[]>([]);
+
+    const [query, setQuery] = useState<string>(
         `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
     );
 
@@ -43,71 +48,89 @@ const UserPage = () => {
     const { data, isFetching } = useUsersQuery(query);
     const { data: rolesData } = useRolesQuery("page=1&size=100");
 
-    const [roleOptions, setRoleOptions] = useState<{ label: string; value: string }[]>([]);
-
     useEffect(() => {
         if (rolesData?.result) {
             const list = rolesData.result.map((r: any) => ({
                 label: r.name,
                 value: r.name,
+                color: "blue",
             }));
             setRoleOptions(list);
         }
     }, [rolesData]);
 
-    // Xây dựng query string từ filter hiện tại
-    const buildQuery = (params: any, sort: any) => {
+    // Auto call API whenever filters change
+    useEffect(() => {
         const q: any = {
-            page: params.current || PAGINATION_CONFIG.DEFAULT_PAGE,
-            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            page: PAGINATION_CONFIG.DEFAULT_PAGE,
+            size: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            sort: "createdAt,desc",
         };
 
-        let filterString = "";
+        const filterParts: string[] = [];
 
-        if (filters.role) {
-            filterString += `role.name='${filters.role}'`;
+        if (searchValue) {
+            filterParts.push(`(name~'${searchValue}' or email~'${searchValue}')`);
         }
 
-        if (filters.active !== undefined && filters.active !== null) {
-            filterString += filterString
-                ? ` and active=${filters.active}`
-                : `active=${filters.active}`;
-        }
+        if (roleFilter) filterParts.push(`role.name='${roleFilter}'`);
+        if (activeFilter !== null) filterParts.push(`active=${activeFilter}`);
+        if (createdAtFilter) filterParts.push(createdAtFilter);
 
-        if (filters.createdAtRange) {
-            filterString += filterString
-                ? ` and ${filters.createdAtRange}`
-                : filters.createdAtRange;
-        }
+        if (filterParts.length > 0) q.filter = filterParts.join(" and ");
 
-        if (filters.search) {
-            filterString += filterString
-                ? ` and (name~'${filters.search}' or email~'${filters.search}')`
-                : `(name~'${filters.search}' or email~'${filters.search}')`;
-        }
-
-        if (filterString) q.filter = filterString;
-
-        const sortBy = sort?.name
-            ? `sort=name,${sort.name === "ascend" ? "asc" : "desc"}`
-            : "sort=createdAt,desc";
-
-        return queryString.stringify(q, { encode: false }) + `&${sortBy}`;
-    };
-
-    // Cập nhật query khi filters thay đổi
-    useEffect(() => {
-        const q = buildQuery({ current: 1, pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE }, {});
-        setQuery(q);
-    }, [filters]);
+        const built = queryString.stringify(q, { encode: false });
+        setQuery(built);
+    }, [searchValue, roleFilter, activeFilter, createdAtFilter]);
 
     const meta = data?.meta ?? {
         page: PAGINATION_CONFIG.DEFAULT_PAGE,
         pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
         total: 0,
     };
-
     const users = data?.result ?? [];
+
+    /** Xây dựng query filter cho DataTable sort/pagination */
+    const buildQuery = (params: any, sort: any) => {
+        const q: any = {
+            page: params.current,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            filter: "",
+        };
+
+        const filterParts: string[] = [];
+
+        if (searchValue) {
+            filterParts.push(`(name~'${searchValue}' or email~'${searchValue}')`);
+        }
+
+        if (roleFilter) filterParts.push(`role.name='${roleFilter}'`);
+        if (activeFilter !== null) filterParts.push(`active=${activeFilter}`);
+        if (createdAtFilter) filterParts.push(createdAtFilter);
+
+        if (filterParts.length > 0) q.filter = filterParts.join(" and ");
+
+        let temp = queryString.stringify(q, { encode: false });
+
+        let sortBy = "";
+        if (sort?.name)
+            sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
+        else if (sort?.email)
+            sortBy = sort.email === "ascend" ? "sort=email,asc" : "sort=email,desc";
+        else sortBy = "sort=createdAt,desc";
+
+        return `${temp}&${sortBy}`;
+    };
+
+    const reloadTable = () => {
+        setSearchValue("");
+        setRoleFilter(null);
+        setActiveFilter(null);
+        setCreatedAtFilter(null);
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+        );
+    };
 
     const columns: ProColumns<IUser>[] = [
         {
@@ -116,7 +139,8 @@ const UserPage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
+                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || 10),
+            hideInSearch: true,
         },
         {
             title: "Tên hiển thị",
@@ -131,16 +155,18 @@ const UserPage = () => {
         {
             title: "Vai trò",
             dataIndex: ["role", "name"],
+            hideInSearch: true,
             render: (_, record) =>
                 record.role?.name ? (
                     <Tag color="blue">{record.role.name}</Tag>
                 ) : (
-                    <Tag color="default">Chưa có vai trò</Tag>
+                    <Tag>Chưa có vai trò</Tag>
                 ),
         },
         {
             title: "Trạng thái",
             dataIndex: "active",
+            hideInSearch: true,
             render: (_, record) =>
                 record.active ? (
                     <Tag color="green">Đang hoạt động</Tag>
@@ -151,13 +177,17 @@ const UserPage = () => {
         {
             title: "Ngày tạo",
             dataIndex: "createdAt",
+            hideInSearch: true,
             render: (_, record) =>
-                record.createdAt ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm") : "-",
+                record.createdAt
+                    ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm")
+                    : "-",
         },
         {
             title: "Hành động",
-            width: 120,
+            hideInSearch: true,
             align: "center",
+            width: 120,
             render: (_, entity) => (
                 <Space>
                     <Access permission={ALL_PERMISSIONS.USERS.GET_BY_ID} hideChildren>
@@ -169,7 +199,6 @@ const UserPage = () => {
                             }}
                         />
                     </Access>
-
                     <Access permission={ALL_PERMISSIONS.USERS.UPDATE} hideChildren>
                         <EditOutlined
                             style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
@@ -188,47 +217,51 @@ const UserPage = () => {
         <PageContainer
             title="Quản lý người dùng"
             filter={
-                <Space wrap size={12}>
+                <div className="flex flex-col gap-3">
                     <SearchFilter
-                        searchPlaceholder="Tìm kiếm theo tên hoặc email..."
-                        showAddButton={true}
+                        searchPlaceholder="Tìm theo tên hoặc email..."
                         addLabel="Thêm người dùng"
                         showFilterButton={false}
-                        showResetButton={false}
-                        onSearch={(val) => setFilters((prev) => ({ ...prev, search: val }))}
+                        onSearch={(val) => setSearchValue(val)}
+                        onReset={reloadTable}
                         onAddClick={() => {
                             setDataInit(null);
                             setOpenModal(true);
                         }}
                     />
-
-                    <AdvancedFilterSelect
-                        fields={[
-                            {
-                                key: "role",
-                                label: "Vai trò",
-                                icon: <UserSwitchOutlined />,
-                                options: roleOptions,
-                            },
-                            {
-                                key: "active",
-                                label: "Trạng thái",
-                                icon: <TagOutlined />,
-                                options: [
-                                    { label: "Đang hoạt động", value: true, color: "green" },
-                                    { label: "Ngừng hoạt động", value: false, color: "red" },
-                                ],
-                            },
-                        ]}
-                        onChange={(selected) => setFilters((prev) => ({ ...prev, ...selected }))}
-                    />
-
-                    <DateRangeFilter
-                        label="Khoảng ngày tạo"
-                        fieldName="createdAt"
-                        onChange={(filter) => setFilters((prev) => ({ ...prev, createdAtRange: filter }))}
-                    />
-                </Space>
+                    <div className="flex flex-wrap gap-3 items-center">
+                        <AdvancedFilterSelect
+                            fields={[
+                                {
+                                    key: "role",
+                                    label: "Vai trò",
+                                    icon: <></>,
+                                    options: roleOptions,
+                                },
+                                {
+                                    key: "active",
+                                    label: "Trạng thái",
+                                    icon: <></>,
+                                    options: [
+                                        { label: "Đang hoạt động", value: true, color: "green" },
+                                        { label: "Ngừng hoạt động", value: false, color: "red" },
+                                    ],
+                                },
+                            ]}
+                            onChange={(filters) => {
+                                setRoleFilter(filters.role || null);
+                                setActiveFilter(
+                                    filters.active !== undefined ? filters.active : null
+                                );
+                            }}
+                        />
+                        <DateRangeFilter
+                            label="Ngày tạo"
+                            fieldName="createdAt"
+                            onChange={(filter) => setCreatedAtFilter(filter)}
+                        />
+                    </div>
+                </div>
             }
         >
             <Access permission={ALL_PERMISSIONS.USERS.GET_PAGINATE}>
@@ -242,12 +275,24 @@ const UserPage = () => {
                         const q = buildQuery(params, sort);
                         setQuery(q);
                         return Promise.resolve({
-                            data: users || [],
+                            data: users,
                             success: true,
-                            total: meta.total || 0,
+                            total: meta.total,
                         });
                     }}
                     pagination={false}
+                    footer={() => (
+                        <CustomPagination
+                            current={meta.page}
+                            pageSize={meta.pageSize}
+                            total={meta.total}
+                            onChange={(page, size) => {
+                                setQuery(`page=${page}&size=${size}&sort=createdAt,desc`);
+                            }}
+                            showTotalText="người dùng"
+                        />
+                    )}
+                    rowSelection={false}
                 />
             </Access>
 

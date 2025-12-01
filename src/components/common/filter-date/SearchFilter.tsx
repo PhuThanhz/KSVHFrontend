@@ -104,7 +104,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
                                     icon={<FilterOutlined />}
                                     className="h-9 text-sm flex items-center justify-center px-4 w-auto"
                                 >
-                                    Bộ Lọc
+                                    Filter
                                 </Button>
                             </Popover>
                         )}
