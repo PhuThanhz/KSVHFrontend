@@ -12,3 +12,20 @@
     scrollbar-width: none;
     /* Firefox */
 }
+
+/* Custom Drawer nhẹ nhàng hơn */
+.custom-drawer .ant-drawer-body {
+    background: #fff !important;
+    padding: 0 !important;
+}
+
+/* Ẩn scrollbar để menu gọn hơn */
+.custom-drawer .ant-drawer-body::-webkit-scrollbar {
+    width: 0 !important;
+}
+
+/* Menu hover tinh tế */
+.ant-menu-light .ant-menu-item:hover {
+    background-color: #f8fafc !important;
+    color: #1677ff !important;
+}

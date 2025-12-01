@@ -101,7 +101,7 @@ const HeaderAdmin: React.FC<IProps> = ({
     return (
         <header
             className="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-200 
-                rounded-bl-xl rounded-br-xl transition-all duration-300"
+                transition-all duration-300"
         >
             <div className="flex items-center justify-between h-16 px-4 sm:px-6">
                 {/* ===== LEFT: Toggle / Brand ===== */}
@@ -113,16 +113,16 @@ const HeaderAdmin: React.FC<IProps> = ({
                                 ? setMobileOpen(!mobileOpen)
                                 : setCollapsed(!collapsed)
                         }
-                        className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 transition-all"
+                        className="flex items-center justify-center w-11 h-11 rounded-lg hover:bg-gray-100 transition-all"
                         style={{ border: "none" }}
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
-                            strokeWidth={2.6}
+                            strokeWidth={2.5}
                             stroke="currentColor"
-                            className="w-7 h-7 text-gray-700"
+                            className="w-6 h-6 text-gray-700"
                         >
                             <path
                                 strokeLinecap="round"
@@ -132,9 +132,6 @@ const HeaderAdmin: React.FC<IProps> = ({
                         </svg>
                     </Button>
 
-                    {isMobile && (
-                        <span className="text-blue-600 font-bold text-base">AMMS Admin</span>
-                    )}
                 </div>
 
                 {/* ===== RIGHT: Notification + User ===== */}
@@ -165,17 +162,17 @@ const HeaderAdmin: React.FC<IProps> = ({
                         onOpenChange={setMenuOpen}
                         placement="bottomRight"
                     >
-                        <Space className="cursor-pointer hover:bg-gray-100 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-all">
+                        <Space className="cursor-pointer hover:bg-gray-100 rounded-lg px-3 py-2 transition-all">
                             {!isMobile && (
                                 <span className="text-sm font-medium text-gray-700 truncate max-w-[150px]">
                                     {user?.name || "Admin"}
                                 </span>
                             )}
                             <Avatar
-                                size={isMobile ? 32 : 40}
+                                size={isMobile ? 32 : 38}
                                 src={avatarSrc}
                                 icon={!avatarSrc && <UserOutlined />}
-                                className="border-2 border-blue-500"
+                                className="border border-gray-300"
                                 style={{
                                     backgroundColor: avatarSrc ? "transparent" : "#1890ff",
                                 }}
@@ -187,7 +184,6 @@ const HeaderAdmin: React.FC<IProps> = ({
                 </Space>
             </div>
 
-            {/* ===== Notification Panel ===== */}
             {showNotifications && (
                 <NotificationPanel
                     onClose={() => {

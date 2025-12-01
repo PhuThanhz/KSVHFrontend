@@ -48,15 +48,14 @@ const LayoutAdmin = () => {
                 setMobileOpen={setMobileOpen}
             />
 
-            <Layout className="transition-all duration-300">
+            <Layout className="transition-all duration-300 bg-gray-50">
                 <HeaderAdmin
                     collapsed={collapsed}
                     setCollapsed={setCollapsed}
                     mobileOpen={mobileOpen}
                     setMobileOpen={setMobileOpen}
                 />
-
-                <Content className="m-4 p-4 bg-white rounded-lg shadow-sm min-h-[calc(100vh-80px)]">
+                <Content className="m-0 bg-transparent">
                     <Outlet />
                 </Content>
             </Layout>

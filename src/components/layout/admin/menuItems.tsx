@@ -19,7 +19,8 @@ import {
     CheckCircleOutlined,
     SettingOutlined,
     InboxOutlined,
-    SolutionOutlined
+    SolutionOutlined,
+
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { ALL_PERMISSIONS } from "@/config/permissions";

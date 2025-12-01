@@ -1,6 +1,15 @@
-import { Drawer, Descriptions, Typography, Spin, Empty, Divider, Badge } from "antd";
+import {
+    Modal,
+    Descriptions,
+    Typography,
+    Spin,
+    Empty,
+    Divider,
+    Badge,
+} from "antd";
 import dayjs from "dayjs";
 import { useWarehouseByIdQuery } from "@/hooks/useWarehouses";
+import { useEffect, useState } from "react";
 
 const { Title, Text } = Typography;
 
@@ -11,21 +20,50 @@ interface IProps {
 }
 
 const ViewDetailWarehouse = ({ onClose, open, warehouseId }: IProps) => {
-    const { data: warehouse, isLoading, isError } = useWarehouseByIdQuery(warehouseId || undefined);
+    const { data: warehouse, isLoading, isError } = useWarehouseByIdQuery(
+        warehouseId || undefined
+    );
+
+    /** Responsive width Modal */
+    const [modalWidth, setModalWidth] = useState<string | number>("50vw");
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 768) {
+                // Mobile → full width
+                setModalWidth("100vw");
+            } else if (window.innerWidth < 1200) {
+                // Tablet → chiếm khoảng 70%
+                setModalWidth("70vw");
+            } else {
+                // Desktop → 50%
+                setModalWidth("50vw");
+            }
+        };
+
+        handleResize(); // chạy lần đầu khi mount
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     return (
-        <Drawer
+        <Modal
             title={
                 <Title level={4} style={{ margin: 0 }}>
                     Thông tin kho
                 </Title>
             }
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"40vw"}
+            onCancel={() => onClose(false)}
+            width={modalWidth}
+            footer={null}
+            centered
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            bodyStyle={{
+                maxHeight: "80vh",
+                overflowY: "auto",
+                paddingBottom: 40,
+            }}
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -52,7 +90,9 @@ const ViewDetailWarehouse = ({ onClose, open, warehouseId }: IProps) => {
                         <Descriptions.Item label="Ngày tạo">
                             <Text type="secondary">
                                 {warehouse.createdAt
-                                    ? dayjs(warehouse.createdAt).format("DD-MM-YYYY HH:mm")
+                                    ? dayjs(warehouse.createdAt).format(
+                                        "DD-MM-YYYY HH:mm"
+                                    )
                                     : "-"}
                             </Text>
                         </Descriptions.Item>
@@ -60,7 +100,9 @@ const ViewDetailWarehouse = ({ onClose, open, warehouseId }: IProps) => {
                         <Descriptions.Item label="Ngày cập nhật">
                             <Text type="secondary">
                                 {warehouse.updatedAt
-                                    ? dayjs(warehouse.updatedAt).format("DD-MM-YYYY HH:mm")
+                                    ? dayjs(warehouse.updatedAt).format(
+                                        "DD-MM-YYYY HH:mm"
+                                    )
                                     : "-"}
                             </Text>
                         </Descriptions.Item>
@@ -73,7 +115,7 @@ const ViewDetailWarehouse = ({ onClose, open, warehouseId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

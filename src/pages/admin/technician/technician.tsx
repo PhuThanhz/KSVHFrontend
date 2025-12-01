@@ -19,7 +19,7 @@ import ModalTechnician from "@/pages/admin/technician/modal.technician";
 import ViewTechnician from "@/pages/admin/technician/view.technician";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import Access from "@/components/share/access";
-import DateRangeFilter from "@/components/common/filter/DateRangeFilter";
+import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
 
 const TechnicianPage = () => {
     // ---------------- State ---------------- //

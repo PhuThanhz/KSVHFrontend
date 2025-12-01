@@ -26,7 +26,7 @@ import { useUnitsQuery } from "@/hooks/useUnits";
 import { useDeviceTypesQuery } from "@/hooks/useDeviceTypes";
 import { useWarehousesQuery } from "@/hooks/useWarehouses";
 import { useMaterialSuppliersQuery } from "@/hooks/useMaterialSuppliers";
-import DateRangeFilter from "@/components/common/filter/DateRangeFilter";
+import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
 
 const InventoryItemPage = () => {
     /** ==================== STATE ==================== */

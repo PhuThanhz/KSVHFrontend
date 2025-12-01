@@ -23,7 +23,7 @@ import { useDepartmentsQuery } from "@/hooks/useDepartments";
 import { usePositionsQuery } from "@/hooks/usePositions";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import Access from "@/components/share/access";
-import DateRangeFilter from "@/components/common/filter/DateRangeFilter";
+import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
 import { sfLike } from "spring-filter-query-builder";
 import dayjs from "dayjs";
 

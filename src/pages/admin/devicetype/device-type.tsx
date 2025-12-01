@@ -11,7 +11,7 @@ import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { sfLike } from "spring-filter-query-builder";
 import { useDeviceTypesQuery, useDeleteDeviceTypeMutation } from "@/hooks/useDeviceTypes";
-import DateRangeFilter from "@/components/common/filter/DateRangeFilter";
+import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
 import { callFetchAssetType } from "@/config/api";
 
 /**
