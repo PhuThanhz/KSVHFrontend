@@ -1,45 +1,43 @@
-import DataTable from "@/components/common/data-table";
-import type { ICustomerPurchaseHistoryAdmin } from "@/types/backend";
-import { EyeOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
+import { useRef, useState, useMemo } from "react";
 import { Space, Tag, Typography } from "antd";
-import { useState, useMemo } from "react";
+import { EyeOutlined } from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import queryString from "query-string";
-import { useCustomerPurchaseHistoriesQuery } from "@/hooks/useCustomerPurchaseHistory";
-import ModalPurchaseDetail from "@/pages/admin/customer/modal.customer-purchase-detail";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+
+import type { ICustomerPurchaseHistoryAdmin } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import { useCustomerPurchaseHistoriesQuery } from "@/hooks/useCustomerPurchaseHistory";
+import ModalPurchaseDetail from "@/pages/admin/customer/modal.customer-purchase-detail";
+import { PAGINATION_CONFIG } from "@/config/pagination";
 
 const { Text } = Typography;
 
 const CustomerPurchaseHistoryPage = () => {
-    const [query, setQuery] = useState(() =>
-        queryString.stringify(
-            {
-                page: 1,
-                size: 100,
-                sort: "purchaseDate,desc",
-            },
-            { encode: false }
-        )
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=purchaseDate,desc`
     );
 
+    const tableRef = useRef<ActionType>(null);
     const { data, isFetching } = useCustomerPurchaseHistoriesQuery(query);
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedRecord, setSelectedRecord] =
         useState<ICustomerPurchaseHistoryAdmin | null>(null);
 
-    /** ===================== GỘP NHÓM THEO KHÁCH HÀNG ===================== **/
+    /** Gộp nhóm theo khách hàng */
     const groupedData = useMemo(() => {
         if (!data?.result) return [];
 
         const map = new Map<string, any>();
-
         data.result.forEach((item) => {
             const code = item.customer?.customerCode || "UNKNOWN";
             const deviceWithDate = {
                 ...item.device,
-                purchaseDate: item.purchaseDate, // thêm ngày mua
+                purchaseDate: item.purchaseDate,
             };
             if (!map.has(code)) {
                 map.set(code, {
@@ -54,7 +52,35 @@ const CustomerPurchaseHistoryPage = () => {
         return Array.from(map.values());
     }, [data]);
 
-    /** ===================== COLUMNS ===================== **/
+    /** Build query */
+    const buildQuery = (params: any, sort: any) => {
+        const q: any = {
+            page: params.current,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            filter: "",
+        };
+
+        if (params.customerCode)
+            q.filter = `customer.customerCode~'${params.customerCode}'`;
+
+        if (params.customerName)
+            q.filter = q.filter
+                ? `${q.filter} and customer.name~'${params.customerName}'`
+                : `customer.name~'${params.customerName}'`;
+
+        const temp = queryString.stringify(q, { encode: false });
+
+        let sortBy = "sort=purchaseDate,desc";
+        if (sort?.customerName)
+            sortBy =
+                sort.customerName === "ascend"
+                    ? "sort=customer.name,asc"
+                    : "sort=customer.name,desc";
+
+        return `${temp}&${sortBy}`;
+    };
+
+    /** Cột bảng */
     const columns: ProColumns<ICustomerPurchaseHistoryAdmin>[] = [
         {
             title: "STT",
@@ -135,60 +161,85 @@ const CustomerPurchaseHistoryPage = () => {
         },
     ];
 
-    /** ===================== BUILD QUERY ===================== **/
-    const buildQuery = (params: any, sort: any) => {
-        const q: any = { page: params.current, size: params.pageSize, filter: "" };
-        if (params.customerCode)
-            q.filter = `customer.customerCode~'${params.customerCode}'`;
-        if (params.customerName)
-            q.filter = q.filter
-                ? `${q.filter} and customer.name~'${params.customerName}'`
-                : `customer.name~'${params.customerName}'`;
+    /** Tổng dữ liệu */
+    const meta = {
+        page: data?.meta?.page ?? PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: data?.meta?.pageSize ?? PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: groupedData.length,
+    };
 
-        let sortBy = "sort=purchaseDate,desc";
-        if (sort?.customerName)
-            sortBy =
-                sort.customerName === "ascend"
-                    ? "sort=customer.name,asc"
-                    : "sort=customer.name,desc";
-
-        const temp = queryString.stringify(q);
-        return `${temp}&${sortBy}`;
+    /** Reload lại bảng */
+    const reloadTable = () => {
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=purchaseDate,desc`
+        );
     };
 
     return (
-        <div>
+        <PageContainer
+            title="Lịch sử mua hàng của khách hàng"
+            filter={
+                <SearchFilter
+                    searchPlaceholder="Tìm theo mã hoặc tên khách hàng..."
+                    showFilterButton={false}
+                    onSearch={(val) =>
+                        setQuery(
+                            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=(customer.customerCode~'${val}' or customer.name~'${val}')`
+                        )
+                    }
+                    onReset={() => reloadTable()}
+                />
+            }
+        >
             <Access permission={ALL_PERMISSIONS.CUSTOMER_PURCHASE_HISTORY.GET_PAGINATE}>
                 <DataTable<ICustomerPurchaseHistoryAdmin>
-                    headerTitle="Danh sách lịch sử mua hàng của khách hàng"
+                    actionRef={tableRef}
                     rowKey={(record) =>
                         String(record.customer?.customerCode || record.id || "")
                     }
                     loading={isFetching}
                     columns={columns}
                     dataSource={groupedData}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: groupedData || [],
+                            success: true,
+                            total: meta.total || 0,
+                        });
                     }}
                     pagination={{
-                        defaultPageSize: 10,
-                        current: 1,
-                        total: groupedData.length,
-                        showQuickJumper: true,
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
                         showSizeChanger: true,
-                        size: "default",
+                        total: meta.total,
+                        showQuickJumper: true,
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                khách hàng
+                            </div>
+                        ),
                     }}
                     rowSelection={false}
                 />
             </Access>
 
+            {/* Modal chi tiết */}
             <ModalPurchaseDetail
                 open={openViewDetail}
                 setOpen={setOpenViewDetail}
                 data={selectedRecord as any}
             />
-        </div>
+        </PageContainer>
     );
 };
 

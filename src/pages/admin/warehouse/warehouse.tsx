@@ -22,7 +22,6 @@ import {
 } from "@/hooks/useWarehouses";
 import ModalWarehouse from "@/pages/admin/warehouse/modal.warehouse";
 import ViewDetailWarehouse from "@/pages/admin/warehouse/view.warehouse";
-import CustomPagination from "@/components/common/pagination/CustomPagination";
 import { PAGINATION_CONFIG } from "@/config/pagination";
 
 const WarehousePage = () => {
@@ -89,7 +88,10 @@ const WarehousePage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
+                index +
+                1 +
+                ((meta.page || 1) - 1) *
+                (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
             hideInSearch: true,
         },
         {
@@ -127,9 +129,16 @@ const WarehousePage = () => {
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.GET_BY_ID} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.WAREHOUSE.GET_BY_ID}
+                        hideChildren
+                    >
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#1677ff",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setSelectedId(Number(entity.id));
                                 setOpenViewDetail(true);
@@ -137,9 +146,16 @@ const WarehousePage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.UPDATE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.WAREHOUSE.UPDATE}
+                        hideChildren
+                    >
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#fa8c16",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
@@ -147,7 +163,10 @@ const WarehousePage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.WAREHOUSE.DELETE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.WAREHOUSE.DELETE}
+                        hideChildren
+                    >
                         <Popconfirm
                             title="Xác nhận xóa kho"
                             description="Bạn có chắc chắn muốn xóa kho này không?"
@@ -156,7 +175,11 @@ const WarehousePage = () => {
                             onConfirm={() => handleDelete(entity.id!)}
                         >
                             <DeleteOutlined
-                                style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
+                                style={{
+                                    fontSize: 18,
+                                    color: "#ff4d4f",
+                                    cursor: "pointer",
+                                }}
                             />
                         </Popconfirm>
                     </Access>
@@ -173,7 +196,11 @@ const WarehousePage = () => {
                     searchPlaceholder="Tìm kiếm kho..."
                     addLabel="Thêm kho"
                     filterFields={[
-                        { name: "address", label: "Địa chỉ", placeholder: "Nhập địa chỉ..." },
+                        {
+                            name: "address",
+                            label: "Địa chỉ",
+                            placeholder: "Nhập địa chỉ...",
+                        },
                     ]}
                     onSearch={(val) =>
                         setQuery(
@@ -211,18 +238,31 @@ const WarehousePage = () => {
                             total: meta.total || 0,
                         });
                     }}
-                    pagination={false}
-                    footer={() => (
-                        <CustomPagination
-                            current={meta.page}
-                            pageSize={meta.pageSize}
-                            total={meta.total}
-                            onChange={(page, size) => {
-                                setQuery(`page=${page}&size=${size}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`);
-                            }}
-                            showTotalText="kho"
-                        />
-                    )}
+                    pagination={{
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
+                        showSizeChanger: true,
+                        total: meta.total,
+                        showQuickJumper: true,
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span
+                                    style={{
+                                        fontWeight: 600,
+                                        color: "#1677ff",
+                                    }}
+                                >
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                kho
+                            </div>
+                        ),
+                    }}
                     rowSelection={false}
                 />
             </Access>

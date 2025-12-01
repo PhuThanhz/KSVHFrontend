@@ -13,7 +13,6 @@ import queryString from "query-string";
 import PageContainer from "@/components/common/data-table/PageContainer";
 import DataTable from "@/components/common/data-table";
 import SearchFilter from "@/components/common/filter-date/SearchFilter";
-import CustomPagination from "@/components/common/pagination/CustomPagination";
 
 import type { ITechnicianSupplier } from "@/types/backend";
 import Access from "@/components/share/access";
@@ -136,9 +135,16 @@ const TechnicianSupplierPage = () => {
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_BY_ID} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.GET_BY_ID}
+                        hideChildren
+                    >
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#1677ff",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setSelectedSupplierId(Number(entity.id));
                                 setOpenViewDetail(true);
@@ -146,7 +152,10 @@ const TechnicianSupplierPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.UPDATE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.UPDATE}
+                        hideChildren
+                    >
                         <EditOutlined
                             style={{
                                 fontSize: 18,
@@ -160,7 +169,10 @@ const TechnicianSupplierPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.DELETE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.TECHNICIAN_SUPPLIER.DELETE}
+                        hideChildren
+                    >
                         <Popconfirm
                             placement="leftTop"
                             title="Xác nhận xóa nhà cung cấp"
@@ -245,18 +257,31 @@ const TechnicianSupplierPage = () => {
                             total: meta.total,
                         });
                     }}
-                    pagination={false}
-                    footer={() => (
-                        <CustomPagination
-                            current={meta.page}
-                            pageSize={meta.pageSize}
-                            total={meta.total}
-                            onChange={(page, size) => {
-                                setQuery(`page=${page}&size=${size}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`);
-                            }}
-                            showTotalText="nhà cung cấp"
-                        />
-                    )}
+                    pagination={{
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
+                        showSizeChanger: true,
+                        total: meta.total,
+                        showQuickJumper: true,
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span
+                                    style={{
+                                        fontWeight: 600,
+                                        color: "#1677ff",
+                                    }}
+                                >
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                nhà cung cấp
+                            </div>
+                        ),
+                    }}
                     rowSelection={false}
                 />
             </Access>

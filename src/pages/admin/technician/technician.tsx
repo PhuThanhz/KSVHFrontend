@@ -14,7 +14,6 @@ import DataTable from "@/components/common/data-table";
 import SearchFilter from "@/components/common/filter-date/SearchFilter";
 import AdvancedFilterSelect from "@/components/common/filter-date/AdvancedFilterSelect";
 import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
-import CustomPagination from "@/components/common/pagination/CustomPagination";
 
 import type { ITechnician } from "@/types/backend";
 import Access from "@/components/share/access";
@@ -293,18 +292,28 @@ const TechnicianPage = () => {
                             total: meta.total,
                         });
                     }}
-                    pagination={false}
-                    footer={() => (
-                        <CustomPagination
-                            current={meta.page}
-                            pageSize={meta.pageSize}
-                            total={meta.total}
-                            onChange={(page, size) => {
-                                setQuery(`page=${page}&size=${size}&sort=createdAt,desc`);
-                            }}
-                            showTotalText="kỹ thuật viên"
-                        />
-                    )}
+                    pagination={{
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
+                        showSizeChanger: true,
+                        total: meta.total,
+                        showQuickJumper: true,
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span
+                                    style={{ fontWeight: 600, color: "#1677ff" }}
+                                >
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                kỹ thuật viên
+                            </div>
+                        ),
+                    }}
                     rowSelection={false}
                 />
             </Access>

@@ -13,7 +13,6 @@ import queryString from "query-string";
 import PageContainer from "@/components/common/data-table/PageContainer";
 import DataTable from "@/components/common/data-table";
 import SearchFilter from "@/components/common/filter-date/SearchFilter";
-import CustomPagination from "@/components/common/pagination/CustomPagination";
 
 import type { ISolution } from "@/types/backend";
 import Access from "@/components/share/access";
@@ -94,7 +93,10 @@ const SolutionPage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
+                index +
+                1 +
+                ((meta.page || 1) - 1) *
+                (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
             hideInSearch: true,
         },
         {
@@ -202,18 +204,28 @@ const SolutionPage = () => {
                             total: meta.total || 0,
                         });
                     }}
-                    pagination={false}
-                    footer={() => (
-                        <CustomPagination
-                            current={meta.page}
-                            pageSize={meta.pageSize}
-                            total={meta.total}
-                            onChange={(page, size) => {
-                                setQuery(`page=${page}&size=${size}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`);
-                            }}
-                            showTotalText="phương án"
-                        />
-                    )}
+                    pagination={{
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
+                        showSizeChanger: true,
+                        total: meta.total,
+                        showQuickJumper: true,
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span
+                                    style={{ fontWeight: 600, color: "#1677ff" }}
+                                >
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                phương án
+                            </div>
+                        ),
+                    }}
                     rowSelection={false}
                 />
             </Access>

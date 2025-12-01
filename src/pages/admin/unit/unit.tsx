@@ -19,7 +19,6 @@ import { ALL_PERMISSIONS } from "@/config/permissions";
 import { useUnitsQuery, useDeleteUnitMutation } from "@/hooks/useUnits";
 import ModalUnit from "@/pages/admin/unit/modal.unit";
 import ViewDetailUnit from "@/pages/admin/unit/view.unit";
-import CustomPagination from "@/components/common/pagination/CustomPagination";
 import { PAGINATION_CONFIG } from "@/config/pagination";
 
 const UnitPage = () => {
@@ -90,7 +89,10 @@ const UnitPage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
+                index +
+                1 +
+                ((meta.page || 1) - 1) *
+                (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
             hideInSearch: true,
         },
         {
@@ -125,7 +127,11 @@ const UnitPage = () => {
                 <Space>
                     <Access permission={ALL_PERMISSIONS.UNIT.GET_BY_ID} hideChildren>
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#1677ff",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setSelectedId(Number(entity.id));
                                 setOpenViewDetail(true);
@@ -135,7 +141,11 @@ const UnitPage = () => {
 
                     <Access permission={ALL_PERMISSIONS.UNIT.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#fa8c16",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
@@ -152,7 +162,11 @@ const UnitPage = () => {
                             onConfirm={() => handleDelete(entity.id!)}
                         >
                             <DeleteOutlined
-                                style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
+                                style={{
+                                    fontSize: 18,
+                                    color: "#ff4d4f",
+                                    cursor: "pointer",
+                                }}
                             />
                         </Popconfirm>
                     </Access>
@@ -198,18 +212,31 @@ const UnitPage = () => {
                             total: meta.total || 0,
                         });
                     }}
-                    pagination={false}
-                    footer={() => (
-                        <CustomPagination
-                            current={meta.page}
-                            pageSize={meta.pageSize}
-                            total={meta.total}
-                            onChange={(page, size) => {
-                                setQuery(`page=${page}&size=${size}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`);
-                            }}
-                            showTotalText="đơn vị"
-                        />
-                    )}
+                    pagination={{
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
+                        showSizeChanger: true,
+                        total: meta.total,
+                        showQuickJumper: true,
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span
+                                    style={{
+                                        fontWeight: 600,
+                                        color: "#1677ff",
+                                    }}
+                                >
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                đơn vị
+                            </div>
+                        ),
+                    }}
                     rowSelection={false}
                 />
             </Access>

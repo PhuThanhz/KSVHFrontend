@@ -19,9 +19,9 @@ import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 
 import { useAdminExecutionsQuery } from "@/hooks/useAdminExecutions";
-import ViewAdminExecutionDetail from "@/pages/admin/maintenance-execution/view.admin-maintenance-execution-detail";
-import ModalAdminMaintenanceExecutionFilter from "@/pages/admin/maintenance-execution/modal.admin-maintenance-execution-filter";
-import ModalAdminSupportRequests from "@/pages/admin/maintenance-execution/modal.admin-support-requests";
+import ViewAdminExecutionDetail from "./view.admin-maintenance-execution-detail";
+import ModalAdminMaintenanceExecutionFilter from "./modal.admin-maintenance-execution-filter";
+import ModalAdminSupportRequests from "./modal.admin-support-requests";
 
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;

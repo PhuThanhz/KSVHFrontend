@@ -11,7 +11,6 @@ const GenerateAutoRequestModal = ({ open, onClose }: IProps) => {
     const { mutate: generateAuto, isPending, isSuccess } =
         useGenerateDueRequestsMutation();
 
-    // Tự đóng modal khi API thành công
     useEffect(() => {
         if (isSuccess) onClose();
     }, [isSuccess, onClose]);

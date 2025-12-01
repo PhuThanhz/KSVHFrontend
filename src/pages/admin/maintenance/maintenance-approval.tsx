@@ -23,9 +23,9 @@ import {
     useMaintenanceApprovalsQuery,
     useApprovePlanMutation,
 } from "@/hooks/useMaintenanceApprovals";
-import ViewMaintenanceApprovalDetail from "@/pages/admin/maintenance-approval/view.maintenance-approval-detail";
-import ViewMaintenanceApprovalMaterials from "@/pages/admin/maintenance-approval/view.maintenance-approval-materials";
-import ModalRejectMaintenancePlan from "@/pages/admin/maintenance-approval/modal.reject-maintenance-plan";
+import ViewMaintenanceApprovalDetail from "@/pages/admin/maintenance/maintenance-approval/view.maintenance-approval-detail";
+import ViewMaintenanceApprovalMaterials from "@/pages/admin/maintenance/maintenance-approval/view.maintenance-approval-materials";
+import ModalRejectMaintenancePlan from "@/pages/admin/maintenance/maintenance-approval/modal.reject-maintenance-plan";
 
 const { RangePicker } = DatePicker;
 const { Text, Title } = Typography;

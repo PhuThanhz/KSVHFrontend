@@ -1,31 +1,33 @@
-import DataTable from "@/components/common/data-table";
-import type { IEmployee } from "@/types/backend";
+import { useEffect, useRef, useState } from "react";
+import { Button, Space, Tag, Badge } from "antd";
 import {
     EditOutlined,
     EyeOutlined,
     PlusOutlined,
 } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import {
-    Button,
-    Space,
-    Tag,
-    Select,
-    Badge,
-} from "antd";
-import { useEffect, useState } from "react";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import queryString from "query-string";
+import dayjs from "dayjs";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+import AdvancedFilterSelect from "@/components/common/filter-date/AdvancedFilterSelect";
+import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
+
+import type { IEmployee } from "@/types/backend";
+import Access from "@/components/share/access";
+import { ALL_PERMISSIONS } from "@/config/permissions";
+import { PAGINATION_CONFIG } from "@/config/pagination";
+import { sfLike } from "spring-filter-query-builder";
+
 import { useEmployeesQuery } from "@/hooks/user/useEmployees";
-import ModalEmployee from "@/pages/admin/employee/modal.employee";
-import ViewDetailEmployee from "@/pages/admin/employee/view.employee";
 import { useCompaniesQuery } from "@/hooks/useCompanies";
 import { useDepartmentsQuery } from "@/hooks/useDepartments";
 import { usePositionsQuery } from "@/hooks/usePositions";
-import { ALL_PERMISSIONS } from "@/config/permissions";
-import Access from "@/components/share/access";
-import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
-import { sfLike } from "spring-filter-query-builder";
-import dayjs from "dayjs";
+
+import ModalEmployee from "@/pages/admin/employee/modal.employee";
+import ViewDetailEmployee from "@/pages/admin/employee/view.employee";
 
 const EmployeePage = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -33,23 +35,22 @@ const EmployeePage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
-    const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
     const [companyFilter, setCompanyFilter] = useState<string | null>(null);
     const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
     const [positionFilter, setPositionFilter] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
+    const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
+    const [searchValue, setSearchValue] = useState<string>("");
 
     const [companyOptions, setCompanyOptions] = useState<{ label: string; value: string }[]>([]);
     const [departmentOptions, setDepartmentOptions] = useState<{ label: string; value: string }[]>([]);
     const [positionOptions, setPositionOptions] = useState<{ label: string; value: string }[]>([]);
 
-    const [query, setQuery] = useState(() =>
-        queryString.stringify({
-            page: 1,
-            size: 10,
-            sort: "createdAt,desc",
-        }, { encode: false })
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
     );
+
+    const tableRef = useRef<ActionType>(null);
 
     const { data, isFetching } = useEmployeesQuery(query);
     const { data: companiesData } = useCompaniesQuery("page=1&size=100");
@@ -57,68 +58,103 @@ const EmployeePage = () => {
     const { data: positionsData } = usePositionsQuery("page=1&size=100");
 
     useEffect(() => {
-        if (companiesData?.result) {
+        if (companiesData?.result)
             setCompanyOptions(companiesData.result.map((c) => ({ label: c.name, value: c.name })));
-        }
-    }, [companiesData]);
-
-    useEffect(() => {
-        if (departmentsData?.result) {
+        if (departmentsData?.result)
             setDepartmentOptions(departmentsData.result.map((d) => ({ label: d.name, value: d.name })));
-        }
-    }, [departmentsData]);
-
-    useEffect(() => {
-        if (positionsData?.result) {
+        if (positionsData?.result)
             setPositionOptions(positionsData.result.map((p) => ({ label: p.name, value: p.name })));
-        }
-    }, [positionsData]);
+    }, [companiesData, departmentsData, positionsData]);
 
+    // ==================================================================
+    // TỰ ĐỘNG BUILD QUERY KHI FILTER THAY ĐỔI
+    // ==================================================================
+    useEffect(() => {
+        const q: any = {
+            page: PAGINATION_CONFIG.DEFAULT_PAGE,
+            size: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            sort: "createdAt,desc",
+        };
+
+        const filters: string[] = [];
+
+        if (searchValue)
+            filters.push(`(fullName~'${searchValue}' or employeeCode~'${searchValue}')`);
+        if (companyFilter) filters.push(`company.name='${companyFilter}'`);
+        if (departmentFilter) filters.push(`department.name='${departmentFilter}'`);
+        if (positionFilter) filters.push(`position.name='${positionFilter}'`);
+        if (statusFilter)
+            filters.push(`active=${statusFilter === "active"}`);
+        if (createdAtFilter) filters.push(createdAtFilter);
+
+        if (filters.length > 0) q.filter = filters.join(" and ");
+
+        setQuery(queryString.stringify(q, { encode: false }));
+    }, [
+        searchValue,
+        companyFilter,
+        departmentFilter,
+        positionFilter,
+        statusFilter,
+        createdAtFilter,
+    ]);
+
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
+    const employees = data?.result ?? [];
+
+    /** Build query sort/pagination cho DataTable */
     const buildQuery = (params: any, sort: any) => {
-        const q: any = { page: params.current, size: params.pageSize, filter: "" };
+        const q: any = {
+            page: params.current,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        };
 
-        if (params.fullName)
-            q.filter = sfLike("fullName", params.fullName);
-        if (params.employeeCode)
-            q.filter = q.filter
-                ? `${q.filter} and ${sfLike("employeeCode", params.employeeCode)}`
-                : sfLike("employeeCode", params.employeeCode);
+        const parts: string[] = [];
 
-        if (statusFilter !== null)
-            q.filter = q.filter
-                ? `${q.filter} and active=${statusFilter === "active"}`
-                : `active=${statusFilter === "active"}`;
+        if (searchValue)
+            parts.push(`(fullName~'${searchValue}' or employeeCode~'${searchValue}')`);
+        if (companyFilter) parts.push(`company.name='${companyFilter}'`);
+        if (departmentFilter) parts.push(`department.name='${departmentFilter}'`);
+        if (positionFilter) parts.push(`position.name='${positionFilter}'`);
+        if (statusFilter)
+            parts.push(`active=${statusFilter === "active"}`);
+        if (createdAtFilter) parts.push(createdAtFilter);
 
-        // Filter công ty, phòng ban, chức vụ
-        if (companyFilter)
-            q.filter = q.filter
-                ? `${q.filter} and company.name='${companyFilter}'`
-                : `company.name='${companyFilter}'`;
-        if (departmentFilter)
-            q.filter = q.filter
-                ? `${q.filter} and department.name='${departmentFilter}'`
-                : `department.name='${departmentFilter}'`;
-        if (positionFilter)
-            q.filter = q.filter
-                ? `${q.filter} and position.name='${positionFilter}'`
-                : `position.name='${positionFilter}'`;
+        if (parts.length > 0) q.filter = parts.join(" and ");
 
-        // Filter ngày tạo
-        if (createdAtFilter)
-            q.filter = q.filter ? `${q.filter} and ${createdAtFilter}` : createdAtFilter;
+        let temp = queryString.stringify(q, { encode: false });
 
-        if (!q.filter) delete q.filter;
-
-        // Sorting
-        let sortBy = "sort=createdAt,desc";
+        let sortBy = "";
         if (sort?.fullName)
             sortBy = sort.fullName === "ascend" ? "sort=fullName,asc" : "sort=fullName,desc";
         else if (sort?.employeeCode)
-            sortBy = sort.employeeCode === "ascend" ? "sort=employeeCode,asc" : "sort=employeeCode,desc";
+            sortBy = sort.employeeCode === "ascend"
+                ? "sort=employeeCode,asc"
+                : "sort=employeeCode,desc";
+        else sortBy = "sort=createdAt,desc";
 
-        return `${queryString.stringify(q)}&${sortBy}`;
+        return `${temp}&${sortBy}`;
     };
 
+    const reloadTable = () => {
+        setSearchValue("");
+        setCompanyFilter(null);
+        setDepartmentFilter(null);
+        setPositionFilter(null);
+        setStatusFilter(null);
+        setCreatedAtFilter(null);
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+        );
+    };
+
+    // ==================================================================
+    // COLUMNS
+    // ==================================================================
     const columns: ProColumns<IEmployee>[] = [
         {
             title: "STT",
@@ -126,7 +162,7 @@ const EmployeePage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) + ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
         { title: "Mã NV", dataIndex: "employeeCode", sorter: true },
@@ -153,7 +189,7 @@ const EmployeePage = () => {
             title: "Trạng thái",
             dataIndex: "active",
             align: "center",
-            width: 140,
+            width: 160,
             hideInSearch: true,
             render: (_, record) =>
                 record.active ? (
@@ -166,18 +202,19 @@ const EmployeePage = () => {
             title: "Ngày tạo",
             dataIndex: "createdAt",
             hideInSearch: true,
-            render: (text: any) => (text ? dayjs(text).format("DD/MM/YYYY HH:mm") : "-"),
+            render: (text: any) =>
+                text ? dayjs(text).format("DD/MM/YYYY HH:mm") : "-",
         },
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 160,
             align: "center",
+            width: 140,
             render: (_, entity) => (
-                <Space size="middle">
+                <Space>
                     <Access permission={ALL_PERMISSIONS.EMPLOYEE.GET_BY_ID} hideChildren>
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
                             onClick={() => {
                                 setSelectedId(String(entity.id));
                                 setOpenViewDetail(true);
@@ -186,7 +223,7 @@ const EmployeePage = () => {
                     </Access>
                     <Access permission={ALL_PERMISSIONS.EMPLOYEE.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
@@ -198,79 +235,107 @@ const EmployeePage = () => {
         },
     ];
 
+    // ==================================================================
+    // RENDER
+    // ==================================================================
     return (
-        <div>
+        <PageContainer
+            title="Quản lý nhân viên"
+            filter={
+                <div className="flex flex-col gap-3">
+                    <SearchFilter
+                        searchPlaceholder="Tìm theo mã hoặc tên nhân viên..."
+                        addLabel="Thêm nhân viên"
+                        showFilterButton={false}
+                        onSearch={(val) => setSearchValue(val)}
+                        onReset={reloadTable}
+                        onAddClick={() => {
+                            setDataInit(null);
+                            setOpenModal(true);
+                        }}
+                    />
+                    <div className="flex flex-wrap gap-3 items-center">
+                        <AdvancedFilterSelect
+                            fields={[
+                                {
+                                    key: "company",
+                                    label: "Công ty",
+                                    options: companyOptions,
+                                },
+                                {
+                                    key: "department",
+                                    label: "Phòng ban",
+                                    options: departmentOptions,
+                                },
+                                {
+                                    key: "position",
+                                    label: "Chức vụ",
+                                    options: positionOptions,
+                                },
+                                {
+                                    key: "status",
+                                    label: "Trạng thái",
+                                    options: [
+                                        { label: "Đang hoạt động", value: "active", color: "green" },
+                                        { label: "Ngừng hoạt động", value: "inactive", color: "red" },
+                                    ],
+                                },
+                            ]}
+                            onChange={(filters) => {
+                                setCompanyFilter(filters.company || null);
+                                setDepartmentFilter(filters.department || null);
+                                setPositionFilter(filters.position || null);
+                                setStatusFilter(filters.status || null);
+                            }}
+                        />
+                        <DateRangeFilter
+                            label="Ngày tạo"
+                            fieldName="createdAt"
+                            onChange={(filter) => setCreatedAtFilter(filter)}
+                        />
+                    </div>
+                </div>
+            }
+        >
             <Access permission={ALL_PERMISSIONS.EMPLOYEE.GET_PAGINATE}>
                 <DataTable<IEmployee>
-                    headerTitle="Danh sách nhân viên"
+                    actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={data?.result || []}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                    dataSource={employees}
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: employees,
+                            success: true,
+                            total: meta.total,
+                        });
                     }}
                     pagination={{
-                        defaultPageSize: 10,
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
-                        total: data?.meta?.total,
-                        showQuickJumper: true,
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
                         showSizeChanger: true,
-                    }}
-                    toolBarRender={() => [
-                        <Space key="toolbar" size={12} align="center" wrap>
-                            <Select
-                                placeholder="Công ty"
-                                allowClear
-                                style={{ width: 160 }}
-                                options={companyOptions}
-                                onChange={(value) => setCompanyFilter(value || null)}
-                            />
-                            <Select
-                                placeholder="Phòng ban"
-                                allowClear
-                                style={{ width: 160 }}
-                                options={departmentOptions}
-                                onChange={(value) => setDepartmentFilter(value || null)}
-                            />
-                            <Select
-                                placeholder="Chức vụ"
-                                allowClear
-                                style={{ width: 160 }}
-                                options={positionOptions}
-                                onChange={(value) => setPositionFilter(value || null)}
-                            />
-                            <Select
-                                placeholder="Trạng thái"
-                                allowClear
-                                style={{ width: 160 }}
-                                options={[
-                                    { label: "Đang hoạt động", value: "active" },
-                                    { label: "Ngừng hoạt động", value: "inactive" },
-                                ]}
-                                onChange={(value) => setStatusFilter(value || null)}
-                            />
-                            <DateRangeFilter
-                                label="Ngày tạo"
-                                fieldName="createdAt"
-                                onChange={(filterStr) => setCreatedAtFilter(filterStr)}
-                            />
-                            <Access permission={ALL_PERMISSIONS.EMPLOYEE.CREATE} hideChildren>
-                                <Button
-                                    icon={<PlusOutlined />}
-                                    type="primary"
-                                    onClick={() => {
-                                        setDataInit(null);
-                                        setOpenModal(true);
-                                    }}
+                        total: meta.total,
+                        showQuickJumper: true,
+                        showTotal: (total, range) => (
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span
+                                    style={{ fontWeight: 600, color: "#1677ff" }}
                                 >
-                                    Thêm mới
-                                </Button>
-                            </Access>
-                        </Space>,
-                    ]}
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                nhân viên
+                            </div>
+                        ),
+                    }}
+                    rowSelection={false}
                 />
             </Access>
 
@@ -286,7 +351,7 @@ const EmployeePage = () => {
                 open={openViewDetail}
                 employeeId={selectedId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

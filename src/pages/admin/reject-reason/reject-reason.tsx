@@ -1,14 +1,26 @@
-import DataTable from "@/components/common/data-table";
-import type { IRejectReason } from "@/types/backend";
-import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
+import { useEffect, useRef, useState } from "react";
 import { Button, Popconfirm, Space, Tag } from "antd";
-import { useEffect, useState } from "react";
-import queryString from "query-string";
-import { sfLike } from "spring-filter-query-builder";
+import {
+    PlusOutlined,
+    EditOutlined,
+    DeleteOutlined,
+    EyeOutlined,
+} from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import dayjs from "dayjs";
+import queryString from "query-string";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+import AdvancedFilterSelect from "@/components/common/filter-date/AdvancedFilterSelect";
+import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
+
+import type { IRejectReason } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import { PAGINATION_CONFIG } from "@/config/pagination";
+import { sfLike } from "spring-filter-query-builder";
 import {
     useRejectReasonsQuery,
     useDeleteRejectReasonMutation,
@@ -22,23 +34,94 @@ const RejectReasonPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedReasonId, setSelectedReasonId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState(() =>
-        queryString.stringify({
-            page: 1,
-            size: 10,
-            sort: "createdAt,desc",
-        }, { encode: false })
-    );;
+    // Bộ lọc
+    const [reasonTypeFilter, setReasonTypeFilter] = useState<string | null>(null);
+    const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
+    const [searchValue, setSearchValue] = useState<string>("");
+
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+    );
+
+    const tableRef = useRef<ActionType>(null);
 
     const { data, isFetching } = useRejectReasonsQuery(query);
     const deleteMutation = useDeleteRejectReasonMutation();
 
-    /** ========================= Xử lý xóa ========================= */
+    /** ================= Auto call API khi thay đổi filter ================= */
+    useEffect(() => {
+        const q: any = {
+            page: PAGINATION_CONFIG.DEFAULT_PAGE,
+            size: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            sort: "createdAt,desc",
+        };
+
+        const filterParts: string[] = [];
+
+        if (searchValue) {
+            filterParts.push(`reasonName~'${searchValue}'`);
+        }
+        if (reasonTypeFilter) filterParts.push(`reasonType='${reasonTypeFilter}'`);
+        if (createdAtFilter) filterParts.push(createdAtFilter);
+
+        if (filterParts.length > 0) q.filter = filterParts.join(" and ");
+
+        const built = queryString.stringify(q, { encode: false });
+        setQuery(built);
+    }, [searchValue, reasonTypeFilter, createdAtFilter]);
+
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
+    const rejectReasons = data?.result ?? [];
+
+    /** ================= Xử lý xóa ================= */
     const handleDelete = async (id: number | string) => {
         await deleteMutation.mutateAsync(id);
     };
 
-    /** ========================= Cấu hình cột ========================= */
+    /** ================= Xây dựng query khi sort/pagination ================= */
+    const buildQuery = (params: any, sort: any) => {
+        const q: any = {
+            page: params.current,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            filter: "",
+        };
+
+        const filterParts: string[] = [];
+
+        if (searchValue) filterParts.push(`reasonName~'${searchValue}'`);
+        if (reasonTypeFilter) filterParts.push(`reasonType='${reasonTypeFilter}'`);
+        if (createdAtFilter) filterParts.push(createdAtFilter);
+
+        if (filterParts.length > 0) q.filter = filterParts.join(" and ");
+
+        let temp = queryString.stringify(q, { encode: false });
+        let sortBy = "";
+
+        if (sort?.reasonName)
+            sortBy =
+                sort.reasonName === "ascend"
+                    ? "sort=reasonName,asc"
+                    : "sort=reasonName,desc";
+        else sortBy = "sort=createdAt,desc";
+
+        return `${temp}&${sortBy}`;
+    };
+
+    /** ================= Làm mới bảng ================= */
+    const reloadTable = () => {
+        setSearchValue("");
+        setReasonTypeFilter(null);
+        setCreatedAtFilter(null);
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+        );
+    };
+
+    /** ================= Cấu hình cột ================= */
     const columns: ProColumns<IRejectReason>[] = [
         {
             title: "STT",
@@ -46,41 +129,36 @@ const RejectReasonPage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) +
-                ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
         {
             title: "Loại lý do",
             dataIndex: "reasonType",
             sorter: true,
-            valueType: "select",
-            valueEnum: {
-                ASSIGNMENT: { text: "Phân công" },
-                PLAN: { text: "Kế hoạch" },
-                ACCEPTANCE: { text: "Nghiệm thu" },
-            },
+            hideInSearch: true,
             render: (_, record) => {
-                const mapColor: Record<string, string> = {
+                const colorMap: Record<string, string> = {
                     ASSIGNMENT: "blue",
                     PLAN: "orange",
                     ACCEPTANCE: "green",
                 };
-                const label =
-                    record.reasonType === "ASSIGNMENT"
-                        ? "Phân công"
-                        : record.reasonType === "PLAN"
-                            ? "Kế hoạch"
-                            : "Nghiệm thu";
-                return <Tag color={mapColor[record.reasonType]}>{label}</Tag>;
+                const labelMap: Record<string, string> = {
+                    ASSIGNMENT: "Phân công",
+                    PLAN: "Kế hoạch",
+                    ACCEPTANCE: "Nghiệm thu",
+                };
+                return (
+                    <Tag color={colorMap[record.reasonType]}>
+                        {labelMap[record.reasonType]}
+                    </Tag>
+                );
             },
         },
-
         {
             title: "Tên lý do",
             dataIndex: "reasonName",
             sorter: true,
-            // ✅ chỉ cho phép tìm kiếm theo trường này
         },
         {
             title: "Mô tả chi tiết",
@@ -92,20 +170,23 @@ const RejectReasonPage = () => {
             title: "Ngày tạo",
             dataIndex: "createdAt",
             sorter: true,
+            hideInSearch: true,
             render: (_, record) =>
                 record.createdAt
                     ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm")
                     : "-",
-            hideInSearch: true,
         },
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 120,
             align: "center",
+            width: 120,
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.REJECT_REASON.GET_BY_ID} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.REJECT_REASON.GET_BY_ID}
+                        hideChildren
+                    >
                         <EyeOutlined
                             style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
                             onClick={() => {
@@ -115,9 +196,12 @@ const RejectReasonPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.REJECT_REASON.UPDATE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.REJECT_REASON.UPDATE}
+                        hideChildren
+                    >
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#ffa500", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
@@ -125,14 +209,16 @@ const RejectReasonPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.REJECT_REASON.DELETE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.REJECT_REASON.DELETE}
+                        hideChildren
+                    >
                         <Popconfirm
-                            placement="topLeft"
                             title="Xác nhận xóa lý do"
                             description="Bạn có chắc chắn muốn xóa lý do này?"
-                            onConfirm={() => handleDelete(Number(entity.id))}
-                            okText="Xác nhận"
+                            okText="Xóa"
                             cancelText="Hủy"
+                            onConfirm={() => handleDelete(Number(entity.id))}
                         >
                             <DeleteOutlined
                                 style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
@@ -144,57 +230,75 @@ const RejectReasonPage = () => {
         },
     ];
 
-
-    /** ========================= Build query ========================= */
-    const buildQuery = (params: any, sort: any) => {
-        const q: any = {
-            page: params.current,
-            size: params.pageSize,
-            filter: "",
-        };
-
-        if (params.reasonName) q.filter = sfLike("reasonName", params.reasonName);
-        if (params.reasonType)
-            q.filter = q.filter
-                ? `${q.filter} and reasonType='${params.reasonType}'`
-                : `reasonType='${params.reasonType}'`;
-
-        let temp = queryString.stringify(q, { encode: false });
-        queryString.stringify(q);
-
-        // Sort
-        let sortBy = "";
-        if (sort?.reasonName)
-            sortBy = sort.reasonName === "ascend" ? "sort=reasonName,asc" : "sort=reasonName,desc";
-        else sortBy = "sort=createdAt,desc";
-
-        return `${temp}&${sortBy}`;
-    };
-
-    /** ========================= Giao diện chính ========================= */
+    /** ================= Giao diện chính ================= */
     return (
-        <div>
+        <PageContainer
+            title="Quản lý lý do từ chối"
+            filter={
+                <div className="flex flex-col gap-3">
+                    <SearchFilter
+                        searchPlaceholder="Tìm kiếm lý do..."
+                        addLabel="Thêm lý do"
+                        showFilterButton={false}
+                        onSearch={(val) => setSearchValue(val)}
+                        onReset={reloadTable}
+                        onAddClick={() => {
+                            setDataInit(null);
+                            setOpenModal(true);
+                        }}
+                    />
+                    <div className="flex flex-wrap gap-3 items-center">
+                        <AdvancedFilterSelect
+                            fields={[
+                                {
+                                    key: "reasonType",
+                                    label: "Loại lý do",
+                                    icon: <></>,
+                                    options: [
+                                        { label: "Phân công", value: "ASSIGNMENT", color: "blue" },
+                                        { label: "Kế hoạch", value: "PLAN", color: "orange" },
+                                        { label: "Nghiệm thu", value: "ACCEPTANCE", color: "green" },
+                                    ],
+                                },
+                            ]}
+                            onChange={(filters) =>
+                                setReasonTypeFilter(filters.reasonType || null)
+                            }
+                        />
+                        <DateRangeFilter
+                            fieldName="createdAt"
+                            onChange={(filter) => setCreatedAtFilter(filter)}
+                        />
+                    </div>
+                </div>
+            }
+        >
             <Access permission={ALL_PERMISSIONS.REJECT_REASON.GET_PAGINATE}>
                 <DataTable<IRejectReason>
-                    headerTitle="Danh sách lý do từ chối"
+                    actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={data?.result || []}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                    dataSource={rejectReasons}
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: rejectReasons,
+                            success: true,
+                            total: meta.total,
+                        });
                     }}
                     pagination={{
-                        defaultPageSize: 10,
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
-                        total: data?.meta?.total,
-                        showQuickJumper: true,
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
                         showSizeChanger: true,
+                        total: meta.total,
+                        showQuickJumper: true,
                         showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
@@ -204,31 +308,8 @@ const RejectReasonPage = () => {
                                 lý do từ chối
                             </div>
                         ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
                     }}
                     rowSelection={false}
-                    toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.REJECT_REASON.CREATE} key="create" hideChildren>
-                            <Button
-                                icon={<PlusOutlined />}
-                                type="primary"
-                                onClick={() => {
-                                    setDataInit(null);
-                                    setOpenModal(true);
-                                }}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Access>,
-                    ]}
                 />
             </Access>
 
@@ -244,7 +325,7 @@ const RejectReasonPage = () => {
                 open={openViewDetail}
                 reasonId={selectedReasonId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

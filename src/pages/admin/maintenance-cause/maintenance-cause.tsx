@@ -1,16 +1,29 @@
-import DataTable from "@/components/common/data-table";
-import type { IMaintenanceCause } from "@/types/backend";
-import { EditOutlined, PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Popconfirm, Tag } from "antd";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
+import { Button, Space } from "antd";
+import {
+    EditOutlined,
+    EyeOutlined,
+    PlusOutlined,
+} from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
+import dayjs from "dayjs";
 import queryString from "query-string";
-import { useMaintenanceCausesQuery } from "@/hooks/maintenance/useMaintenanceCause";
-import ModalMaintenanceCause from "@/pages/admin/maintenance-cause/modal.maintenance-cause";
-import ViewMaintenanceCause from "@/pages/admin/maintenance-cause/view.maintenance-cause";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+
+import type { IMaintenanceCause } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import dayjs from "dayjs";
+import { PAGINATION_CONFIG } from "@/config/pagination";
+
+import {
+    useMaintenanceCausesQuery,
+} from "@/hooks/maintenance/useMaintenanceCause";
+
+import ModalMaintenanceCause from "@/pages/admin/maintenance-cause/modal.maintenance-cause";
+import ViewMaintenanceCause from "@/pages/admin/maintenance-cause/view.maintenance-cause";
 
 const MaintenanceCausePage = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -18,41 +31,63 @@ const MaintenanceCausePage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
-    const [query, setQuery] = useState<string>(() =>
-        queryString.stringify({
-            page: 1,
-            size: 10,
-            sort: "createdAt,desc",
-        })
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
     );
+
+    const tableRef = useRef<ActionType>(null);
 
     const { data, isFetching } = useMaintenanceCausesQuery(query);
 
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
+    const causes = data?.result ?? [];
+
+    /** Reload lại bảng */
+    const reloadTable = () => {
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
+        );
+    };
+
+    /** Build query cho sort/pagination */
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
-            size: params.pageSize,
-            filter: "",
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
         };
 
-        if (params.causeName) q.filter = `causeName~'${params.causeName}'`;
+        if (params.causeName) {
+            q.filter = `causeName ~ '${params.causeName}'`;
+        }
 
-        let sortBy = "sort=createdAt,desc";
-        if (sort?.causeName)
-            sortBy = sort.causeName === "ascend" ? "sort=causeName,asc" : "sort=causeName,desc";
+        let temp = queryString.stringify(q, { encode: false });
 
-        let temp = queryString.stringify(q);
-        return `${temp}&${sortBy}`;
+        if (sort?.causeName) {
+            const dir = sort.causeName === "ascend" ? "asc" : "desc";
+            temp += `&sort=causeName,${dir}`;
+        } else {
+            temp += `&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`;
+        }
+
+        return temp;
     };
 
-
+    /** Cấu hình cột */
     const columns: ProColumns<IMaintenanceCause>[] = [
         {
             title: "STT",
+            key: "index",
             width: 60,
             align: "center",
-            render: (_, __, index) =>
-                (index + 1) + ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+            render: (_text, _record, index) =>
+                index +
+                1 +
+                ((meta.page || 1) - 1) *
+                (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
             hideInSearch: true,
         },
         {
@@ -65,98 +100,127 @@ const MaintenanceCausePage = () => {
             dataIndex: "createdAt",
             hideInSearch: true,
             render: (_, record) =>
-                record.createdAt ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm") : "-",
+                record.createdAt
+                    ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm")
+                    : "-",
         },
         {
             title: "Ngày cập nhật",
             dataIndex: "updatedAt",
             hideInSearch: true,
             render: (_, record) =>
-                record.updatedAt ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm") : "-",
+                record.updatedAt
+                    ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm")
+                    : "-",
         },
         {
             title: "Hành động",
-            width: 120,
             hideInSearch: true,
+            width: 120,
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.MAINTENANCE_CAUSE.GET_BY_ID} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.MAINTENANCE_CAUSE.GET_BY_ID}
+                        hideChildren
+                    >
                         <EyeOutlined
-                            style={{ color: "#1890ff", fontSize: 18, cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#1677ff",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
-                                setSelectedId(entity.id!);
+                                setSelectedId(String(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.MAINTENANCE_CAUSE.UPDATE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.MAINTENANCE_CAUSE.UPDATE}
+                        hideChildren
+                    >
                         <EditOutlined
-                            style={{ color: "#faad14", fontSize: 18, cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#fa8c16",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
                             }}
                         />
                     </Access>
-
                 </Space>
             ),
         },
     ];
 
     return (
-        <div>
+        <PageContainer
+            title="Quản lý nguyên nhân hư hỏng"
+            filter={
+                <SearchFilter
+                    searchPlaceholder="Tìm kiếm nguyên nhân..."
+                    addLabel="Thêm nguyên nhân"
+                    showFilterButton={false}
+                    onSearch={(val) =>
+                        setQuery(
+                            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=causeName~'${val}'`
+                        )
+                    }
+                    onReset={() => reloadTable()}
+                    onAddClick={() => {
+                        setDataInit(null);
+                        setOpenModal(true);
+                    }}
+                />
+            }
+        >
             <Access permission={ALL_PERMISSIONS.MAINTENANCE_CAUSE.GET_PAGINATE}>
                 <DataTable<IMaintenanceCause>
-                    headerTitle="Danh sách nguyên nhân hư hỏng"
+                    actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={data?.result || []}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                    dataSource={causes}
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: causes || [],
+                            success: true,
+                            total: meta.total || 0,
+                        });
                     }}
                     pagination={{
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
-                        total: data?.meta?.total,
-                        showQuickJumper: true,
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
                         showSizeChanger: true,
-                        size: "default",
+                        total: meta.total,
+                        showQuickJumper: true,
                         showTotal: (total, range) => (
                             <div style={{ fontSize: 13 }}>
-                                Hiển thị <b>{range[0]}–{range[1]}</b> /{" "}
-                                <b style={{ color: "#1677ff" }}>{total.toLocaleString()}</b> nguyên nhân
+                                <span style={{ fontWeight: 500 }}>
+                                    {range[0]}–{range[1]}
+                                </span>{" "}
+                                trên{" "}
+                                <span
+                                    style={{
+                                        fontWeight: 600,
+                                        color: "#1677ff",
+                                    }}
+                                >
+                                    {total.toLocaleString()}
+                                </span>{" "}
+                                nguyên nhân
                             </div>
                         ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
                     }}
                     rowSelection={false}
-                    toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.MAINTENANCE_CAUSE.CREATE} key="create">
-                            <Button
-                                type="primary"
-                                icon={<PlusOutlined />}
-                                onClick={() => {
-                                    setDataInit(null);
-                                    setOpenModal(true);
-                                }}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Access>,
-                    ]}
                 />
             </Access>
 
@@ -168,11 +232,11 @@ const MaintenanceCausePage = () => {
             />
 
             <ViewMaintenanceCause
-                open={openViewDetail}
                 onClose={setOpenViewDetail}
+                open={openViewDetail}
                 causeId={selectedId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

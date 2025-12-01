@@ -1,64 +1,69 @@
-import DataTable from "@/components/common/data-table";
-import type { IInventoryItem } from "@/types/backend";
+import { useEffect, useRef, useState } from "react";
+import { Button, Space, Tag, Popconfirm } from "antd";
 import {
-    DeleteOutlined,
     EditOutlined,
     EyeOutlined,
     PlusOutlined,
+    DeleteOutlined,
 } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Popconfirm, Select, Space, Tag } from "antd";
-import { useState } from "react";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import dayjs from "dayjs";
 import queryString from "query-string";
-import { sfLike } from "spring-filter-query-builder";
 
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+import AdvancedFilterSelect from "@/components/common/filter-date/AdvancedFilterSelect";
+import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
+
+import type { IInventoryItem } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import { PAGINATION_CONFIG } from "@/config/pagination";
+import { sfLike } from "spring-filter-query-builder";
+
 import {
     useInventoryItemsQuery,
     useDeleteInventoryItemMutation,
 } from "@/hooks/useInventoryItems";
-import ModalInventoryItem from "@/pages/admin/inventory-item/modal.inventory-item";
-import ViewInventoryItem from "@/pages/admin/inventory-item/view.inventory-item";
-import { formatCurrency } from "@/utils/format";
 import { useUnitsQuery } from "@/hooks/useUnits";
 import { useDeviceTypesQuery } from "@/hooks/useDeviceTypes";
 import { useWarehousesQuery } from "@/hooks/useWarehouses";
 import { useMaterialSuppliersQuery } from "@/hooks/useMaterialSuppliers";
-import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
+
+import ModalInventoryItem from "@/pages/admin/inventory-item/modal.inventory-item";
+import ViewInventoryItem from "@/pages/admin/inventory-item/view.inventory-item";
+import { formatCurrency } from "@/utils/format";
 
 const InventoryItemPage = () => {
-    /** ==================== STATE ==================== */
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IInventoryItem | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
 
-    const [query, setQuery] = useState(() =>
-        queryString.stringify({
-            page: 1,
-            size: 10,
-            sort: "createdAt,desc",
-        }, { encode: false })
-    );
-    // Bộ lọc nâng cao
+    // FILTER STATES
     const [unitFilter, setUnitFilter] = useState<string | null>(null);
     const [deviceTypeFilter, setDeviceTypeFilter] = useState<string | null>(null);
     const [warehouseFilter, setWarehouseFilter] = useState<string | null>(null);
     const [supplierFilter, setSupplierFilter] = useState<string | null>(null);
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
+    const [searchValue, setSearchValue] = useState<string>("");
 
-    /** ==================== HOOKS ==================== */
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+    );
+
+    const tableRef = useRef<ActionType>(null);
+
     const { data, isFetching } = useInventoryItemsQuery(query);
-    const { mutate: deleteItem, isPending: isDeleting } = useDeleteInventoryItemMutation();
+    const { mutateAsync: deleteItem, isPending: isDeleting } = useDeleteInventoryItemMutation();
 
     const { data: unitsData } = useUnitsQuery("page=1&size=100");
     const { data: deviceTypesData } = useDeviceTypesQuery("page=1&size=100");
     const { data: warehousesData } = useWarehousesQuery("page=1&size=100");
     const { data: suppliersData } = useMaterialSuppliersQuery("page=1&size=100");
 
-    /** ==================== MAP OPTIONS ==================== */
+    // MAP OPTIONS
     const unitOptions =
         unitsData?.result?.map((u) => ({ label: u.name, value: u.name })) || [];
     const deviceTypeOptions =
@@ -68,66 +73,95 @@ const InventoryItemPage = () => {
     const supplierOptions =
         suppliersData?.result?.map((s) => ({ label: s.supplierName, value: s.supplierName })) || [];
 
-    /** ==================== BUILD QUERY ==================== */
+    // ==================================================================
+    // Auto rebuild query when filters change
+    // ==================================================================
+    useEffect(() => {
+        const q: any = {
+            page: PAGINATION_CONFIG.DEFAULT_PAGE,
+            size: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            sort: "createdAt,desc",
+        };
+
+        const filters: string[] = [];
+
+        if (searchValue) {
+            filters.push(`(itemName~'${searchValue}' or itemCode~'${searchValue}')`);
+        }
+        if (unitFilter) filters.push(`unit.name='${unitFilter}'`);
+        if (deviceTypeFilter) filters.push(`deviceType.typeName='${deviceTypeFilter}'`);
+        if (warehouseFilter) filters.push(`warehouse.warehouseName='${warehouseFilter}'`);
+        if (supplierFilter) filters.push(`materialSupplier.supplierName='${supplierFilter}'`);
+        if (createdAtFilter) filters.push(createdAtFilter);
+
+        if (filters.length > 0) q.filter = filters.join(" and ");
+
+        const built = queryString.stringify(q, { encode: false });
+        setQuery(built);
+    }, [searchValue, unitFilter, deviceTypeFilter, warehouseFilter, supplierFilter, createdAtFilter]);
+
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
+    const items = data?.result ?? [];
+
+    /** Xây dựng query filter cho DataTable sort/pagination */
     const buildQuery = (params: any, sort: any) => {
-        const q: any = { page: params.current, size: params.pageSize, filter: "" };
+        const q: any = {
+            page: params.current,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            filter: "",
+        };
 
-        // Tên hoặc mã vật tư
-        if (params.itemName)
-            q.filter = sfLike("itemName", params.itemName);
-        if (params.itemCode)
-            q.filter = q.filter
-                ? `${q.filter} and ${sfLike("itemCode", params.itemCode)}`
-                : sfLike("itemCode", params.itemCode);
+        const parts: string[] = [];
 
-        // Bộ lọc nâng cao
-        if (unitFilter)
-            q.filter = q.filter
-                ? `${q.filter} and unit.name='${unitFilter}'`
-                : `unit.name='${unitFilter}'`;
+        if (searchValue)
+            parts.push(`(itemName~'${searchValue}' or itemCode~'${searchValue}')`);
+        if (unitFilter) parts.push(`unit.name='${unitFilter}'`);
+        if (deviceTypeFilter) parts.push(`deviceType.typeName='${deviceTypeFilter}'`);
+        if (warehouseFilter) parts.push(`warehouse.warehouseName='${warehouseFilter}'`);
+        if (supplierFilter) parts.push(`materialSupplier.supplierName='${supplierFilter}'`);
+        if (createdAtFilter) parts.push(createdAtFilter);
 
-        if (deviceTypeFilter)
-            q.filter = q.filter
-                ? `${q.filter} and deviceType.typeName='${deviceTypeFilter}'`
-                : `deviceType.typeName='${deviceTypeFilter}'`;
+        if (parts.length > 0) q.filter = parts.join(" and ");
 
-        if (warehouseFilter)
-            q.filter = q.filter
-                ? `${q.filter} and warehouse.warehouseName='${warehouseFilter}'`
-                : `warehouse.warehouseName='${warehouseFilter}'`;
+        let temp = queryString.stringify(q, { encode: false });
 
-        if (supplierFilter)
-            q.filter = q.filter
-                ? `${q.filter} and materialSupplier.supplierName='${supplierFilter}'`
-                : `materialSupplier.supplierName='${supplierFilter}'`;
-
-        if (createdAtFilter)
-            q.filter = q.filter
-                ? `${q.filter} and ${createdAtFilter}`
-                : createdAtFilter;
-
-        if (!q.filter) delete q.filter;
-
-        // Sort
-        let sortBy = "sort=createdAt,desc";
+        let sortBy = "";
         if (sort?.itemName)
             sortBy = sort.itemName === "ascend" ? "sort=itemName,asc" : "sort=itemName,desc";
         else if (sort?.itemCode)
             sortBy = sort.itemCode === "ascend" ? "sort=itemCode,asc" : "sort=itemCode,desc";
+        else sortBy = "sort=createdAt,desc";
 
-        return `${queryString.stringify(q)}&${sortBy}`;
+        return `${temp}&${sortBy}`;
     };
 
-    /** ==================== COLUMNS ==================== */
+    const reloadTable = () => {
+        setSearchValue("");
+        setUnitFilter(null);
+        setDeviceTypeFilter(null);
+        setWarehouseFilter(null);
+        setSupplierFilter(null);
+        setCreatedAtFilter(null);
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+        );
+    };
+
+    // ==================================================================
+    // COLUMNS
+    // ==================================================================
     const columns: ProColumns<IInventoryItem>[] = [
         {
             title: "STT",
             key: "index",
             width: 60,
             align: "center",
-            render: (_, __, index) =>
-                (index + 1) +
-                ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+            render: (_text, _record, index) =>
+                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
         { title: "Mã vật tư", dataIndex: "itemCode", sorter: true },
@@ -146,65 +180,42 @@ const InventoryItemPage = () => {
             hideInSearch: true,
             render: (_, record) => formatCurrency(record.unitPrice ?? 0),
         },
-        {
-            title: "Đơn vị",
-            dataIndex: ["unit", "name"],
-            hideInSearch: true,
-        },
-        {
-            title: "Loại thiết bị",
-            dataIndex: ["deviceType", "typeName"],
-            hideInSearch: true,
-        },
-        {
-            title: "Kho",
-            dataIndex: ["warehouse", "warehouseName"],
-            hideInSearch: true,
-        },
-        {
-            title: "Nhà cung cấp",
-            dataIndex: ["materialSupplier", "supplierName"],
-            hideInSearch: true,
-        },
+        { title: "Đơn vị", dataIndex: ["unit", "name"], hideInSearch: true },
+        { title: "Loại thiết bị", dataIndex: ["deviceType", "typeName"], hideInSearch: true },
+        { title: "Kho chứa", dataIndex: ["warehouse", "warehouseName"], hideInSearch: true },
+        { title: "Nhà cung cấp", dataIndex: ["materialSupplier", "supplierName"], hideInSearch: true },
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 160,
             align: "center",
+            width: 140,
             render: (_, entity) => (
-                <Space size="middle">
-                    {/* Xem chi tiết */}
+                <Space>
                     <Access permission={ALL_PERMISSIONS.INVENTORY_ITEM.GET_BY_ID} hideChildren>
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
                             onClick={() => {
                                 setSelectedId(Number(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />
                     </Access>
-
-                    {/* Sửa */}
                     <Access permission={ALL_PERMISSIONS.INVENTORY_ITEM.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
                             }}
                         />
                     </Access>
-
-                    {/* Xóa */}
                     <Access permission={ALL_PERMISSIONS.INVENTORY_ITEM.DELETE} hideChildren>
                         <Popconfirm
-                            title="Xác nhận xóa vật tư?"
+                            title="Xác nhận xóa vật tư"
                             okText="Xóa"
                             cancelText="Hủy"
                             okButtonProps={{ danger: true, loading: isDeleting }}
-                            onConfirm={() => {
-                                if (entity.id) deleteItem(entity.id);
-                            }}
+                            onConfirm={() => entity.id && deleteItem(entity.id)}
                         >
                             <DeleteOutlined
                                 style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
@@ -216,35 +227,91 @@ const InventoryItemPage = () => {
         },
     ];
 
-    /** ==================== RENDER ==================== */
+    // ==================================================================
+    // RENDER
+    // ==================================================================
     return (
-        <div>
+        <PageContainer
+            title="Quản lý vật tư tồn kho"
+            filter={
+                <div className="flex flex-col gap-3">
+                    <SearchFilter
+                        searchPlaceholder="Tìm theo mã hoặc tên vật tư..."
+                        addLabel="Thêm vật tư"
+                        showFilterButton={false}
+                        onSearch={(val) => setSearchValue(val)}
+                        onReset={reloadTable}
+                        onAddClick={() => {
+                            setDataInit(null);
+                            setOpenModal(true);
+                        }}
+                    />
+                    <div className="flex flex-wrap gap-3 items-center">
+                        <AdvancedFilterSelect
+                            fields={[
+                                {
+                                    key: "unit",
+                                    label: "Đơn vị",
+                                    options: unitOptions,
+                                },
+                                {
+                                    key: "deviceType",
+                                    label: "Loại thiết bị",
+                                    options: deviceTypeOptions,
+                                },
+                                {
+                                    key: "warehouse",
+                                    label: "Kho chứa",
+                                    options: warehouseOptions,
+                                },
+                                {
+                                    key: "supplier",
+                                    label: "Nhà cung cấp",
+                                    options: supplierOptions,
+                                },
+                            ]}
+                            onChange={(filters) => {
+                                setUnitFilter(filters.unit || null);
+                                setDeviceTypeFilter(filters.deviceType || null);
+                                setWarehouseFilter(filters.warehouse || null);
+                                setSupplierFilter(filters.supplier || null);
+                            }}
+                        />
+                        <DateRangeFilter
+                            label="Ngày tạo"
+                            fieldName="createdAt"
+                            onChange={(filter) => setCreatedAtFilter(filter)}
+                        />
+                    </div>
+                </div>
+            }
+        >
             <Access permission={ALL_PERMISSIONS.INVENTORY_ITEM.GET_PAGINATE}>
                 <DataTable<IInventoryItem>
-                    headerTitle="Danh sách vật tư tồn kho"
+                    actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={data?.result || []}
+                    dataSource={items}
                     request={async (params, sort) => {
                         const q = buildQuery(params, sort);
                         setQuery(q);
                         return Promise.resolve({
-                            data: data?.result || [],
+                            data: items,
                             success: true,
-                            total: data?.meta?.total || 0,
+                            total: meta.total,
                         });
                     }}
                     pagination={{
-                        defaultPageSize: 10,
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
                         showSizeChanger: true,
-                        total: data?.meta?.total,
+                        total: meta.total,
                         showQuickJumper: true,
                         showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
@@ -254,66 +321,8 @@ const InventoryItemPage = () => {
                                 vật tư
                             </div>
                         ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
                     }}
-                    toolBarRender={() => [
-                        <Space key="filters" size={12} align="center" wrap>
-                            <Select
-                                placeholder="Đơn vị"
-                                allowClear
-                                style={{ width: 160 }}
-                                options={unitOptions}
-                                onChange={(v) => setUnitFilter(v || null)}
-                            />
-                            <Select
-                                placeholder="Loại thiết bị"
-                                allowClear
-                                style={{ width: 180 }}
-                                options={deviceTypeOptions}
-                                onChange={(v) => setDeviceTypeFilter(v || null)}
-                            />
-                            <Select
-                                placeholder="Kho chứa"
-                                allowClear
-                                style={{ width: 180 }}
-                                options={warehouseOptions}
-                                onChange={(v) => setWarehouseFilter(v || null)}
-                            />
-                            <Select
-                                placeholder="Nhà cung cấp"
-                                allowClear
-                                style={{ width: 200 }}
-                                options={supplierOptions}
-                                onChange={(v) => setSupplierFilter(v || null)}
-                            />
-                            <DateRangeFilter
-                                label="Ngày tạo"
-                                fieldName="createdAt"
-                                width={300}
-                                onChange={(filterStr) => setCreatedAtFilter(filterStr)}
-                            />
-                            <Access permission={ALL_PERMISSIONS.INVENTORY_ITEM.CREATE} hideChildren>
-                                <Button
-                                    icon={<PlusOutlined />}
-                                    type="primary"
-                                    onClick={() => {
-                                        setDataInit(null);
-                                        setOpenModal(true);
-                                    }}
-                                >
-                                    Thêm mới
-                                </Button>
-                            </Access>
-                        </Space>,
-                    ]}
+                    rowSelection={false}
                 />
             </Access>
 
@@ -329,7 +338,7 @@ const InventoryItemPage = () => {
                 open={openViewDetail}
                 itemId={selectedId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

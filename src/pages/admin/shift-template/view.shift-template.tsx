@@ -1,4 +1,4 @@
-import { Drawer, Descriptions, Typography, Divider, Spin, Empty, Badge } from "antd";
+import { Modal, Descriptions, Typography, Divider, Spin, Empty, Badge } from "antd";
 import dayjs from "dayjs";
 import { useShiftTemplateByIdQuery } from "@/hooks/useShiftTemplate";
 
@@ -16,17 +16,17 @@ const ViewDetailShiftTemplate = ({ onClose, open, shiftTemplateId }: IProps) => 
     );
 
     return (
-        <Drawer
+        <Modal
             title={<Title level={4} style={{ margin: 0 }}>Thông tin ca mẫu</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            centered
+            width={700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
         >
             {isLoading ? (
-                <div style={{ textAlign: "center", padding: "50px 0" }}>
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
                     <Spin size="large" />
                 </div>
             ) : isError || !template ? (
@@ -99,7 +99,7 @@ const ViewDetailShiftTemplate = ({ onClose, open, shiftTemplateId }: IProps) => 
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

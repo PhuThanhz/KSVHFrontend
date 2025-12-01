@@ -1,113 +1,159 @@
-import DataTable from "@/components/common/data-table";
-import type { IDeviceType } from "@/types/backend";
-import { EditOutlined, PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Tag, Select, Popconfirm } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Button, Space, Tag, Popconfirm } from "antd";
+import {
+    EditOutlined,
+    EyeOutlined,
+    PlusOutlined,
+    DeleteOutlined,
+} from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import queryString from "query-string";
-import ModalDeviceType from "@/pages/admin/devicetype/modal.device-type";
-import ViewDetailDeviceType from "@/pages/admin/devicetype/view.device-type";
+import dayjs from "dayjs";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+import AdvancedFilterSelect from "@/components/common/filter-date/AdvancedFilterSelect";
+import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
+
+import type { IDeviceType } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
+import { PAGINATION_CONFIG } from "@/config/pagination";
 import { sfLike } from "spring-filter-query-builder";
+
 import { useDeviceTypesQuery, useDeleteDeviceTypeMutation } from "@/hooks/useDeviceTypes";
-import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
 import { callFetchAssetType } from "@/config/api";
 
-/**
- * 🔹 Trang quản lý loại thiết bị
- * Chuẩn hoá: tránh gọi API trùng, giữ query ổn định, refetch chính xác
- */
+import ModalDeviceType from "@/pages/admin/devicetype/modal.device-type";
+import ViewDetailDeviceType from "@/pages/admin/devicetype/view.device-type";
+
 const DeviceTypePage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IDeviceType | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
-    const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
+    const [selectedId, setSelectedId] = useState<number | null>(null);
 
+    const [searchValue, setSearchValue] = useState<string>("");
     const [assetTypeFilter, setAssetTypeFilter] = useState<string | null>(null);
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
+
     const [assetTypeOptions, setAssetTypeOptions] = useState<{ label: string; value: string }[]>([]);
 
-    const [query, setQuery] = useState(() =>
-        queryString.stringify({
-            page: 1,
-            size: 10,
-            sort: "createdAt,desc",
-        }, { encode: false })
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
     );
-    const { data, isFetching } = useDeviceTypesQuery(query);
-    const { mutate: deleteDeviceType, isPending: isDeleting } = useDeleteDeviceTypeMutation();
 
-    /** ====================== Lấy danh sách loại tài sản để lọc ====================== */
+    const tableRef = useRef<ActionType>(null);
+
+    const { data, isFetching } = useDeviceTypesQuery(query);
+    const { mutateAsync: deleteDeviceType, isPending: isDeleting } = useDeleteDeviceTypeMutation();
+
+    // ==================================================================
+    // FETCH ASSET TYPE OPTIONS
+    // ==================================================================
     useEffect(() => {
-        let mounted = true;
         const fetchAssetTypes = async () => {
             try {
                 const res = await callFetchAssetType("page=1&size=100");
-                if (mounted && res?.data?.result) {
+                if (res?.data?.result) {
                     const list = res.data.result.map((a: any) => ({
                         label: a.assetTypeName,
                         value: a.assetTypeName,
                     }));
                     setAssetTypeOptions(list);
                 }
-            } catch (err) {
-                console.error("Failed to fetch asset types", err);
+            } catch (error) {
+                console.error("Failed to fetch asset types:", error);
             }
         };
         fetchAssetTypes();
-        return () => {
-            mounted = false;
+    }, []);
+
+    // ==================================================================
+    // AUTO BUILD QUERY WHEN FILTERS CHANGE
+    // ==================================================================
+    useEffect(() => {
+        const q: any = {
+            page: PAGINATION_CONFIG.DEFAULT_PAGE,
+            size: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+            sort: "createdAt,desc",
         };
-    }, []); // ✅ chỉ gọi 1 lần khi mount
 
-    /** ====================== Build query filter ====================== */
-    const buildQuery = useMemo(
-        () =>
-            (params: any, sort: any) => {
-                const q: any = {
-                    page: params.current,
-                    size: params.pageSize,
-                    filter: "",
-                };
+        const filterParts: string[] = [];
 
-                if (params.typeName) q.filter = sfLike("typeName", params.typeName);
+        if (searchValue) {
+            filterParts.push(`(typeName~'${searchValue}' or deviceTypeCode~'${searchValue}')`);
+        }
 
-                if (params.deviceTypeCode)
-                    q.filter = q.filter
-                        ? `${q.filter} and ${sfLike("deviceTypeCode", params.deviceTypeCode)}`
-                        : sfLike("deviceTypeCode", params.deviceTypeCode);
+        if (assetTypeFilter) {
+            filterParts.push(`assetType.assetTypeName='${assetTypeFilter}'`);
+        }
 
-                if (assetTypeFilter) {
-                    q.filter = q.filter
-                        ? `${q.filter} and assetType.assetTypeName='${assetTypeFilter}'`
-                        : `assetType.assetTypeName='${assetTypeFilter}'`;
-                }
+        if (createdAtFilter) {
+            filterParts.push(createdAtFilter);
+        }
 
-                if (createdAtFilter) {
-                    q.filter = q.filter ? `${q.filter} and ${createdAtFilter}` : createdAtFilter;
-                }
+        if (filterParts.length > 0) q.filter = filterParts.join(" and ");
 
-                if (!q.filter) delete q.filter;
+        setQuery(queryString.stringify(q, { encode: false }));
+    }, [searchValue, assetTypeFilter, createdAtFilter]);
 
-                let temp = queryString.stringify(q, { encode: false });
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
+    const deviceTypes = data?.result ?? [];
 
-                let sortBy = "";
-                if (sort?.typeName)
-                    sortBy = sort.typeName === "ascend" ? "sort=typeName,asc" : "sort=typeName,desc";
-                else if (sort?.deviceTypeCode)
-                    sortBy =
-                        sort.deviceTypeCode === "ascend"
-                            ? "sort=deviceTypeCode,asc"
-                            : "sort=deviceTypeCode,desc";
-                else sortBy = "sort=createdAt,desc";
+    // ==================================================================
+    // BUILD QUERY (FOR SORT & PAGINATION)
+    // ==================================================================
+    const buildQuery = (params: any, sort: any) => {
+        const q: any = {
+            page: params.current,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        };
 
-                return `${temp}&${sortBy}`;
-            },
-        [assetTypeFilter, createdAtFilter]
-    );
+        const parts: string[] = [];
 
-    /** ====================== Cấu hình cột bảng ====================== */
+        if (searchValue)
+            parts.push(`(typeName~'${searchValue}' or deviceTypeCode~'${searchValue}')`);
+        if (assetTypeFilter) parts.push(`assetType.assetTypeName='${assetTypeFilter}'`);
+        if (createdAtFilter) parts.push(createdAtFilter);
+
+        if (parts.length > 0) q.filter = parts.join(" and ");
+
+        let temp = queryString.stringify(q, { encode: false });
+
+        let sortBy = "";
+        if (sort?.typeName)
+            sortBy = sort.typeName === "ascend" ? "sort=typeName,asc" : "sort=typeName,desc";
+        else if (sort?.deviceTypeCode)
+            sortBy =
+                sort.deviceTypeCode === "ascend"
+                    ? "sort=deviceTypeCode,asc"
+                    : "sort=deviceTypeCode,desc";
+        else sortBy = "sort=createdAt,desc";
+
+        return `${temp}&${sortBy}`;
+    };
+
+    // ==================================================================
+    // RELOAD FILTERS
+    // ==================================================================
+    const reloadTable = () => {
+        setSearchValue("");
+        setAssetTypeFilter(null);
+        setCreatedAtFilter(null);
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+        );
+    };
+
+    // ==================================================================
+    // COLUMNS
+    // ==================================================================
     const columns: ProColumns<IDeviceType>[] = [
         {
             title: "STT",
@@ -115,7 +161,7 @@ const DeviceTypePage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                index + 1 + ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
         {
@@ -131,14 +177,20 @@ const DeviceTypePage = () => {
         {
             title: "Loại tài sản",
             dataIndex: ["assetType", "assetTypeName"],
-            sorter: true,
-            hideInSearch: true,
             render: (_, record) =>
                 record.assetType?.assetTypeName ? (
                     <Tag color="blue">{record.assetType.assetTypeName}</Tag>
                 ) : (
                     <Tag color="default">Chưa có</Tag>
                 ),
+            hideInSearch: true,
+        },
+        {
+            title: "Ngày tạo",
+            dataIndex: "createdAt",
+            sorter: true,
+            hideInSearch: true,
+            render: (text: any) => (text ? dayjs(text).format("DD/MM/YYYY HH:mm") : "-"),
         },
         {
             title: "Hành động",
@@ -149,33 +201,34 @@ const DeviceTypePage = () => {
                 <Space>
                     <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.GET_BY_ID} hideChildren>
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#1677ff", cursor: "pointer" }}
                             onClick={() => {
-                                setSelectedDeviceTypeId(Number(entity.id));
+                                setSelectedId(Number(entity.id));
                                 setOpenViewDetail(true);
                             }}
                         />
                     </Access>
-
                     <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#faad14", cursor: "pointer" }}
+                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
                             }}
                         />
                     </Access>
-
                     <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.DELETE} hideChildren>
                         <Popconfirm
                             title="Xóa loại thiết bị?"
                             description="Bạn có chắc muốn xóa loại thiết bị này không?"
-                            onConfirm={() => entity.id && deleteDeviceType(entity.id)}
                             okText="Xóa"
                             cancelText="Hủy"
+                            okButtonProps={{ danger: true, loading: isDeleting }}
+                            onConfirm={() => entity.id && deleteDeviceType(entity.id)}
                         >
-                            <DeleteOutlined style={{ fontSize: 18, color: "red", cursor: "pointer" }} />
+                            <DeleteOutlined
+                                style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
+                            />
                         </Popconfirm>
                     </Access>
                 </Space>
@@ -183,30 +236,73 @@ const DeviceTypePage = () => {
         },
     ];
 
-    /** ====================== Render ====================== */
+    // ==================================================================
+    // RENDER
+    // ==================================================================
     return (
-        <div>
+        <PageContainer
+            title="Quản lý loại thiết bị"
+            filter={
+                <div className="flex flex-col gap-3">
+                    <SearchFilter
+                        searchPlaceholder="Tìm theo mã hoặc tên loại thiết bị..."
+                        addLabel="Thêm loại thiết bị"
+                        showFilterButton={false}
+                        onSearch={(val) => setSearchValue(val)}
+                        onReset={reloadTable}
+                        onAddClick={() => {
+                            setDataInit(null);
+                            setOpenModal(true);
+                        }}
+                    />
+                    <div className="flex flex-wrap gap-3 items-center">
+                        <AdvancedFilterSelect
+                            fields={[
+                                {
+                                    key: "assetType",
+                                    label: "Loại tài sản",
+                                    options: assetTypeOptions,
+                                },
+                            ]}
+                            onChange={(filters) => {
+                                setAssetTypeFilter(filters.assetType || null);
+                            }}
+                        />
+                        <DateRangeFilter
+                            label="Ngày tạo"
+                            fieldName="createdAt"
+                            onChange={(filter) => setCreatedAtFilter(filter)}
+                        />
+                    </div>
+                </div>
+            }
+        >
             <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.GET_PAGINATE}>
                 <DataTable<IDeviceType>
-                    headerTitle="Danh sách loại thiết bị"
+                    actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching || isDeleting}
                     columns={columns}
-                    dataSource={data?.result || []}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        if (newQuery !== query) setQuery(newQuery);
+                    dataSource={deviceTypes}
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: deviceTypes,
+                            success: true,
+                            total: meta.total,
+                        });
                     }}
                     pagination={{
-                        defaultPageSize: 10,
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
-                        total: data?.meta?.total,
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
                         showSizeChanger: true,
+                        total: meta.total,
                         showQuickJumper: true,
                         showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
@@ -216,46 +312,8 @@ const DeviceTypePage = () => {
                                 loại thiết bị
                             </div>
                         ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
                     }}
-                    toolBarRender={() => [
-                        <Space key="toolbar" size={12} align="center" wrap>
-                            <Select
-                                placeholder="Chọn loại tài sản"
-                                allowClear
-                                style={{ width: 220 }}
-                                options={assetTypeOptions}
-                                onChange={(value) => setAssetTypeFilter(value || null)}
-                            />
-                            <DateRangeFilter
-                                label="Ngày tạo"
-                                fieldName="createdAt"
-                                size="middle"
-                                width={320}
-                                onChange={(filterStr) => setCreatedAtFilter(filterStr)}
-                            />
-                            <Access permission={ALL_PERMISSIONS.DEVICE_TYPES.CREATE} hideChildren>
-                                <Button
-                                    icon={<PlusOutlined />}
-                                    type="primary"
-                                    onClick={() => {
-                                        setDataInit(null);
-                                        setOpenModal(true);
-                                    }}
-                                >
-                                    Thêm mới
-                                </Button>
-                            </Access>
-                        </Space>,
-                    ]}
+                    rowSelection={false}
                 />
             </Access>
 
@@ -269,9 +327,9 @@ const DeviceTypePage = () => {
             <ViewDetailDeviceType
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
-                deviceTypeId={selectedDeviceTypeId}
+                deviceTypeId={selectedId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

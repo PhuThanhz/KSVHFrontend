@@ -55,7 +55,7 @@ import HomePlanPage from "@/pages/technician/plan/home-plan";
 import HomeExecutionPage from "@/pages/technician/execution/home-execution";
 import LayoutTechnician from "@/components/layout/technician/layout.technician";
 import MaintenanceApprovalPage from "@/pages/admin/maintenance/maintenance-approval";
-import MaintenanceExecutionAdminPage from "./pages/admin/maintenance/maintenance-execution-admin";
+import MaintenanceExecutionAdminPage from "./pages/admin/maintenance/maintenance-execution/maintenance-execution-admin";
 import MaintenanceAcceptancePage from "@/pages/admin/maintenance/maintenance-acceptance";
 import TechnicianProfilePage from "@/pages/technician/profile/index";
 

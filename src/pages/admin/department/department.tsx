@@ -1,20 +1,30 @@
-import DataTable from "@/components/common/data-table";
-import type { IDepartment } from "@/types/backend";
-import { EditOutlined, PlusOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Space, Popconfirm, Tag } from "antd";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Button, Popconfirm, Space, Tag } from "antd";
+import {
+    EditOutlined,
+    DeleteOutlined,
+    EyeOutlined,
+    PlusOutlined,
+} from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
+import dayjs from "dayjs";
 import queryString from "query-string";
-import ModalDepartment from "./modal.department";
-import ViewDetailDepartment from "./view.department";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+
+import type { IDepartment } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import { sfLike } from "spring-filter-query-builder";
 import {
     useDepartmentsQuery,
     useDeleteDepartmentMutation,
 } from "@/hooks/useDepartments";
-import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
+import ModalDepartment from "@/pages/admin/department/modal.department";
+import ViewDetailDepartment from "@/pages/admin/department/view.department";
+import { PAGINATION_CONFIG } from "@/config/pagination";
+import { sfLike } from "spring-filter-query-builder";
 
 const DepartmentPage = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -22,23 +32,42 @@ const DepartmentPage = () => {
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
 
-    const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
-
-    const [query, setQuery] = useState(() =>
-        queryString.stringify({
-            page: 1,
-            size: 10,
-            sort: "createdAt,desc",
-        }, { encode: false })
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
     );
 
-    const { data, isFetching } = useDepartmentsQuery(query);
-    const { mutate: deleteDepartment } = useDeleteDepartmentMutation();
+    const tableRef = useRef<ActionType>(null);
 
+    const { data, isFetching } = useDepartmentsQuery(query);
+    const deleteMutation = useDeleteDepartmentMutation();
+
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
+    const departments = data?.result ?? [];
+
+    /** Xử lý xóa */
+    const handleDelete = async (id?: number | string) => {
+        if (!id) return;
+        await deleteMutation.mutateAsync(id, {
+            onSuccess: () => reloadTable(),
+        });
+    };
+
+    /** Reload bảng */
+    const reloadTable = () => {
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
+        );
+    };
+
+    /** Build query sort/pagination/filter */
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
-            size: params.pageSize,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
             filter: "",
         };
 
@@ -53,10 +82,6 @@ const DepartmentPage = () => {
                 ? `${q.filter} and ${sfLike("company.name", params.company)}`
                 : sfLike("company.name", params.company);
 
-        if (createdAtFilter) {
-            q.filter = q.filter ? `${q.filter} and ${createdAtFilter}` : createdAtFilter;
-        }
-
         if (!q.filter) delete q.filter;
 
         let temp = queryString.stringify(q, { encode: false });
@@ -70,11 +95,12 @@ const DepartmentPage = () => {
                     : "sort=departmentCode,desc";
         else if (sort?.name)
             sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
-        else sortBy = "sort=createdAt,desc";
+        else sortBy = `sort=${PAGINATION_CONFIG.DEFAULT_SORT}`;
 
         return `${temp}&${sortBy}`;
     };
 
+    /** Cột bảng */
     const columns: ProColumns<IDepartment>[] = [
         {
             title: "STT",
@@ -82,7 +108,10 @@ const DepartmentPage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) + ((data?.meta?.page || 1) - 1) * (data?.meta?.pageSize || 10),
+                index +
+                1 +
+                ((meta.page || 1) - 1) *
+                (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
             hideInSearch: true,
         },
         {
@@ -99,6 +128,25 @@ const DepartmentPage = () => {
             title: "Công ty",
             dataIndex: ["company", "name"],
             sorter: false,
+            render: (text) => (text ? <Tag color="blue">{text}</Tag> : "-"),
+        },
+        {
+            title: "Ngày tạo",
+            dataIndex: "createdAt",
+            hideInSearch: true,
+            render: (_, record) =>
+                record.createdAt
+                    ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm")
+                    : "-",
+        },
+        {
+            title: "Ngày cập nhật",
+            dataIndex: "updatedAt",
+            hideInSearch: true,
+            render: (_, record) =>
+                record.updatedAt
+                    ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm")
+                    : "-",
         },
         {
             title: "Hành động",
@@ -109,7 +157,11 @@ const DepartmentPage = () => {
                 <Space>
                     <Access permission={ALL_PERMISSIONS.DEPARTMENT.GET_BY_ID} hideChildren>
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#1677ff",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setSelectedDeptId(Number(entity.id));
                                 setOpenViewDetail(true);
@@ -121,7 +173,7 @@ const DepartmentPage = () => {
                         <EditOutlined
                             style={{
                                 fontSize: 18,
-                                color: "#ffa500",
+                                color: "#fa8c16",
                                 cursor: "pointer",
                             }}
                             onClick={() => {
@@ -133,10 +185,11 @@ const DepartmentPage = () => {
 
                     <Access permission={ALL_PERMISSIONS.DEPARTMENT.DELETE} hideChildren>
                         <Popconfirm
-                            title="Xác nhận xóa phòng ban này?"
-                            onConfirm={() => {
-                                if (entity.id) deleteDepartment(Number(entity.id));
-                            }}
+                            title="Xác nhận xóa phòng ban"
+                            description="Bạn có chắc chắn muốn xóa phòng ban này không?"
+                            okText="Xóa"
+                            cancelText="Hủy"
+                            onConfirm={() => handleDelete(entity.id!)}
                         >
                             <DeleteOutlined
                                 style={{
@@ -153,75 +206,72 @@ const DepartmentPage = () => {
     ];
 
     return (
-        <div>
+        <PageContainer
+            title="Quản lý phòng ban"
+            filter={
+                <SearchFilter
+                    searchPlaceholder="Tìm kiếm theo mã hoặc tên phòng ban..."
+                    addLabel="Thêm phòng ban"
+                    showFilterButton={false}
+                    onSearch={(val) =>
+                        setQuery(
+                            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=(departmentCode~'${val}' or name~'${val}')`
+                        )
+                    }
+                    onReset={() => reloadTable()}
+                    onAddClick={() => {
+                        setDataInit(null);
+                        setOpenModal(true);
+                    }}
+                />
+            }
+        >
             <Access permission={ALL_PERMISSIONS.DEPARTMENT.GET_PAGINATE}>
                 <DataTable<IDepartment>
-                    headerTitle="Danh sách phòng ban"
+                    actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={data?.result || []}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                    dataSource={departments}
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: departments || [],
+                            success: true,
+                            total: meta.total || 0,
+                        });
                     }}
                     pagination={{
-                        defaultPageSize: 10,
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
                         showSizeChanger: true,
-                        total: data?.meta?.total,
+                        total: meta.total,
                         showQuickJumper: true,
-                        size: "default",
                         showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
-                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
+                                <span
+                                    style={{
+                                        fontWeight: 600,
+                                        color: "#1677ff",
+                                    }}
+                                >
                                     {total.toLocaleString()}
                                 </span>{" "}
                                 phòng ban
                             </div>
                         ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
                     }}
                     rowSelection={false}
-                    toolBarRender={() => [
-                        <Space key="toolbar" size={12} align="center" wrap>
-                            <DateRangeFilter
-                                label="Ngày tạo"
-                                fieldName="createdAt"
-                                size="middle"
-                                width={320}
-                                onChange={(filterStr) => setCreatedAtFilter(filterStr)}
-                            />
-                            <Access permission={ALL_PERMISSIONS.DEPARTMENT.CREATE} hideChildren>
-                                <Button
-                                    icon={<PlusOutlined />}
-                                    type="primary"
-                                    onClick={() => {
-                                        setDataInit(null);
-                                        setOpenModal(true);
-                                    }}
-                                >
-                                    Thêm mới
-                                </Button>
-                            </Access>
-                        </Space>,
-                    ]}
                 />
             </Access>
 
+            {/* Modal thêm/sửa */}
             <ModalDepartment
                 openModal={openModal}
                 setOpenModal={setOpenModal}
@@ -229,12 +279,13 @@ const DepartmentPage = () => {
                 setDataInit={setDataInit}
             />
 
+            {/* Drawer xem chi tiết */}
             <ViewDetailDepartment
                 onClose={setOpenViewDetail}
                 open={openViewDetail}
                 departmentId={selectedDeptId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

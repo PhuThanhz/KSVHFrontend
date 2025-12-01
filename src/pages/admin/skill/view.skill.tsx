@@ -1,4 +1,4 @@
-import { Drawer, Descriptions, Typography, Divider, Spin, Empty } from "antd";
+import { Modal, Descriptions, Typography, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
 import { useSkillByIdQuery } from "@/hooks/useSkills";
 
@@ -14,26 +14,31 @@ const ViewDetailSkill = ({ onClose, open, skillId }: IProps) => {
     const { data: skill, isLoading, isError } = useSkillByIdQuery(skillId || undefined);
 
     return (
-        <Drawer
-            title={<Title level={4}>Chi tiết kỹ năng</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
+        <Modal
+            title={<Title level={4} style={{ margin: 0 }}>Chi tiết kỹ năng</Title>}
             open={open}
-            width={"40vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width="600px"
+            centered
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
         >
             {isLoading ? (
-                <div style={{ textAlign: "center", padding: "50px 0" }}>
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
                     <Spin size="large" />
                 </div>
             ) : isError || !skill ? (
                 <Empty description="Không tìm thấy thông tin kỹ năng" />
             ) : (
                 <>
-                    <Descriptions bordered column={1} size="middle">
+                    <Descriptions
+                        bordered
+                        column={1}
+                        size="middle"
+                        labelStyle={{ fontWeight: 600, background: "#fafafa" }}
+                    >
                         <Descriptions.Item label="Tên kỹ năng">
-                            <Text strong>{skill.techniqueName}</Text>
+                            <Text strong>{skill.techniqueName ?? "-"}</Text>
                         </Descriptions.Item>
 
                         <Descriptions.Item label="Ngày tạo">
@@ -53,11 +58,14 @@ const ViewDetailSkill = ({ onClose, open, skillId }: IProps) => {
                         </Descriptions.Item>
                     </Descriptions>
 
-                    <Divider />
-                    <Text type="secondary">Dữ liệu hiển thị từ module Skill</Text>
+                    <Divider style={{ margin: "20px 0 10px" }} />
+
+                    <div style={{ textAlign: "right" }}>
+                        <Text type="secondary">Dữ liệu hiển thị từ module Skill</Text>
+                    </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

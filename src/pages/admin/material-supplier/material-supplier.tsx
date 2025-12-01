@@ -1,56 +1,97 @@
-import DataTable from "@/components/common/data-table";
-import type { IMaterialSupplier } from "@/types/backend";
-import { EditOutlined, EyeOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Popconfirm, Space, Tag } from "antd";
-import { useState } from "react";
-import queryString from "query-string";
+import { useRef, useState } from "react";
+import { Button, Popconfirm, Space } from "antd";
+import {
+    EditOutlined,
+    DeleteOutlined,
+    EyeOutlined,
+    PlusOutlined,
+} from "@ant-design/icons";
+import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import dayjs from "dayjs";
-import ModalMaterialSupplier from "@/pages/admin/material-supplier/modal.materialSupplier";
-import ViewMaterialSupplier from "@/pages/admin/material-supplier/view.materialSupplier";
+import queryString from "query-string";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+
+import type { IMaterialSupplier } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import { useMaterialSuppliersQuery, useDeleteMaterialSupplierMutation } from "@/hooks/useMaterialSuppliers";
+import {
+    useMaterialSuppliersQuery,
+    useDeleteMaterialSupplierMutation,
+} from "@/hooks/useMaterialSuppliers";
+import ModalMaterialSupplier from "@/pages/admin/material-supplier/modal.materialSupplier";
+import ViewMaterialSupplier from "@/pages/admin/material-supplier/view.materialSupplier";
+import { PAGINATION_CONFIG } from "@/config/pagination";
 
 const MaterialSupplierPage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [dataInit, setDataInit] = useState<IMaterialSupplier | null>(null);
     const [openViewDetail, setOpenViewDetail] = useState(false);
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
-    const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
+
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
+    );
+
+    const tableRef = useRef<ActionType>(null);
 
     const { data, isFetching } = useMaterialSuppliersQuery(query);
     const deleteMutation = useDeleteMaterialSupplierMutation();
 
-    const meta = data?.meta ?? { page: 1, pageSize: 10, total: 0 };
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
     const suppliers = data?.result ?? [];
 
-    const handleDelete = async (id: string | number) => {
-        await deleteMutation.mutateAsync(id);
+    const handleDelete = async (id?: number | string) => {
+        if (!id) return;
+        await deleteMutation.mutateAsync(id, {
+            onSuccess: () => reloadTable(),
+        });
     };
 
-    /** ==================== Build query (phân trang, sort, filter) ==================== */
+    const reloadTable = () => {
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
+        );
+    };
+
+    /** Build query cho sort/pagination/filter */
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
-            size: params.pageSize,
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
         };
 
-        if (params.supplierCode) q.supplierCode = params.supplierCode;
-        if (params.supplierName) q.supplierName = params.supplierName;
+        const filters: string[] = [];
+
+        if (params.supplierCode) filters.push(`supplierCode~'${params.supplierCode}'`);
+        if (params.supplierName) filters.push(`supplierName~'${params.supplierName}'`);
+        if (params.representative) filters.push(`representative~'${params.representative}'`);
+
+        if (params.phone) filters.push(`phone~'${params.phone}'`);
+        if (params.email) filters.push(`email~'${params.email}'`);
+        if (params.address) filters.push(`address~'${params.address}'`);
+
+        if (filters.length > 0) q.filter = filters.join(" and ");
 
         let temp = queryString.stringify(q, { encode: false });
 
-        // Sort
-        const sortField =
-            sort?.supplierName
-                ? `sort=supplierName,${sort.supplierName === "ascend" ? "asc" : "desc"}`
-                : "sort=createdAt,desc";
+        if (sort?.supplierName) {
+            const dir = sort.supplierName === "ascend" ? "asc" : "desc";
+            temp += `&sort=supplierName,${dir}`;
+        } else {
+            temp += `&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`;
+        }
 
-        return `${temp}&${sortField}`;
+        return temp;
     };
 
-    /** ==================== Columns ==================== */
+    /** Cấu hình cột bảng */
     const columns: ProColumns<IMaterialSupplier>[] = [
         {
             title: "STT",
@@ -58,28 +99,41 @@ const MaterialSupplierPage = () => {
             width: 60,
             align: "center",
             render: (_text, _record, index) =>
-                (index + 1) + ((meta.page || 1) - 1) * (meta.pageSize || 10),
+                index +
+                1 +
+                ((meta.page || 1) - 1) *
+                (meta.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE),
             hideInSearch: true,
         },
-        { title: "Mã NCC", dataIndex: "supplierCode", sorter: true },
-        { title: "Tên NCC", dataIndex: "supplierName", sorter: true },
-        { title: "Người đại diện", dataIndex: "representative", hideInSearch: true },
-        { title: "Số điện thoại", dataIndex: "phone", hideInSearch: true },
-        { title: "Email", dataIndex: "email", hideInSearch: true },
-        { title: "Địa chỉ", dataIndex: "address", hideInSearch: true },
         {
-            title: "Ngày tạo",
-            dataIndex: "createdAt",
-            hideInSearch: true,
-            render: (_, record) =>
-                record.createdAt ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm") : "-",
+            title: "Mã NCC",
+            dataIndex: "supplierCode",
+            sorter: true,
         },
         {
-            title: "Ngày cập nhật",
-            dataIndex: "updatedAt",
+            title: "Tên NCC",
+            dataIndex: "supplierName",
+            sorter: true,
+        },
+        {
+            title: "Người đại diện",
+            dataIndex: "representative",
+            sorter: true,
+        },
+        {
+            title: "Số điện thoại",
+            dataIndex: "phone",
             hideInSearch: true,
-            render: (_, record) =>
-                record.updatedAt ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm") : "-",
+        },
+        {
+            title: "Email",
+            dataIndex: "email",
+            hideInSearch: true,
+        },
+        {
+            title: "Địa chỉ",
+            dataIndex: "address",
+            hideInSearch: true,
         },
         {
             title: "Hành động",
@@ -88,9 +142,16 @@ const MaterialSupplierPage = () => {
             align: "center",
             render: (_, entity) => (
                 <Space>
-                    <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_BY_ID} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_BY_ID}
+                        hideChildren
+                    >
                         <EyeOutlined
-                            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#1677ff",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setSelectedSupplierId(Number(entity.id));
                                 setOpenViewDetail(true);
@@ -98,9 +159,16 @@ const MaterialSupplierPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.UPDATE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.UPDATE}
+                        hideChildren
+                    >
                         <EditOutlined
-                            style={{ fontSize: 18, color: "#ffa500", cursor: "pointer" }}
+                            style={{
+                                fontSize: 18,
+                                color: "#fa8c16",
+                                cursor: "pointer",
+                            }}
                             onClick={() => {
                                 setDataInit(entity);
                                 setOpenModal(true);
@@ -108,17 +176,23 @@ const MaterialSupplierPage = () => {
                         />
                     </Access>
 
-                    <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.DELETE} hideChildren>
+                    <Access
+                        permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.DELETE}
+                        hideChildren
+                    >
                         <Popconfirm
-                            placement="topLeft"
-                            title="Xác nhận xóa nhà cung cấp vật tư"
+                            title="Xác nhận xóa nhà cung cấp"
                             description="Bạn có chắc chắn muốn xóa nhà cung cấp này không?"
                             okText="Xóa"
                             cancelText="Hủy"
                             onConfirm={() => handleDelete(entity.id!)}
                         >
                             <DeleteOutlined
-                                style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
+                                style={{
+                                    fontSize: 18,
+                                    color: "#ff4d4f",
+                                    cursor: "pointer",
+                                }}
                             />
                         </Popconfirm>
                     </Access>
@@ -128,62 +202,100 @@ const MaterialSupplierPage = () => {
     ];
 
     return (
-        <div>
+        <PageContainer
+            title="Quản lý nhà cung cấp vật tư"
+            filter={
+                <SearchFilter
+                    searchPlaceholder="Tìm theo Mã NCC, Tên NCC hoặc Người đại diện..."
+                    addLabel="Thêm nhà cung cấp"
+                    filterFields={[
+                        {
+                            name: "phone",
+                            label: "Số điện thoại",
+                            placeholder: "Nhập số điện thoại...",
+                        },
+                        {
+                            name: "email",
+                            label: "Email",
+                            placeholder: "Nhập email...",
+                        },
+                        {
+                            name: "address",
+                            label: "Địa chỉ",
+                            placeholder: "Nhập địa chỉ...",
+                        },
+                    ]}
+                    onSearch={(val) => {
+                        setQuery(
+                            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=(supplierCode~'${val}' or supplierName~'${val}' or representative~'${val}')`
+                        );
+                    }}
+                    onFilterApply={(filters) => {
+                        const parts: string[] = [];
+                        if (filters.phone)
+                            parts.push(`phone~'${filters.phone}'`);
+                        if (filters.email)
+                            parts.push(`email~'${filters.email}'`);
+                        if (filters.address)
+                            parts.push(`address~'${filters.address}'`);
+
+                        const filterQuery =
+                            parts.length > 0 ? parts.join(" and ") : "";
+                        setQuery(
+                            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}${filterQuery ? `&filter=${filterQuery}` : ""
+                            }`
+                        );
+                    }}
+                    onReset={() => reloadTable()}
+                    onAddClick={() => {
+                        setDataInit(null);
+                        setOpenModal(true);
+                    }}
+                />
+            }
+        >
             <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.GET_PAGINATE}>
                 <DataTable<IMaterialSupplier>
-                    headerTitle="Danh sách nhà cung cấp vật tư"
+                    actionRef={tableRef}
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
                     dataSource={suppliers}
-                    request={async (params, sort): Promise<any> => {
-                        const newQuery = buildQuery(params, sort);
-                        setQuery(newQuery);
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
+                        setQuery(q);
+                        return Promise.resolve({
+                            data: suppliers || [],
+                            success: true,
+                            total: meta.total || 0,
+                        });
                     }}
                     pagination={{
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
                         current: meta.page,
                         pageSize: meta.pageSize,
+                        showSizeChanger: true,
                         total: meta.total,
                         showQuickJumper: true,
-                        showSizeChanger: true,
                         showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
-                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
+                                <span
+                                    style={{
+                                        fontWeight: 600,
+                                        color: "#1677ff",
+                                    }}
+                                >
                                     {total.toLocaleString()}
                                 </span>{" "}
                                 nhà cung cấp
                             </div>
                         ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
                     }}
                     rowSelection={false}
-                    toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.MATERIAL_SUPPLIER?.CREATE} hideChildren>
-                            <Button
-                                key="create"
-                                icon={<PlusOutlined />}
-                                type="primary"
-                                onClick={() => {
-                                    setDataInit(null);
-                                    setOpenModal(true);
-                                }}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Access>,
-                    ]}
                 />
             </Access>
 
@@ -199,7 +311,7 @@ const MaterialSupplierPage = () => {
                 open={openViewDetail}
                 supplierId={selectedSupplierId}
             />
-        </div>
+        </PageContainer>
     );
 };
 

@@ -1,33 +1,39 @@
-import DataTable from "@/components/common/data-table";
-import { useState, useRef, useEffect } from "react";
-import type { IPermission, IRole } from "@/types/backend";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
-import type { ActionType, ProColumns } from "@ant-design/pro-components";
+import { useState, useEffect, useRef } from "react";
 import { Button, Popconfirm, Space, Tag } from "antd";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import type { ActionType, ProColumns } from "@ant-design/pro-components";
 import dayjs from "dayjs";
 import queryString from "query-string";
+
+import PageContainer from "@/components/common/data-table/PageContainer";
+import DataTable from "@/components/common/data-table";
+import SearchFilter from "@/components/common/filter-date/SearchFilter";
+
+import type { IPermission, IRole } from "@/types/backend";
+import { useRolesQuery, useDeleteRoleMutation } from "@/hooks/user/useRoles";
+import { usePermissionsQuery } from "@/hooks/user/usePermissions";
 import ModalRole from "@/pages/admin/role/modal.role";
-import { ALL_PERMISSIONS } from "@/config/permissions";
+
 import Access from "@/components/share/access";
+import { ALL_PERMISSIONS } from "@/config/permissions";
+import { PAGINATION_CONFIG } from "@/config/pagination";
 import { sfLike } from "spring-filter-query-builder";
 import { groupByPermission } from "@/config/utils";
-import { usePermissionsQuery } from "@/hooks/user/usePermissions";
-import { useRolesQuery, useDeleteRoleMutation } from "@/hooks/user/useRoles";
 
 const RolePage = () => {
-    const [openModal, setOpenModal] = useState<boolean>(false);
-    const [listPermissions, setListPermissions] = useState<{
-        module: string;
-        permissions: IPermission[];
-    }[] | null>(null);
+    const [openModal, setOpenModal] = useState(false);
+    const [listPermissions, setListPermissions] = useState<{ module: string; permissions: IPermission[]; }[] | null>(null);
     const [singleRole, setSingleRole] = useState<IRole | null>(null);
-    const [query, setQuery] = useState<string>("page=1&size=10&sort=createdAt,desc");
-    const tableRef = useRef<ActionType>(null!);
 
-    //  React Query
-    const { data, isLoading, refetch } = useRolesQuery(query);
+    const [query, setQuery] = useState<string>(
+        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+    );
+
+    const tableRef = useRef<ActionType>(null);
+
+    // React Query
+    const { data, isFetching, refetch } = useRolesQuery(query);
     const deleteRoleMutation = useDeleteRoleMutation();
-
     const { data: permissionsData } = usePermissionsQuery("page=1&size=500");
 
     useEffect(() => {
@@ -36,48 +42,63 @@ const RolePage = () => {
         }
     }, [permissionsData]);
 
-    //  Xóa role
+    /** Xóa role */
     const handleDeleteRole = async (id?: string) => {
         if (!id) return;
-        try {
-            await deleteRoleMutation.mutateAsync(id);
-        } catch (err) {
-            console.error(err);
-        }
+        await deleteRoleMutation.mutateAsync(id, {
+            onSuccess: () => refetch(),
+        });
     };
 
-    const buildQuery = (params: any, sort: any, filter: any) => {
-        const clone = { ...params };
+    /** Tạo query filter */
+    const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
-            size: params.pageSize,
-            filter: "",
+            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
         };
 
-        if (clone.name) q.filter = `${sfLike("name", clone.name)}`;
-        if (!q.filter) delete q.filter;
+        if (params.name) q.filter = sfLike("name", params.name);
 
         let temp = queryString.stringify(q, { encode: false });
         let sortBy = "";
 
-        if (sort?.name) sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
-        if (sort?.createdAt) sortBy = sort.createdAt === "ascend" ? "sort=createdAt,asc" : "sort=createdAt,desc";
-        if (sort?.updatedAt) sortBy = sort.updatedAt === "ascend" ? "sort=updatedAt,asc" : "sort=updatedAt,desc";
+        if (sort?.name)
+            sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
+        else if (sort?.createdAt)
+            sortBy = sort.createdAt === "ascend" ? "sort=createdAt,asc" : "sort=createdAt,desc";
+        else
+            sortBy = "sort=createdAt,desc";
 
-        temp += sortBy ? `&${sortBy}` : "&sort=createdAt,desc";
-        return temp;
+        return `${temp}&${sortBy}`;
     };
 
+    const meta = data?.meta ?? {
+        page: PAGINATION_CONFIG.DEFAULT_PAGE,
+        pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+        total: 0,
+    };
+    const roles = data?.result ?? [];
+
+    /** Reload bảng */
+    const reloadTable = () => {
+        setQuery(
+            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
+        );
+    };
+
+    /** Cấu hình cột */
     const columns: ProColumns<IRole>[] = [
         {
-            title: "Id",
-            dataIndex: "id",
-            width: 250,
+            title: "STT",
+            key: "index",
+            width: 60,
+            align: "center",
+            render: (_text, _record, index) =>
+                index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
-            render: (_, record) => <span>{record.id}</span>,
         },
         {
-            title: "Name",
+            title: "Tên vai trò",
             dataIndex: "name",
             sorter: true,
         },
@@ -86,54 +107,55 @@ const RolePage = () => {
             dataIndex: "active",
             hideInSearch: true,
             render: (_, record) => (
-                <Tag color={record.active ? "lime" : "red"}>
-                    {record.active ? "ACTIVE" : "INACTIVE"}
+                <Tag color={record.active ? "green" : "red"}>
+                    {record.active ? "Đang hoạt động" : "Ngừng hoạt động"}
                 </Tag>
             ),
         },
         {
-            title: "CreatedAt",
+            title: "Ngày tạo",
             dataIndex: "createdAt",
-            width: 200,
             sorter: true,
             hideInSearch: true,
-            render: (_, record) => (record.createdAt ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm:ss") : ""),
+            render: (_, record) =>
+                record.createdAt ? dayjs(record.createdAt).format("DD-MM-YYYY HH:mm") : "-",
         },
         {
-            title: "UpdatedAt",
+            title: "Ngày cập nhật",
             dataIndex: "updatedAt",
-            width: 200,
             sorter: true,
             hideInSearch: true,
-            render: (_, record) => (record.updatedAt ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm:ss") : ""),
+            render: (_, record) =>
+                record.updatedAt ? dayjs(record.updatedAt).format("DD-MM-YYYY HH:mm") : "-",
         },
         {
-            title: "Actions",
+            title: "Hành động",
             hideInSearch: true,
-            width: 50,
+            width: 120,
+            align: "center",
             render: (_, entity) => (
                 <Space>
                     <Access permission={ALL_PERMISSIONS.ROLES.UPDATE} hideChildren>
                         <EditOutlined
-                            style={{ fontSize: 20, color: "#ffa500" }}
+                            style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
                             onClick={() => {
                                 setSingleRole(entity);
                                 setOpenModal(true);
                             }}
                         />
                     </Access>
+
                     <Access permission={ALL_PERMISSIONS.ROLES.DELETE} hideChildren>
                         <Popconfirm
-                            placement="leftTop"
-                            title="Xác nhận xóa role"
-                            description="Bạn có chắc chắn muốn xóa role này?"
-                            onConfirm={() => handleDeleteRole(entity.id)}
-                            okText="Xác nhận"
+                            title="Xác nhận xóa vai trò"
+                            description="Bạn có chắc chắn muốn xóa vai trò này?"
+                            okText="Xóa"
                             cancelText="Hủy"
+                            onConfirm={() => handleDeleteRole(entity.id)}
                         >
-                            <span style={{ cursor: "pointer", margin: "0 10px" }}>
-                                <DeleteOutlined style={{ fontSize: 20, color: "#ff4d4f" }} />
-                            </span>
+                            <DeleteOutlined
+                                style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
+                            />
                         </Popconfirm>
                     </Access>
                 </Space>
@@ -142,37 +164,55 @@ const RolePage = () => {
     ];
 
     return (
-        <div>
+        <PageContainer
+            title="Quản lý vai trò"
+            filter={
+                <SearchFilter
+                    searchPlaceholder="Tìm kiếm vai trò..."
+                    addLabel="Thêm vai trò"
+                    onSearch={(val) =>
+                        setQuery(
+                            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=${sfLike(
+                                "name",
+                                val
+                            )}`
+                        )
+                    }
+                    onReset={reloadTable}
+                    onAddClick={() => {
+                        setSingleRole(null);
+                        setOpenModal(true);
+                    }}
+                    showFilterButton={false}
+                />
+            }
+        >
             <Access permission={ALL_PERMISSIONS.ROLES.GET_PAGINATE}>
                 <DataTable<IRole>
                     actionRef={tableRef}
-                    headerTitle="Danh sách Roles (Vai Trò)"
                     rowKey="id"
-                    loading={isLoading}
+                    loading={isFetching}
                     columns={columns}
-                    dataSource={data?.result || []}
-                    request={async (params, sort, filter) => {
-                        const q = buildQuery(params, sort, filter);
+                    dataSource={roles}
+                    request={async (params, sort) => {
+                        const q = buildQuery(params, sort);
                         setQuery(q);
-                        return {
-                            data: data?.result || [],
+                        return Promise.resolve({
+                            data: roles,
                             success: true,
-                            total: data?.meta?.total || 0,
-                        };
+                            total: meta.total,
+                        });
                     }}
-                    scroll={{ x: true }}
                     pagination={{
-                        defaultPageSize: 10,
-
-                        current: data?.meta?.page,
-                        pageSize: data?.meta?.pageSize,
+                        defaultPageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
+                        current: meta.page,
+                        pageSize: meta.pageSize,
                         showSizeChanger: true,
-                        total: data?.meta?.total,
+                        total: meta.total,
                         showQuickJumper: true,
-                        size: "default",
                         showTotal: (total, range) => (
-                            <div style={{ fontSize: 13, color: "#595959" }}>
-                                <span style={{ fontWeight: 500, color: "#000" }}>
+                            <div style={{ fontSize: 13 }}>
+                                <span style={{ fontWeight: 500 }}>
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
@@ -182,31 +222,11 @@ const RolePage = () => {
                                 vai trò
                             </div>
                         ),
-                        style: {
-                            marginTop: 16,
-                            padding: "12px 24px",
-                            background: "#fff",
-                            borderRadius: 8,
-                            borderTop: "1px solid #f0f0f0",
-                            display: "flex",
-                            justifyContent: "flex-end",
-                        },
                     }}
                     rowSelection={false}
-                    toolBarRender={() => [
-                        <Access permission={ALL_PERMISSIONS.ROLES.CREATE} key="create" hideChildren>
-                            <Button
-                                icon={<PlusOutlined />}
-                                type="primary"
-                                onClick={() => setOpenModal(true)}
-                            >
-                                Thêm mới
-                            </Button>
-                        </Access>
-
-                    ]}
                 />
             </Access>
+
             {listPermissions && (
                 <ModalRole
                     openModal={openModal}
@@ -217,8 +237,7 @@ const RolePage = () => {
                     setSingleRole={setSingleRole}
                 />
             )}
-
-        </div>
+        </PageContainer>
     );
 };
 
