@@ -1,5 +1,6 @@
-import { Drawer, Descriptions, Typography, Divider, Spin, Empty, Badge } from "antd";
+import { Modal, Descriptions, Typography, Divider, Spin, Empty, Badge } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useCustomerByIdQuery } from "@/hooks/user/useCustomers";
 
 const { Text, Title } = Typography;
@@ -14,14 +15,15 @@ const ViewDetailCustomer = ({ onClose, open, customerId }: IProps) => {
     const { data, isLoading, isError } = useCustomerByIdQuery(customerId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={<Title level={4}>Chi tiết khách hàng</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -96,7 +98,7 @@ const ViewDetailCustomer = ({ onClose, open, customerId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

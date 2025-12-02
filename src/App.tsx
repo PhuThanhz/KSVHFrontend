@@ -54,9 +54,9 @@ import ProtectedUIRoute from "components/share/ProtectedUIRoute";
 import HomePlanPage from "@/pages/technician/plan/home-plan";
 import HomeExecutionPage from "@/pages/technician/execution/home-execution";
 import LayoutTechnician from "@/components/layout/technician/layout.technician";
-import MaintenanceApprovalPage from "@/pages/admin/maintenance/maintenance-approval";
+import MaintenanceApprovalPage from "@/pages/admin/maintenance/maintenance-approval/maintenance-approval";
 import MaintenanceExecutionAdminPage from "./pages/admin/maintenance/maintenance-execution/maintenance-execution-admin";
-import MaintenanceAcceptancePage from "@/pages/admin/maintenance/maintenance-acceptance";
+import MaintenanceAcceptancePage from "@/pages/admin/maintenance/maintenance-acceptance/maintenance-acceptance";
 import TechnicianProfilePage from "@/pages/technician/profile/index";
 
 import MaintenanceHistoryPage from "./pages/admin/maintenance/maintenance-histories";

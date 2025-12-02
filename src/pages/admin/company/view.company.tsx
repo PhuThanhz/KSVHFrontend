@@ -1,5 +1,6 @@
-import { Badge, Descriptions, Drawer, Typography, Divider, Spin, Empty } from "antd";
+import { Modal, Descriptions, Typography, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useCompanyByIdQuery } from "@/hooks/useCompanies";
 
 const { Text, Title } = Typography;
@@ -14,14 +15,15 @@ const ViewDetailCompany = ({ onClose, open, companyId }: IProps) => {
     const { data: company, isLoading, isError } = useCompanyByIdQuery(companyId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={<Title level={4}>Thông tin công ty</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -93,7 +95,7 @@ const ViewDetailCompany = ({ onClose, open, companyId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

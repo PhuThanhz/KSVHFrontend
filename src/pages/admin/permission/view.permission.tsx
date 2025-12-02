@@ -1,6 +1,7 @@
 import type { IPermission } from "@/types/backend";
-import { Descriptions, Drawer, Spin } from "antd";
+import { Descriptions, Modal, Spin } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { usePermissionByIdQuery } from "@/hooks/user/usePermissions";
 
 interface IProps {
@@ -21,13 +22,15 @@ const ViewDetailPermission = (props: IProps) => {
     };
 
     return (
-        <Drawer
+        <Modal
             title="Thông Tin Permission"
-            placement="right"
-            onClose={handleClose}
             open={open}
-            width={"40vw"}
+            onCancel={handleClose}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
+            destroyOnClose
+            centered
         >
             {isFetching ? (
                 <div style={{ textAlign: "center", marginTop: 50 }}>
@@ -61,7 +64,7 @@ const ViewDetailPermission = (props: IProps) => {
                     </Descriptions.Item>
                 </Descriptions>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

@@ -7,10 +7,10 @@ import {
     Space,
     Tag,
     Typography,
-    Divider,
     Empty,
-    Modal,
     Badge,
+    Dropdown,
+    Menu,
 } from "antd";
 import {
     PlusOutlined,
@@ -19,6 +19,9 @@ import {
     UserOutlined,
     EnvironmentOutlined,
     ClockCircleOutlined,
+    MoreOutlined,
+    LeftOutlined,
+    RightOutlined,
 } from "@ant-design/icons";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -26,13 +29,14 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-
 import ModalTechnicianAvailability from "@/pages/admin/technician-availability/modal.technician-availability";
 import ViewDetailTechnicianAvailability from "@/pages/admin/technician-availability/view.technician-availability";
 import { useTechnicianAvailabilitiesQuery } from "@/hooks/useTechnicianAvailability";
 import type { ITechnicianAvailability } from "@/types/backend";
+import PageContainer from "@/components/common/data-table/PageContainer";
 
 dayjs.locale("vi");
 const { Text, Title } = Typography;
@@ -124,11 +128,6 @@ const PageTechnicianAvailability = () => {
         setOpenDayModal(true);
     };
 
-    const eventsOfSelectedDate = useMemo(() => {
-        if (!selectedDate) return [];
-        return events.filter((ev) => ev.extendedProps.workDate === selectedDate);
-    }, [events, selectedDate]);
-
     const renderEventContent = (eventInfo: any) => {
         const { techName, shiftName, special } = eventInfo.event.extendedProps;
         return (
@@ -160,26 +159,194 @@ const PageTechnicianAvailability = () => {
         );
     };
 
+    const actionMenu = (
+        <Menu>
+            <Menu.Item key="refresh" icon={<ReloadOutlined />} onClick={() => refetch()}>
+                Làm mới
+            </Menu.Item>
+            <Access permission={ALL_PERMISSIONS.TECHNICIAN_AVAILABILITY.CREATE} hideChildren>
+                <Menu.Item
+                    key="add"
+                    icon={<PlusOutlined />}
+                    onClick={() => setOpenModal(true)}
+                >
+                    Thêm ca mới
+                </Menu.Item>
+            </Access>
+        </Menu>
+    );
+
     return (
-        <div style={{ padding: "20px", background: "#f0f2f5", minHeight: "100vh" }}>
+        <PageContainer title="Quản lý lịch làm việc kỹ thuật viên">
+            <style>
+                {`
+                    /* Custom FullCalendar styles for better responsive */
+                    .fc {
+                        font-size: 14px;
+                    }
+                    
+                    .fc .fc-toolbar {
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        padding: 8px 0;
+                    }
+                    
+                    .fc .fc-toolbar-title {
+                        font-size: 18px !important;
+                        font-weight: 600;
+                        margin: 0 8px;
+                    }
+                    
+                    .fc .fc-button {
+                        padding: 6px 12px !important;
+                        font-size: 13px !important;
+                        height: auto !important;
+                        border-radius: 6px !important;
+                    }
+                    
+                    .fc .fc-button-group {
+                        display: flex;
+                        gap: 4px;
+                    }
+                    
+                    .fc-toolbar-chunk {
+                        display: flex;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                    }
+                    
+                    /* Mobile styles */
+                    @media (max-width: 768px) {
+                        .fc .fc-toolbar {
+                            flex-direction: column;
+                            align-items: stretch;
+                        }
+                        
+                        .fc-toolbar-chunk {
+                            justify-content: center;
+                            width: 100%;
+                        }
+                        
+                        .fc .fc-toolbar-title {
+                            font-size: 16px !important;
+                            text-align: center;
+                            width: 100%;
+                        }
+                        
+                        .fc .fc-button {
+                            padding: 8px 10px !important;
+                            font-size: 12px !important;
+                            flex: 1;
+                            min-width: 0;
+                        }
+                        
+                        .fc .fc-button-group {
+                            width: 100%;
+                            display: flex;
+                        }
+                        
+                        .fc .fc-button-group .fc-button {
+                            flex: 1;
+                        }
+                        
+                        .fc-daygrid-day-number {
+                            font-size: 12px;
+                            padding: 4px;
+                        }
+                        
+                        .fc-col-header-cell-cushion {
+                            padding: 4px 2px;
+                            font-size: 12px;
+                        }
+                        
+                        .fc-event {
+                            font-size: 11px !important;
+                        }
+                    }
+                    
+                    @media (max-width: 576px) {
+                        .fc .fc-toolbar-title {
+                            font-size: 14px !important;
+                        }
+                        
+                        .fc .fc-button {
+                            padding: 6px 8px !important;
+                            font-size: 11px !important;
+                        }
+                        
+                        .fc-daygrid-day-number {
+                            font-size: 11px;
+                        }
+                        
+                        .fc-col-header-cell-cushion {
+                            font-size: 11px;
+                        }
+                    }
+                    
+                    /* Custom button text for mobile */
+                    @media (max-width: 576px) {
+                        .fc .fc-prev-button .fc-icon,
+                        .fc .fc-next-button .fc-icon {
+                            font-size: 16px;
+                        }
+                    }
+                `}
+            </style>
+
             <Row gutter={[16, 16]}>
-                {/* Header */}
+                {/* Header - Responsive */}
                 <Col span={24}>
-                    <Card>
-                        <Row gutter={16} align="middle">
-                            <Col flex="auto">
-                                <Title level={3} style={{ margin: 0 }}>
-                                    <CalendarOutlined style={{ marginRight: 8 }} />
-                                    Quản lý lịch làm việc kỹ thuật viên
-                                </Title>
-                                <Text type="secondary">
-                                    Tổng số ca làm việc: <strong>{events.length}</strong> | Hôm nay:{" "}
-                                    <strong>{todayEvents.length} ca</strong>
-                                </Text>
+                    <Card bodyStyle={{ padding: "12px 16px" }}>
+                        <Row gutter={[8, 8]} align="middle">
+                            <Col xs={24} sm={24} md={12} lg={14}>
+                                <div style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 4
+                                }}>
+                                    <Text type="secondary" style={{ fontSize: 13 }}>
+                                        Tổng số ca: <strong>{events.length}</strong>
+                                    </Text>
+                                    <Text type="secondary" style={{ fontSize: 13 }}>
+                                        Hôm nay: <strong>{todayEvents.length} ca</strong>
+                                    </Text>
+                                </div>
                             </Col>
-                            <Col>
-                                <Space>
-                                    <Button icon={<ReloadOutlined />} onClick={() => refetch()}>
+                            <Col xs={24} sm={24} md={12} lg={10}>
+                                {/* Desktop actions */}
+                                <Space
+                                    style={{
+                                        width: "100%",
+                                        justifyContent: "flex-end"
+                                    }}
+                                    className="desktop-actions"
+                                >
+                                    <style>
+                                        {`
+                                            @media (max-width: 576px) {
+                                                .desktop-actions {
+                                                    display: none !important;
+                                                }
+                                                .mobile-actions {
+                                                    display: flex !important;
+                                                }
+                                            }
+                                            @media (min-width: 577px) {
+                                                .desktop-actions {
+                                                    display: flex !important;
+                                                }
+                                                .mobile-actions {
+                                                    display: none !important;
+                                                }
+                                            }
+                                        `}
+                                    </style>
+                                    <Button
+                                        icon={<ReloadOutlined />}
+                                        onClick={() => refetch()}
+                                        size="middle"
+                                    >
                                         Làm mới
                                     </Button>
                                     <Access
@@ -190,21 +357,54 @@ const PageTechnicianAvailability = () => {
                                             type="primary"
                                             icon={<PlusOutlined />}
                                             onClick={() => setOpenModal(true)}
-                                            size="large"
+                                            size="middle"
                                         >
                                             Thêm ca mới
                                         </Button>
                                     </Access>
                                 </Space>
+
+                                {/* Mobile actions */}
+                                <div
+                                    className="mobile-actions"
+                                    style={{
+                                        display: "none",
+                                        gap: 8,
+                                        width: "100%"
+                                    }}
+                                >
+                                    <Button
+                                        icon={<ReloadOutlined />}
+                                        onClick={() => refetch()}
+                                        style={{ flex: 1 }}
+                                        size="middle"
+                                    >
+                                        Làm mới
+                                    </Button>
+                                    <Access
+                                        permission={ALL_PERMISSIONS.TECHNICIAN_AVAILABILITY.CREATE}
+                                        hideChildren
+                                    >
+                                        <Button
+                                            type="primary"
+                                            icon={<PlusOutlined />}
+                                            onClick={() => setOpenModal(true)}
+                                            style={{ flex: 1 }}
+                                            size="middle"
+                                        >
+                                            Thêm mới
+                                        </Button>
+                                    </Access>
+                                </div>
                             </Col>
                         </Row>
                     </Card>
                 </Col>
 
-                {/* Lịch chính */}
+                {/* Lịch chính - Responsive */}
                 <Col xs={24} lg={17}>
                     <Card
-                        bodyStyle={{ padding: "16px" }}
+                        bodyStyle={{ padding: "12px" }}
                         loading={isFetching}
                         style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
                     >
@@ -234,7 +434,7 @@ const PageTechnicianAvailability = () => {
                             eventDisplay="block"
                             displayEventTime={true}
                             dayMaxEvents={3}
-                            moreLinkText={(num) => `+${num} ca khác`}
+                            moreLinkText={(num) => `+${num}`}
                             eventTimeFormat={{
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -245,11 +445,13 @@ const PageTechnicianAvailability = () => {
                                 const end = dayjs(info.end).format("YYYY-MM-DD");
                                 setCalendarRange({ start, end });
                             }}
+                            contentHeight="auto"
+                            aspectRatio={1.5}
                         />
                     </Card>
                 </Col>
 
-                {/* Sidebar */}
+                {/* Sidebar - Responsive */}
                 <Col xs={24} lg={7}>
                     <Space direction="vertical" style={{ width: "100%" }} size={16}>
                         {/* Ca hôm nay */}
@@ -262,8 +464,9 @@ const PageTechnicianAvailability = () => {
                             }
                             extra={<Badge count={todayEvents.length} />}
                             style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                            bodyStyle={{ padding: "12px" }}
                         >
-                            <Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
+                            <Text type="secondary" style={{ display: "block", marginBottom: 12, fontSize: 13 }}>
                                 {dayjs().format("dddd, DD/MM/YYYY")}
                             </Text>
                             <div style={{ maxHeight: "400px", overflowY: "auto" }}>
@@ -290,15 +493,16 @@ const PageTechnicianAvailability = () => {
                                                     setSelectedId(String(ev.id));
                                                     setOpenView(true);
                                                 }}
+                                                bodyStyle={{ padding: "10px 12px" }}
                                             >
-                                                <Space direction="vertical" size={4}>
+                                                <Space direction="vertical" size={4} style={{ width: "100%" }}>
                                                     <Text strong style={{ fontSize: 14 }}>
                                                         {item.technician?.fullName || "Kỹ thuật viên"}
                                                     </Text>
                                                     <Text type="secondary" style={{ fontSize: 12 }}>
                                                         {item.shiftTemplate?.name || "Ca làm việc"}
                                                     </Text>
-                                                    <Text>
+                                                    <Text style={{ fontSize: 13 }}>
                                                         🕒 {dayjs(item.startTime, "HH:mm:ss").format("HH:mm")} -{" "}
                                                         {dayjs(item.endTime, "HH:mm:ss").format("HH:mm")}
                                                     </Text>
@@ -307,7 +511,7 @@ const PageTechnicianAvailability = () => {
                                                             <EnvironmentOutlined /> {item.note}
                                                         </Text>
                                                     )}
-                                                    <div>
+                                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                                                         <Tag
                                                             color={
                                                                 item.status === "AVAILABLE"
@@ -345,43 +549,55 @@ const PageTechnicianAvailability = () => {
                                     <Text strong>Kỹ thuật viên</Text>
                                 </Space>
                             }
+                            bodyStyle={{ padding: "12px" }}
                         >
                             <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-                                {technicianStats.map((tech) => (
-                                    <div
-                                        key={tech.name}
-                                        style={{
-                                            padding: "8px 12px",
-                                            marginBottom: 8,
-                                            background: "#fafafa",
-                                            borderRadius: 6,
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            borderLeft: `3px solid ${tech.color}`,
-                                        }}
-                                    >
-                                        <Space>
-                                            <div
-                                                style={{
-                                                    width: 10,
-                                                    height: 10,
-                                                    borderRadius: "50%",
-                                                    background: tech.color,
-                                                }}
+                                {technicianStats.length === 0 ? (
+                                    <Empty
+                                        description="Chưa có kỹ thuật viên"
+                                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                    />
+                                ) : (
+                                    technicianStats.map((tech) => (
+                                        <div
+                                            key={tech.name}
+                                            style={{
+                                                padding: "8px 12px",
+                                                marginBottom: 8,
+                                                background: "#fafafa",
+                                                borderRadius: 6,
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "center",
+                                                borderLeft: `3px solid ${tech.color}`,
+                                            }}
+                                        >
+                                            <Space>
+                                                <div
+                                                    style={{
+                                                        width: 10,
+                                                        height: 10,
+                                                        borderRadius: "50%",
+                                                        background: tech.color,
+                                                    }}
+                                                />
+                                                <Text style={{ fontSize: 13 }}>{tech.name}</Text>
+                                            </Space>
+                                            <Badge
+                                                count={tech.count}
+                                                style={{ backgroundColor: tech.color }}
+                                                overflowCount={999}
                                             />
-                                            <Text>{tech.name}</Text>
-                                        </Space>
-                                        <Badge count={tech.count} style={{ backgroundColor: tech.color }} />
-                                    </div>
-                                ))}
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </Card>
                     </Space>
                 </Col>
             </Row>
 
-            {/* Modal tạo/sửa */}
+            {/* Modal thêm/sửa */}
             {openModal && (
                 <ModalTechnicianAvailability
                     openModal={openModal}
@@ -404,7 +620,7 @@ const PageTechnicianAvailability = () => {
                     }}
                 />
             )}
-        </div>
+        </PageContainer>
     );
 };
 

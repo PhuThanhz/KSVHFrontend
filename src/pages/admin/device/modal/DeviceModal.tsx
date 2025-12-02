@@ -28,12 +28,12 @@ import {
     callFetchCustomer,
 } from "@/config/api";
 
-import DeviceBasicInfo from "./sections/DeviceBasicInfo";
-import DeviceSpecsAndManagement from "./sections/DeviceSpecsAndManagement";
-import DeviceImagesAndNotes from "./sections/DeviceImagesAndNotes";
-import DeviceWarrantyAndMaintenance from "./sections/DeviceWarrantyAndMaintenance";
+import DeviceBasicInfo from "../sections/DeviceBasicInfo";
+import DeviceSpecsAndManagement from "../sections/DeviceSpecsAndManagement";
+import DeviceImagesAndNotes from "../sections/DeviceImagesAndNotes";
+import DeviceWarrantyAndMaintenance from "../sections/DeviceWarrantyAndMaintenance";
 
-import type { ISelectItem } from "./sections/types";
+import type { ISelectItem } from "../sections/types";
 
 const { Text } = Typography;
 

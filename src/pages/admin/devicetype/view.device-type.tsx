@@ -1,5 +1,6 @@
-import { Badge, Descriptions, Drawer, Typography, Divider, Spin, Empty } from "antd";
+import { Badge, Descriptions, Modal, Typography, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useDeviceTypeByIdQuery } from "@/hooks/useDeviceTypes";
 
 const { Text, Title } = Typography;
@@ -14,18 +15,19 @@ const ViewDetailDeviceType = ({ onClose, open, deviceTypeId }: IProps) => {
     const { data: deviceType, isLoading, isError } = useDeviceTypeByIdQuery(deviceTypeId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={
                 <Title level={4} style={{ margin: 0 }}>
                     Thông tin loại thiết bị
                 </Title>
             }
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -60,7 +62,10 @@ const ViewDetailDeviceType = ({ onClose, open, deviceTypeId }: IProps) => {
 
                         <Descriptions.Item label="Loại tài sản">
                             {deviceType.assetType?.assetTypeName ? (
-                                <Badge status="processing" text={deviceType.assetType.assetTypeName} />
+                                <Badge
+                                    status="processing"
+                                    text={deviceType.assetType.assetTypeName}
+                                />
                             ) : (
                                 <Badge status="default" text="Chưa có loại tài sản" />
                             )}
@@ -93,7 +98,7 @@ const ViewDetailDeviceType = ({ onClose, open, deviceTypeId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

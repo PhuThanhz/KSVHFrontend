@@ -1,5 +1,6 @@
-import { Badge, Descriptions, Drawer, Typography, Divider, Spin, Empty } from "antd";
+import { Badge, Descriptions, Modal, Typography, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useMaterialSupplierByIdQuery } from "@/hooks/useMaterialSuppliers";
 
 const { Text, Title } = Typography;
@@ -14,18 +15,19 @@ const ViewMaterialSupplier = ({ onClose, open, supplierId }: IProps) => {
     const { data: supplier, isLoading, isError } = useMaterialSupplierByIdQuery(supplierId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={
                 <Title level={4} style={{ margin: 0 }}>
                     Thông tin nhà cung cấp vật tư
                 </Title>
             }
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -101,7 +103,7 @@ const ViewMaterialSupplier = ({ onClose, open, supplierId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

@@ -1,5 +1,6 @@
-import { Descriptions, Drawer, Typography, Divider, Spin, Empty } from "antd";
+import { Modal, Descriptions, Typography, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useAssetTypeByIdQuery } from "@/hooks/useAssetTypes";
 
 const { Text, Title } = Typography;
@@ -14,14 +15,15 @@ const ViewDetailAssetType = ({ onClose, open, assetTypeId }: IProps) => {
     const { data: assetType, isLoading, isError } = useAssetTypeByIdQuery(assetTypeId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={<Title level={4}>Thông tin loại tài sản</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"40vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -81,7 +83,7 @@ const ViewDetailAssetType = ({ onClose, open, assetTypeId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

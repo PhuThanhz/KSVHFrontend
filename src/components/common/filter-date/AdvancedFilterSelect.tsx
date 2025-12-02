@@ -13,12 +13,19 @@ interface AdvancedFilterSelectProps {
     fields: FilterField[];
     onChange: (filters: Record<string, any>) => void;
     resetSignal?: number;
+    buttonLabel?: string;
 }
 
-const AdvancedFilterSelect: React.FC<AdvancedFilterSelectProps> = ({ fields, onChange, resetSignal }) => {
+const AdvancedFilterSelect: React.FC<AdvancedFilterSelectProps> = ({
+    fields,
+    onChange,
+    resetSignal,
+    buttonLabel = "Bộ lọc",
+}) => {
     const [activeFilters, setActiveFilters] = React.useState<Record<string, any>>({});
     const [openDropdownKey, setOpenDropdownKey] = React.useState<string | null>(null);
 
+    // Reset filters khi có tín hiệu resetSignal
     React.useEffect(() => {
         if (resetSignal !== undefined) {
             setActiveFilters({});
@@ -94,7 +101,7 @@ const AdvancedFilterSelect: React.FC<AdvancedFilterSelectProps> = ({ fields, onC
                 </Dropdown>
             ) : (
                 <Dropdown menu={{ items: mainMenu.props.items }} trigger={["click"]}>
-                    <Button icon={<FilterOutlined />}>Bộ lọc</Button>
+                    <Button icon={<FilterOutlined />}>{buttonLabel}</Button>
                 </Dropdown>
             )}
 

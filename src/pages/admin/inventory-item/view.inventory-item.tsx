@@ -1,5 +1,5 @@
 import {
-    Drawer,
+    Modal,
     Descriptions,
     Typography,
     Divider,
@@ -8,6 +8,7 @@ import {
     Image,
 } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useInventoryItemByIdQuery } from "@/hooks/useInventoryItems";
 import { formatCurrency } from "@/utils/format";
 
@@ -24,14 +25,15 @@ const ViewInventoryItem = ({ onClose, open, itemId }: IProps) => {
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
     return (
-        <Drawer
+        <Modal
             title={<Title level={4}>Chi tiết vật tư tồn kho</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"45vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 800}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -118,7 +120,7 @@ const ViewInventoryItem = ({ onClose, open, itemId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

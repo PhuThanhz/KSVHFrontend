@@ -1,6 +1,7 @@
-import { Drawer, Descriptions, Typography, Spin, Empty, Divider } from "antd";
+import { Modal, Descriptions, Typography, Spin, Empty, Divider } from "antd";
 import { useMaintenanceCauseByIdQuery } from "@/hooks/maintenance/useMaintenanceCause";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 
 const { Text, Title } = Typography;
 
@@ -14,14 +15,15 @@ const ViewMaintenanceCause = ({ open, onClose, causeId }: IProps) => {
     const { data: cause, isLoading, isError } = useMaintenanceCauseByIdQuery(causeId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={<Title level={4}>Chi tiết nguyên nhân hư hỏng</Title>}
-            placement="right"
             open={open}
-            onClose={() => onClose(false)}
-            width={"40vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -58,7 +60,7 @@ const ViewMaintenanceCause = ({ open, onClose, causeId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

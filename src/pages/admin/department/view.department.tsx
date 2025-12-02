@@ -1,5 +1,6 @@
-import { Badge, Descriptions, Drawer, Typography, Divider, Spin, Empty } from "antd";
+import { Badge, Descriptions, Modal, Typography, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useDepartmentByIdQuery } from "@/hooks/useDepartments";
 
 const { Text, Title } = Typography;
@@ -14,18 +15,19 @@ const ViewDetailDepartment = ({ onClose, open, departmentId }: IProps) => {
     const { data: dept, isLoading, isError } = useDepartmentByIdQuery(departmentId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={
                 <Title level={4} style={{ margin: 0 }}>
                     Thông tin phòng ban
                 </Title>
             }
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -93,7 +95,7 @@ const ViewDetailDepartment = ({ onClose, open, departmentId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

@@ -1,14 +1,15 @@
 import {
-    Drawer,
+    Modal,
     Descriptions,
     Typography,
     Badge,
     Divider,
     Spin,
     Empty,
-    List
+    List,
 } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useEmployeeByIdQuery } from "@/hooks/user/useEmployees";
 
 const { Text, Title } = Typography;
@@ -23,14 +24,15 @@ const ViewDetailEmployee = ({ onClose, open, employeeId }: IProps) => {
     const { data, isLoading, isError } = useEmployeeByIdQuery(employeeId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={<Title level={4}>Chi tiết nhân viên</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 800}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -86,7 +88,6 @@ const ViewDetailEmployee = ({ onClose, open, employeeId }: IProps) => {
                                 <Badge status="default" text="Không có (Top-level)" />
                             )}
                         </Descriptions.Item>
-
 
                         {/* Trạng thái hoạt động */}
                         <Descriptions.Item label="Trạng thái">
@@ -152,7 +153,7 @@ const ViewDetailEmployee = ({ onClose, open, employeeId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

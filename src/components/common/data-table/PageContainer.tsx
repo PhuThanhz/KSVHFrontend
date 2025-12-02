@@ -27,7 +27,6 @@ const PageContainer: React.FC<PageContainerProps> = ({
                 </div>
             </div>
 
-            {/* Filter Section */}
             {filter && <div className="px-6 pb-4">{filter}</div>}
 
             {/* Main Content */}

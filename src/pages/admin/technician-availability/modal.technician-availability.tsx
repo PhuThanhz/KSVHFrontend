@@ -29,11 +29,7 @@ interface IProps {
     setDataInit: (v: any) => void;
 }
 
-/**
- * Modal quản lý ca làm việc kỹ thuật viên
- * - Hỗ trợ tạo 1 ngày hoặc nhiều ngày liên tiếp
- * - Cho phép chọn ca mẫu để tự động fill giờ làm việc
- */
+
 const ModalTechnicianAvailability = ({
     openModal,
     setOpenModal,

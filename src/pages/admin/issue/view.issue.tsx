@@ -1,5 +1,6 @@
-import { Drawer, Descriptions, Typography, Divider, Spin, Empty } from "antd";
+import { Modal, Descriptions, Typography, Divider, Spin, Empty } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useIssueByIdQuery } from "@/hooks/useIssues";
 
 const { Text, Title } = Typography;
@@ -14,18 +15,19 @@ const ViewIssue = ({ onClose, open, issueId }: IProps) => {
     const { data: issue, isLoading, isError } = useIssueByIdQuery(issueId || undefined);
 
     return (
-        <Drawer
+        <Modal
             title={
                 <Title level={4} style={{ margin: 0 }}>
                     Thông tin vấn đề
                 </Title>
             }
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"40vw"}
+            onCancel={() => onClose(false)}
+            footer={null}
+            width={isMobile ? "100%" : 700}
             maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -81,7 +83,7 @@ const ViewIssue = ({ onClose, open, issueId }: IProps) => {
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 
