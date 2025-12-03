@@ -182,6 +182,8 @@ const CustomerPurchaseHistoryPage = () => {
                 <SearchFilter
                     searchPlaceholder="Tìm theo mã hoặc tên khách hàng..."
                     showFilterButton={false}
+                    showAddButton={false}
+
                     onSearch={(val) =>
                         setQuery(
                             `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=(customer.customerCode~'${val}' or customer.name~'${val}')`

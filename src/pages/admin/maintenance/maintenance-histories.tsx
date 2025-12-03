@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Tabs,
     Card,
@@ -12,36 +12,67 @@ import {
     Spin,
     Empty,
     Pagination,
-    Descriptions,
 } from "antd";
 import dayjs from "dayjs";
-
+import PageContainer from "@/components/common/data-table/PageContainer";
+import { PAGINATION_CONFIG } from "@/config/pagination";
 import { useMaintenanceHistoryQuery } from "@/hooks/maintenance/useMaintenanceHistory";
 import ViewMaintenanceHistoryDetail from "@/pages/admin/maintenance/view-maintenance-history-detail";
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
+interface MaintenanceHistoryItem {
+    requestInfo: {
+        requestId?: string;
+        requestCode?: string;
+        status?: string;
+        priorityLevel?: string;
+        createdAt?: string;
+        device?: {
+            deviceName?: string;
+            deviceCode?: string;
+            companyName?: string;
+            departmentName?: string;
+            image1?: string;
+            image2?: string;
+            image3?: string;
+        };
+    };
+    completedAt?: string;
+}
+
 export default function MaintenanceHistoryPage() {
+    // ===================== State =====================
     const [activeTab, setActiveTab] = useState("ALL");
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [searchValue, setSearchValue] = useState<string>("");
+    const [page, setPage] = useState(PAGINATION_CONFIG.DEFAULT_PAGE);
+    const [pageSize, setPageSize] = useState(PAGINATION_CONFIG.DEFAULT_PAGE_SIZE);
     const [query, setQuery] = useState(`page=${page}&pageSize=${pageSize}`);
 
     const [detailModal, setDetailModal] = useState<string | null>(null);
 
+    // ===================== Query =====================
     const { data, isLoading } = useMaintenanceHistoryQuery(query);
+    const list = (data?.result || []) as MaintenanceHistoryItem[];
+    const meta = data?.meta;
 
-    const list = data?.result || [];
+    // ===================== Effect: Update Query =====================
+    useEffect(() => {
+        const params = new URLSearchParams();
+        params.set("page", page.toString());
+        params.set("pageSize", pageSize.toString());
+        if (searchValue) params.set("search", searchValue);
+        setQuery(params.toString());
+    }, [page, pageSize, searchValue]);
 
+    // ===================== Helpers =====================
     const handlePageChange = (newPage: number, newSize?: number) => {
         setPage(newPage);
         setPageSize(newSize || pageSize);
-        setQuery(`page=${newPage}&pageSize=${newSize || pageSize}`);
     };
 
-    // Helper function to get status color
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status?: string) => {
         switch (status) {
             case "HOAN_THANH":
                 return "green";
@@ -54,8 +85,7 @@ export default function MaintenanceHistoryPage() {
         }
     };
 
-    // Helper function to get priority color
-    const getPriorityColor = (priority: string) => {
+    const getPriorityColor = (priority?: string) => {
         switch (priority) {
             case "KHAN_CAP":
                 return "red";
@@ -70,8 +100,7 @@ export default function MaintenanceHistoryPage() {
         }
     };
 
-    // Helper function to format priority text
-    const getPriorityText = (priority: string) => {
+    const getPriorityText = (priority?: string) => {
         switch (priority) {
             case "KHAN_CAP":
                 return "Khẩn cấp";
@@ -82,46 +111,44 @@ export default function MaintenanceHistoryPage() {
             case "THAP":
                 return "Thấp";
             default:
-                return priority;
+                return priority || "-";
         }
     };
 
+    // ===================== Main Render =====================
     return (
-        <div style={{ padding: 24 }}>
-            <Title level={3} style={{ marginBottom: 20 }}>
-                Quản lý lịch sử bảo trì
-            </Title>
+        <PageContainer title="Lịch sử bảo trì">
+            <div className="flex flex-col gap-3">
+                {/* Tabs */}
+                <Tabs
+                    activeKey={activeTab}
+                    onChange={(key) => {
+                        setActiveTab(key);
+                        setPage(1);
+                    }}
+                    items={[
+                        {
+                            key: "ALL",
+                            label: (
+                                <>
+                                    Tất cả <Tag color="blue">{meta?.total || 0}</Tag>
+                                </>
+                            ),
+                        },
+                    ]}
+                />
 
-            {/* Tabs */}
-            <Tabs
-                activeKey={activeTab}
-                onChange={(key) => {
-                    setActiveTab(key);
-                    setPage(1);
-                    setQuery(`page=1&pageSize=${pageSize}`);
-                }}
-                items={[
-                    {
-                        key: "ALL",
-                        label: (
-                            <>
-                                Tất cả{" "}
-                                <Tag color="blue">{data?.meta?.total || 0}</Tag>
-                            </>
-                        ),
-                    },
-                ]}
-            />
-
-            {/* Search */}
-            <Input.Search
-                placeholder="Tìm theo mã phiếu hoặc thiết bị"
-                onSearch={(value) =>
-                    setQuery(`page=1&pageSize=${pageSize}&search=${encodeURIComponent(value)}`)
-                }
-                style={{ width: 260, marginBottom: 16 }}
-                allowClear
-            />
+                {/* Search */}
+                <Input.Search
+                    placeholder="Tìm theo mã phiếu hoặc tên thiết bị..."
+                    onSearch={(value) => {
+                        setSearchValue(value);
+                        setPage(1);
+                    }}
+                    allowClear
+                    style={{ width: 280 }}
+                />
+            </div>
 
             {/* LIST */}
             {isLoading ? (
@@ -129,19 +156,16 @@ export default function MaintenanceHistoryPage() {
                     <Spin size="large" />
                 </div>
             ) : list.length === 0 ? (
-                <Empty description="Không có dữ liệu" />
+                <Empty description="Không có dữ liệu bảo trì" />
             ) : (
                 <>
-                    {/* Cards */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
                         {list.map((item) => {
                             const device = item.requestInfo.device;
                             const images = [device?.image1, device?.image2, device?.image3].filter(Boolean);
-
                             const createdAt = item.requestInfo.createdAt
                                 ? dayjs(item.requestInfo.createdAt).format("DD/MM/YYYY HH:mm")
                                 : "-";
-
                             const completedAt = item.completedAt
                                 ? dayjs(item.completedAt).format("DD/MM/YYYY HH:mm")
                                 : "-";
@@ -152,13 +176,16 @@ export default function MaintenanceHistoryPage() {
                                     bordered
                                     hoverable
                                     bodyStyle={{ padding: 16 }}
+                                    style={{ borderRadius: 8, border: "1px solid #e8e8e8" }}
                                 >
                                     <Row gutter={[12, 12]}>
-                                        <Col xs={24} sm={6}>
+                                        {/* Hình ảnh thiết bị */}
+                                        <Col xs={24} sm={6} md={5}>
                                             {images.length > 0 ? (
                                                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                                     <Image
                                                         src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${images[0]}`}
+                                                        alt={device?.deviceName}
                                                         width="100%"
                                                         height={120}
                                                         style={{
@@ -168,11 +195,19 @@ export default function MaintenanceHistoryPage() {
                                                         }}
                                                     />
                                                     {images.length > 1 && (
-                                                        <div style={{ display: "flex", gap: 8 }}>
+                                                        <div
+                                                            style={{
+                                                                display: "flex",
+                                                                justifyContent: "center",
+                                                                gap: 8,
+                                                                width: "100%",
+                                                            }}
+                                                        >
                                                             {images.slice(1).map((img, idx) => (
                                                                 <Image
                                                                     key={idx}
                                                                     src={`${import.meta.env.VITE_BACKEND_URL}/storage/DEVICE/${img}`}
+                                                                    alt={`device-thumb-${idx}`}
                                                                     width="48%"
                                                                     height={80}
                                                                     style={{
@@ -189,91 +224,83 @@ export default function MaintenanceHistoryPage() {
                                                 <div
                                                     style={{
                                                         width: "100%",
-                                                        height: 140,
+                                                        height: 120,
                                                         background: "#f5f5f5",
-                                                        borderRadius: 8,
+                                                        borderRadius: 6,
                                                         display: "flex",
                                                         justifyContent: "center",
                                                         alignItems: "center",
                                                         color: "#aaa",
-                                                        border: "1px solid #eee",
+                                                        border: "1px solid #ddd",
                                                     }}
                                                 >
-                                                    Không có ảnh
+                                                    Không có hình ảnh
                                                 </div>
                                             )}
                                         </Col>
 
-                                        {/* Info */}
-                                        <Col xs={24} sm={18}>
+                                        {/* Thông tin phiếu */}
+                                        <Col xs={24} sm={18} md={19}>
                                             <div
                                                 style={{
                                                     display: "flex",
                                                     justifyContent: "space-between",
                                                     flexWrap: "wrap",
-                                                    gap: 16,
                                                 }}
                                             >
                                                 <div style={{ flex: 1, minWidth: 300 }}>
-                                                    <Text strong style={{ fontSize: 16 }}>
-                                                        {device?.deviceName}{" "}
-                                                        <Text type="secondary">({device?.deviceCode})</Text>
+                                                    <Text strong style={{ fontSize: 15 }}>
+                                                        {device?.deviceName || "Thiết bị không xác định"}{" "}
+                                                        <Text type="secondary" style={{ fontSize: 13 }}>
+                                                            ({device?.deviceCode || "Không có mã"})
+                                                        </Text>
                                                     </Text>
 
-                                                    <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.8 }}>
-                                                        <div style={{ marginBottom: 6 }}>
+                                                    <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.7 }}>
+                                                        <p>
                                                             <Text type="secondary">Mã phiếu: </Text>
                                                             <Text strong>{item.requestInfo.requestCode}</Text>
-                                                        </div>
-
-                                                        <div style={{ marginBottom: 6 }}>
+                                                        </p>
+                                                        <p>
                                                             <Text type="secondary">Mức độ ưu tiên: </Text>
-                                                            <Tag color={getPriorityColor(item.requestInfo.priorityLevel ?? "")}>
-                                                                {getPriorityText(item.requestInfo.priorityLevel || "-")}
+                                                            <Tag color={getPriorityColor(item.requestInfo.priorityLevel)}>
+                                                                {getPriorityText(item.requestInfo.priorityLevel)}
                                                             </Tag>
-                                                        </div>
-
-                                                        <div style={{ marginBottom: 6 }}>
+                                                        </p>
+                                                        <p>
                                                             <Text type="secondary">Trạng thái: </Text>
-                                                            <Tag color={getStatusColor(item.requestInfo.status ?? "")}>
-                                                                {item.requestInfo.status || "-"}
+                                                            <Tag color={getStatusColor(item.requestInfo.status)}>
+                                                                {item.requestInfo.status}
                                                             </Tag>
-                                                        </div>
-
-                                                        <div style={{ marginBottom: 6 }}>
+                                                        </p>
+                                                        <p>
                                                             <Text type="secondary">Công ty: </Text>
-                                                            <Text>{device?.companyName || "-"}</Text>
-                                                        </div>
-
+                                                            {device?.companyName || "-"}
+                                                        </p>
                                                         {device?.departmentName && (
-                                                            <div style={{ marginBottom: 6 }}>
+                                                            <p>
                                                                 <Text type="secondary">Phòng ban: </Text>
-                                                                <Text>{device.departmentName}</Text>
-                                                            </div>
+                                                                {device.departmentName}
+                                                            </p>
                                                         )}
-
-
-                                                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f0f0" }}>
-                                                            <Text type="secondary" style={{ fontSize: 12 }}>
-                                                                Ngày tạo: {createdAt}
-                                                            </Text>
-                                                        </div>
+                                                        <p>
+                                                            <Text type="secondary">Ngày tạo: </Text>
+                                                            {createdAt}
+                                                        </p>
+                                                        <p>
+                                                            <Text type="secondary">Hoàn thành: </Text>
+                                                            {completedAt}
+                                                        </p>
                                                     </div>
                                                 </div>
 
-                                                {/* Action buttons */}
-                                                <div
-                                                    style={{
-                                                        display: "flex",
-                                                        flexDirection: "column",
-                                                        gap: 8,
-                                                        minWidth: 180,
-                                                    }}
-                                                >
-                                                    {/* View detail button */}
+                                                {/* Actions */}
+                                                <div style={{ textAlign: "right", minWidth: 180 }}>
                                                     <Button
-                                                        style={{ backgroundColor: "#0091EA", color: "white" }}
-                                                        onClick={() => setDetailModal(item.requestInfo.requestId || "-")}
+                                                        type="primary"
+                                                        onClick={() =>
+                                                            setDetailModal(item.requestInfo.requestId || "")
+                                                        }
                                                     >
                                                         Xem chi tiết
                                                     </Button>
@@ -287,15 +314,20 @@ export default function MaintenanceHistoryPage() {
                     </div>
 
                     {/* Pagination */}
-                    {data?.meta && (
-                        <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+                    {meta && (
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                marginTop: 24,
+                            }}
+                        >
                             <Pagination
-                                current={data.meta.page}
-                                total={data.meta.total}
-                                pageSize={data.meta.pageSize}
+                                current={meta.page}
+                                total={meta.total}
+                                pageSize={meta.pageSize}
                                 showSizeChanger
                                 onChange={handlePageChange}
-                                onShowSizeChange={handlePageChange}
                                 showTotal={(t) => `Tổng ${t} phiếu`}
                             />
                         </div>
@@ -303,7 +335,7 @@ export default function MaintenanceHistoryPage() {
                 </>
             )}
 
-            {/* Modals */}
+            {/* Modal chi tiết */}
             {detailModal && (
                 <ViewMaintenanceHistoryDetail
                     open={!!detailModal}
@@ -311,6 +343,6 @@ export default function MaintenanceHistoryPage() {
                     requestId={detailModal}
                 />
             )}
-        </div>
+        </PageContainer>
     );
 }

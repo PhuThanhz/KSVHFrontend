@@ -173,18 +173,16 @@ export const callCreateUser = (user: IUser) => {
     });
 };
 
-
 export const callUpdateUser = (user: IUser) => {
     const payload = {
         id: user.id,
         name: user.name,
         address: user.address,
         role: { id: user.role?.id },
-        active: user.active,
     };
 
-    return axios.put<IBackendRes<IUser>>('/api/v1/users', payload, {
-        headers: { 'Content-Type': 'application/json' },
+    return axios.put<IBackendRes<IUser>>("/api/v1/users", payload, {
+        headers: { "Content-Type": "application/json" },
     });
 };
 
@@ -194,6 +192,13 @@ export const callFetchUser = (query: string) => {
 
 export const callFetchUserById = (id: string | number) => {
     return axios.get<IBackendRes<IUser>>(`/api/v1/users/${id}`);
+};
+export const callDeactivateUser = (id: string) => {
+    return axios.delete<IBackendRes<IUser>>(`/api/v1/users/${id}`);
+};
+
+export const callRestoreUser = (id: string) => {
+    return axios.put<IBackendRes<IUser>>(`/api/v1/users/${id}/restore`);
 };
 
 interface IResponsePasswordCode {
@@ -468,6 +473,15 @@ export const callUpdateEmployee = (data: {
     });
 };
 
+// Vô hiệu hóa (soft delete)
+export const callDeactivateEmployee = (id: string) => {
+    return axios.delete<IBackendRes<IEmployee>>(`/api/v1/employees/${id}`);
+};
+
+// Phục hồi (restore)
+export const callRestoreEmployee = (id: string) => {
+    return axios.put<IBackendRes<IEmployee>>(`/api/v1/employees/${id}/restore`);
+};
 
 
 
@@ -518,8 +532,12 @@ export const callUpdateCustomer = (data: {
     });
 };
 
-export const callDeactivateCustomer = (id: string | number) => {
-    return axios.put<IBackendRes<ICustomer>>(`/api/v1/customers/${id}/deactivate`);
+export const callDeactivateCustomer = (id: string) => {
+    return axios.delete<IBackendRes<ICustomer>>(`/api/v1/customers/${id}`);
+};
+
+export const callRestoreCustomer = (id: string) => {
+    return axios.put<IBackendRes<ICustomer>>(`/api/v1/customers/${id}/restore`);
 };
 
 
@@ -865,10 +883,17 @@ export const callUpdateTechnician = (technician: ITechnician) => {
         headers: { "Content-Type": "application/json" },
     });
 };
+// Vô hiệu hóa (soft delete)
+export const callDeactivateTechnician = (id: string) => {
+    return axios.delete<IBackendRes<ITechnician>>(`/api/v1/technicians/${id}`);
+};
+
+// Phục hồi (restore)
+export const callRestoreTechnician = (id: string) => {
+    return axios.put<IBackendRes<ITechnician>>(`/api/v1/technicians/${id}/restore`);
+};
 
 
-
-/** ======================== Module InventoryItem ======================== **/
 /** ======================== Module InventoryItem ======================== **/
 export const callFetchInventoryItem = (query: string) => {
     return axios.get<IBackendRes<IModelPaginate<IInventoryItem>>>(`/api/v1/inventory-items?${query}`);
@@ -1073,7 +1098,6 @@ export const callFetchMyTechnicianAvailability = (query: string) => {
         `/api/v1/technician-availabilities/my?${query}`
     );
 };
-
 
 
 /** ======================== Module Maintenance Request ======================== **/

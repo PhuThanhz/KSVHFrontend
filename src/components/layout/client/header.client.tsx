@@ -3,13 +3,11 @@ import {
     ContactsOutlined,
     FireOutlined,
     LogoutOutlined,
-    MenuFoldOutlined,
     HistoryOutlined,
     ToolOutlined,
 } from "@ant-design/icons";
 import {
     Avatar,
-    Drawer,
     Dropdown,
     Space,
     message,
@@ -30,7 +28,6 @@ const Header = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { isAuthenticated, user } = useAppSelector((state) => state.account);
-    const [openMobileMenu, setOpenMobileMenu] = useState(false);
     const [openManageAccount, setOpenManageAccount] = useState(false);
     const [current, setCurrent] = useState(PATHS.CLIENT.HOME);
     const location = useLocation();
@@ -149,12 +146,12 @@ const Header = () => {
                 : []),
             {
                 label: (
-                    <span className="cursor-pointer" onClick={handleLogout}>
+                    <span className="cursor-pointer text-red-500" onClick={handleLogout}>
                         Đăng xuất
                     </span>
                 ),
                 key: "logout",
-                icon: <LogoutOutlined />,
+                icon: <LogoutOutlined style={{ color: "#ff4d4f" }} />,
             },
         ]
         : [
@@ -165,14 +162,13 @@ const Header = () => {
         ];
 
     const items: MenuProps["items"] = [];
-    const itemsMobiles = [...items, ...itemsDropdown];
 
     return (
         <>
-            {/* Header Section */}
-            <header className="bg-[#222831] sticky top-0 z-50">
+            {/* ================= HEADER ================= */}
+            <header className="bg-[#222831] sticky top-0 z-50 shadow-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    {/* Logo + Text */}
+                    {/* LOGO */}
                     <div
                         className="flex items-center gap-2 cursor-pointer"
                         onClick={() => navigate(PATHS.CLIENT.HOME)}
@@ -180,98 +176,58 @@ const Header = () => {
                         <img
                             src="/logo/logo.png"
                             alt="AMMS Logo"
-                            className="h-10 w-auto object-contain hover:opacity-80 transition-opacity duration-200"
+                            className="h-10 w-auto object-contain hover:opacity-85 transition-opacity"
                         />
                         {!isMobile && (
-                            <span className="text-white font-bold text-lg leading-none">
+                            <span className="text-white font-bold text-lg tracking-wide">
                                 AMMS
                             </span>
                         )}
                     </div>
 
-                    {/* Desktop Menu & User */}
-                    {!isMobile && (
-                        <div className="flex items-center gap-6">
-                            {/* Top Menu */}
-                            {items.length > 0 && (
-                                <ConfigProvider
-                                    theme={{
-                                        token: {
-                                            colorPrimary: "#fff",
-                                            colorBgContainer: "#222831",
-                                            colorText: "#a7a7a7",
-                                        },
-                                    }}
+                    {/* =============== USER =============== */}
+                    <div className="flex items-center">
+                        {isAuthenticated ? (
+                            <Dropdown
+                                menu={{ items: itemsDropdown }}
+                                trigger={["click"]}
+                                placement="bottomRight"
+                            >
+                                <Space
+                                    className="cursor-pointer rounded-md px-3 py-2 hover:bg-[#393E46] transition-all duration-200"
+                                    size={10}
                                 >
-                                    <Menu
-                                        onClick={onClick}
-                                        selectedKeys={[current]}
-                                        mode="horizontal"
-                                        items={items}
-                                        className="border-0 bg-transparent"
-                                    />
-                                </ConfigProvider>
-                            )}
-
-                            {/* User */}
-                            {isAuthenticated ? (
-                                <Dropdown
-                                    menu={{ items: itemsDropdown }}
-                                    trigger={["click"]}
-                                >
-                                    <Space className="cursor-pointer px-3 py-2 rounded-md hover:bg-[#393E46] transition-colors duration-200">
-                                        <Avatar
-                                            src={avatarUrl}
-                                            alt={user?.name}
-                                            className="border-2 border-[#61dafb]"
-                                        >
-                                            {!avatarUrl &&
-                                                user?.name
-                                                    ?.substring(0, 2)
-                                                    ?.toUpperCase()}
-                                        </Avatar>
-                                        <span className="text-white font-medium">
+                                    <Avatar
+                                        src={avatarUrl}
+                                        alt={user?.name}
+                                        className="border-2 border-[#61dafb]"
+                                        size={isMobile ? 36 : 40}
+                                    >
+                                        {!avatarUrl &&
+                                            user?.name
+                                                ?.substring(0, 2)
+                                                ?.toUpperCase()}
+                                    </Avatar>
+                                    {!isMobile && (
+                                        <span className="text-white font-medium text-sm truncate max-w-[160px]">
                                             {user?.name || "Người dùng"}
                                         </span>
-                                    </Space>
-                                </Dropdown>
-                            ) : (
-                                <Link
-                                    to={PATHS.LOGIN}
-                                    className="text-white hover:text-[#61dafb] transition-colors duration-200 px-4 py-2 rounded-md hover:bg-[#393E46]"
-                                >
-                                    Đăng Nhập
-                                </Link>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Mobile Menu Button */}
-                    {isMobile && (
-                        <MenuFoldOutlined
-                            onClick={() => setOpenMobileMenu(true)}
-                            className="text-white text-2xl cursor-pointer hover:text-[#61dafb] transition-colors duration-200"
-                        />
-                    )}
+                                    )}
+                                </Space>
+                            </Dropdown>
+                        ) : (
+                            <Link
+                                to={PATHS.LOGIN}
+                                className="text-white bg-[#61dafb]/10 hover:bg-[#61dafb]/20 border border-[#61dafb]/30 px-4 py-2 rounded-md transition-all text-sm font-medium"
+                            >
+                                Đăng Nhập
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </header>
 
-            {/* Mobile Drawer */}
-            <Drawer
-                title="Chức năng"
-                placement="right"
-                onClose={() => setOpenMobileMenu(false)}
-                open={openMobileMenu}
-            >
-                <Menu
-                    onClick={onClick}
-                    selectedKeys={[current]}
-                    mode="inline"
-                    items={itemsMobiles}
-                />
-            </Drawer>
-
-            {/* Manage Account Modal */}
+            {/* ================= MANAGE ACCOUNT MODAL ================= */}
             <ManageAccount
                 open={openManageAccount}
                 onClose={setOpenManageAccount}

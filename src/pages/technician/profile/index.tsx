@@ -130,15 +130,18 @@ const TechnicianProfilePage: React.FC = () => {
     const displayAvatar = previewUrl || avatarSrc;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white flex justify-center py-10 px-4 pb-28">
-            <Card className="w-full max-w-md rounded-xl shadow-md p-6 bg-white">
+        <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white flex justify-center py-16 px-6">
+            <Card
+                className="w-full max-w-2xl rounded-2xl shadow-lg p-10 bg-white"
+                style={{ fontSize: "18px" }}
+            >
                 {/* ====== Header thông tin ====== */}
-                <div className="flex flex-col items-center text-center">
+                <div className="flex flex-col items-center text-center mb-6">
                     <Avatar
-                        size={100}
+                        size={130}
                         src={avatarSrc}
                         icon={!avatarSrc && <UserOutlined />}
-                        className={`shadow-md mb-3 ${avatarSrc
+                        className={`shadow-lg mb-4 ${avatarSrc
                             ? ""
                             : "bg-gradient-to-br from-pink-400 to-orange-400 text-white"
                             }`}
@@ -146,73 +149,81 @@ const TechnicianProfilePage: React.FC = () => {
                         {!avatarSrc && user?.name?.charAt(0)?.toUpperCase()}
                     </Avatar>
 
-                    <Title level={4} style={{ marginBottom: 4 }}>
+                    <Title level={3} style={{ marginBottom: 4, fontSize: 28 }}>
                         {user?.name || employee?.fullName || "Kỹ thuật viên"}
                     </Title>
-                    <Text type="secondary">Kỹ thuật viên bảo trì</Text>
+                    <Text type="secondary" style={{ fontSize: 18 }}>
+                        Kỹ thuật viên bảo trì
+                    </Text>
                 </div>
 
                 <Divider />
 
                 {/* ====== Thông tin chi tiết ====== */}
-                <Space direction="vertical" size={12} style={{ width: "100%" }}>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-gray-700">
-                            <MailOutlined />
-                            <Text>Email:</Text>
+                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                    <div className="flex items-center justify-between py-2">
+                        <div className="flex items-center gap-4 text-gray-700">
+                            <MailOutlined style={{ fontSize: 20 }} />
+                            <Text strong style={{ fontSize: 17 }}>Email:</Text>
                         </div>
-                        <Text strong>{user?.email || employee?.email || "Chưa cập nhật"}</Text>
+                        <Text style={{ fontSize: 17 }}>{user?.email || employee?.email || "Chưa cập nhật"}</Text>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-gray-700">
-                            <IdcardOutlined />
-                            <Text>Mã nhân viên:</Text>
+                    <div className="flex items-center justify-between py-2">
+                        <div className="flex items-center gap-4 text-gray-700">
+                            <IdcardOutlined style={{ fontSize: 20 }} />
+                            <Text strong style={{ fontSize: 17 }}>Mã nhân viên:</Text>
                         </div>
-                        <Text strong>{employee?.employeeCode || "Không có"}</Text>
+                        <Text style={{ fontSize: 17 }}>{employee?.employeeCode || "Không có"}</Text>
                     </div>
 
                     {employee?.phone && (
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-gray-700">
-                                <PhoneOutlined />
-                                <Text>Số điện thoại:</Text>
+                        <div className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-4 text-gray-700">
+                                <PhoneOutlined style={{ fontSize: 20 }} />
+                                <Text strong style={{ fontSize: 17 }}>Số điện thoại:</Text>
                             </div>
-                            <Text strong>{employee.phone}</Text>
+                            <Text style={{ fontSize: 17 }}>{employee.phone}</Text>
                         </div>
                     )}
 
                     {employee?.positionName && (
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-gray-700">
-                                <ToolOutlined />
-                                <Text>Chức vụ:</Text>
+                        <div className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-4 text-gray-700">
+                                <ToolOutlined style={{ fontSize: 20 }} />
+                                <Text strong style={{ fontSize: 17 }}>Chức vụ:</Text>
                             </div>
-                            <Text strong>{employee.positionName}</Text>
+                            <Text style={{ fontSize: 17 }}>{employee.positionName}</Text>
                         </div>
                     )}
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-gray-700">
-                            <UserOutlined />
-                            <Text>Địa chỉ:</Text>
+                    <div className="flex items-center justify-between py-2">
+                        <div className="flex items-center gap-4 text-gray-700">
+                            <UserOutlined style={{ fontSize: 20 }} />
+                            <Text strong style={{ fontSize: 17 }}>Địa chỉ:</Text>
                         </div>
-                        <Text strong>{user?.address || "Chưa cập nhật"}</Text>
+                        <Text style={{ fontSize: 17 }}>{user?.address || "Chưa cập nhật"}</Text>
                     </div>
                 </Space>
 
                 <Divider />
 
-                <Space className="w-full mt-4 flex justify-between">
+                <Space className="w-full mt-6 flex justify-between">
                     <Button
                         type="primary"
+                        size="large"
                         icon={<EditOutlined />}
                         onClick={() => setOpenModal(true)}
                     >
                         Cập nhật thông tin
                     </Button>
 
-                    <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
+                    <Button
+                        danger
+                        size="large"
+                        icon={<LogoutOutlined />}
+                        onClick={handleLogout}
+                    >
                         Đăng xuất
                     </Button>
                 </Space>
@@ -220,13 +231,13 @@ const TechnicianProfilePage: React.FC = () => {
 
             {/* ===== Modal cập nhật hồ sơ ===== */}
             <Modal
-                title="Cập nhật thông tin cá nhân"
+                title={<span style={{ fontSize: 20, fontWeight: 600 }}>Cập nhật thông tin cá nhân</span>}
                 open={openModal}
                 onCancel={() => setOpenModal(false)}
                 footer={null}
                 destroyOnClose
                 maskClosable={false}
-                width={isMobile ? "100%" : 600}
+                width={isMobile ? "100%" : 650}
                 className="rounded-lg"
             >
                 <Form
@@ -243,8 +254,12 @@ const TechnicianProfilePage: React.FC = () => {
                 >
                     {/* Avatar */}
                     <div style={{ textAlign: "center", marginBottom: 20 }}>
-                        <Avatar size={100} src={displayAvatar || undefined} icon={<UserOutlined />} />
-                        <div className="mt-2">
+                        <Avatar
+                            size={120}
+                            src={displayAvatar || undefined}
+                            icon={<UserOutlined />}
+                        />
+                        <div className="mt-3">
                             <Upload
                                 showUploadList={false}
                                 beforeUpload={handleFileSelect}
@@ -253,7 +268,7 @@ const TechnicianProfilePage: React.FC = () => {
                             >
                                 <Button
                                     icon={<UploadOutlined />}
-                                    size="small"
+                                    size="middle"
                                     disabled={submitting}
                                 >
                                     Chọn Avatar
@@ -262,7 +277,7 @@ const TechnicianProfilePage: React.FC = () => {
                         </div>
 
                         {avatarFile && (
-                            <div className="mt-1 text-xs text-gray-500">
+                            <div className="mt-2 text-sm text-gray-500">
                                 Đã chọn: {avatarFile.name} ({(avatarFile.size / 1024).toFixed(1)}KB)
                             </div>
                         )}
@@ -270,29 +285,30 @@ const TechnicianProfilePage: React.FC = () => {
 
                     {/* Form fields */}
                     <Form.Item
-                        label="Họ và tên"
+                        label={<span style={{ fontSize: 17 }}>Họ và tên</span>}
                         name="name"
                         rules={[{ required: true, message: "Vui lòng nhập họ và tên!" }]}
                     >
-                        <Input placeholder="Nhập họ và tên" disabled={submitting} />
+                        <Input size="large" placeholder="Nhập họ và tên" disabled={submitting} />
                     </Form.Item>
 
-                    <Form.Item label="Email" name="email">
-                        <Input disabled />
+                    <Form.Item label={<span style={{ fontSize: 17 }}>Email</span>} name="email">
+                        <Input size="large" disabled />
                     </Form.Item>
 
-                    <Form.Item label="Mã nhân viên" name="employeeCode">
-                        <Input disabled />
+                    <Form.Item label={<span style={{ fontSize: 17 }}>Mã nhân viên</span>} name="employeeCode">
+                        <Input size="large" disabled />
                     </Form.Item>
 
-                    <Form.Item label="Địa chỉ" name="address">
-                        <Input placeholder="Nhập địa chỉ" disabled={submitting} />
+                    <Form.Item label={<span style={{ fontSize: 17 }}>Địa chỉ</span>} name="address">
+                        <Input size="large" placeholder="Nhập địa chỉ" disabled={submitting} />
                     </Form.Item>
 
                     <div className="text-right">
                         <Button
                             type="primary"
                             htmlType="submit"
+                            size="large"
                             loading={submitting}
                             className="bg-blue-500 hover:bg-blue-600"
                         >

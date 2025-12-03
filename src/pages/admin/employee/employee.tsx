@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Space, Tag, Badge } from "antd";
+import { Button, Space, Tag, Badge, Popconfirm, message } from "antd";
 import {
     EditOutlined,
     EyeOutlined,
-    PlusOutlined,
+    StopOutlined,
+    ReloadOutlined,
 } from "@ant-design/icons";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import queryString from "query-string";
@@ -19,12 +20,11 @@ import type { IEmployee } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { PAGINATION_CONFIG } from "@/config/pagination";
-import { sfLike } from "spring-filter-query-builder";
-
 import { useEmployeesQuery } from "@/hooks/user/useEmployees";
 import { useCompaniesQuery } from "@/hooks/useCompanies";
 import { useDepartmentsQuery } from "@/hooks/useDepartments";
 import { usePositionsQuery } from "@/hooks/usePositions";
+import { callDeactivateEmployee, callRestoreEmployee } from "@/config/api";
 
 import ModalEmployee from "@/pages/admin/employee/modal.employee";
 import ViewDetailEmployee from "@/pages/admin/employee/view.employee";
@@ -52,7 +52,7 @@ const EmployeePage = () => {
 
     const tableRef = useRef<ActionType>(null);
 
-    const { data, isFetching } = useEmployeesQuery(query);
+    const { data, isFetching, refetch } = useEmployeesQuery(query);
     const { data: companiesData } = useCompaniesQuery("page=1&size=100");
     const { data: departmentsData } = useDepartmentsQuery("page=1&size=100");
     const { data: positionsData } = usePositionsQuery("page=1&size=100");
@@ -67,7 +67,7 @@ const EmployeePage = () => {
     }, [companiesData, departmentsData, positionsData]);
 
     // ==================================================================
-    // TỰ ĐỘNG BUILD QUERY KHI FILTER THAY ĐỔI
+    // AUTO BUILD QUERY
     // ==================================================================
     useEffect(() => {
         const q: any = {
@@ -106,6 +106,11 @@ const EmployeePage = () => {
     };
     const employees = data?.result ?? [];
 
+    /** Reload table */
+    const reloadTable = () => {
+        refetch();
+    };
+
     /** Build query sort/pagination cho DataTable */
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
@@ -140,16 +145,27 @@ const EmployeePage = () => {
         return `${temp}&${sortBy}`;
     };
 
-    const reloadTable = () => {
-        setSearchValue("");
-        setCompanyFilter(null);
-        setDepartmentFilter(null);
-        setPositionFilter(null);
-        setStatusFilter(null);
-        setCreatedAtFilter(null);
-        setQuery(
-            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
-        );
+    // ==================================================================
+    // HANDLERS
+    // ==================================================================
+    const handleDeactivate = async (id: string) => {
+        try {
+            await callDeactivateEmployee(id);
+            message.success("Đã vô hiệu hóa nhân viên");
+            reloadTable();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || "Lỗi khi vô hiệu hóa");
+        }
+    };
+
+    const handleRestore = async (id: string) => {
+        try {
+            await callRestoreEmployee(id);
+            message.success("Đã phục hồi nhân viên");
+            reloadTable();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || "Lỗi khi phục hồi");
+        }
     };
 
     // ==================================================================
@@ -209,7 +225,7 @@ const EmployeePage = () => {
             title: "Hành động",
             hideInSearch: true,
             align: "center",
-            width: 140,
+            width: 160,
             render: (_, entity) => (
                 <Space>
                     <Access permission={ALL_PERMISSIONS.EMPLOYEE.GET_BY_ID} hideChildren>
@@ -221,6 +237,7 @@ const EmployeePage = () => {
                             }}
                         />
                     </Access>
+
                     <Access permission={ALL_PERMISSIONS.EMPLOYEE.UPDATE} hideChildren>
                         <EditOutlined
                             style={{ fontSize: 18, color: "#fa8c16", cursor: "pointer" }}
@@ -230,6 +247,42 @@ const EmployeePage = () => {
                             }}
                         />
                     </Access>
+
+                    {entity.active ? (
+                        <Access permission={ALL_PERMISSIONS.EMPLOYEE.DELETE} hideChildren>
+                            <Popconfirm
+                                title="Vô hiệu hóa nhân viên này?"
+                                okText="Xác nhận"
+                                cancelText="Hủy"
+                                onConfirm={() => handleDeactivate(String(entity.id))}
+                            >
+                                <StopOutlined
+                                    style={{
+                                        fontSize: 18,
+                                        color: "#ff4d4f",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </Popconfirm>
+                        </Access>
+                    ) : (
+                        <Access permission={ALL_PERMISSIONS.EMPLOYEE.RESTORE} hideChildren>
+                            <Popconfirm
+                                title="Phục hồi nhân viên này?"
+                                okText="Xác nhận"
+                                cancelText="Hủy"
+                                onConfirm={() => handleRestore(String(entity.id))}
+                            >
+                                <ReloadOutlined
+                                    style={{
+                                        fontSize: 18,
+                                        color: "#52c41a",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </Popconfirm>
+                        </Access>
+                    )}
                 </Space>
             ),
         },
@@ -257,21 +310,9 @@ const EmployeePage = () => {
                     <div className="flex flex-wrap gap-3 items-center">
                         <AdvancedFilterSelect
                             fields={[
-                                {
-                                    key: "company",
-                                    label: "Công ty",
-                                    options: companyOptions,
-                                },
-                                {
-                                    key: "department",
-                                    label: "Phòng ban",
-                                    options: departmentOptions,
-                                },
-                                {
-                                    key: "position",
-                                    label: "Chức vụ",
-                                    options: positionOptions,
-                                },
+                                { key: "company", label: "Công ty", options: companyOptions },
+                                { key: "department", label: "Phòng ban", options: departmentOptions },
+                                { key: "position", label: "Chức vụ", options: positionOptions },
                                 {
                                     key: "status",
                                     label: "Trạng thái",
@@ -326,9 +367,7 @@ const EmployeePage = () => {
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
-                                <span
-                                    style={{ fontWeight: 600, color: "#1677ff" }}
-                                >
+                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
                                 nhân viên

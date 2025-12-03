@@ -1,5 +1,5 @@
 import {
-    Drawer,
+    Modal,
     Descriptions,
     Typography,
     Divider,
@@ -9,6 +9,7 @@ import {
     Button,
 } from "antd";
 import dayjs from "dayjs";
+import { isMobile } from "react-device-detect";
 import { useTechnicianAvailabilityByIdQuery } from "@/hooks/useTechnicianAvailability";
 
 const { Text, Title } = Typography;
@@ -19,7 +20,6 @@ interface IProps {
     technicianAvailabilityId?: string | number | null;
     onEdit?: (data: any) => void;
 }
-
 
 const ViewDetailTechnicianAvailability = ({
     onClose,
@@ -48,15 +48,11 @@ const ViewDetailTechnicianAvailability = ({
     };
 
     return (
-        <Drawer
+        <Modal
             title={<Title level={4}>Chi tiết ca làm việc kỹ thuật viên</Title>}
-            placement="right"
-            onClose={() => onClose(false)}
             open={open}
-            width={"42vw"}
-            maskClosable={false}
-            bodyStyle={{ paddingBottom: 40 }}
-            extra={
+            onCancel={() => onClose(false)}
+            footer={
                 !isLoading && availability ? (
                     <Button
                         type="primary"
@@ -66,6 +62,10 @@ const ViewDetailTechnicianAvailability = ({
                     </Button>
                 ) : null
             }
+            width={isMobile ? "100%" : 800}
+            maskClosable={false}
+            destroyOnClose
+            centered
         >
             {isLoading ? (
                 <div style={{ textAlign: "center", padding: "50px 0" }}>
@@ -117,7 +117,7 @@ const ViewDetailTechnicianAvailability = ({
                             )}
                         </Descriptions.Item>
 
-                        <Descriptions.Item label="Ca ">
+                        <Descriptions.Item label="Ca">
                             {availability.shiftTemplate ? (
                                 <>
                                     <Text strong>
@@ -170,9 +170,7 @@ const ViewDetailTechnicianAvailability = ({
                         <Descriptions.Item label="Ngày tạo">
                             <Text type="secondary">
                                 {availability.createdAt
-                                    ? dayjs(availability.createdAt).format(
-                                        "DD-MM-YYYY HH:mm"
-                                    )
+                                    ? dayjs(availability.createdAt).format("DD-MM-YYYY HH:mm")
                                     : "-"}
                             </Text>
                         </Descriptions.Item>
@@ -180,9 +178,7 @@ const ViewDetailTechnicianAvailability = ({
                         <Descriptions.Item label="Ngày cập nhật">
                             <Text type="secondary">
                                 {availability.updatedAt
-                                    ? dayjs(availability.updatedAt).format(
-                                        "DD-MM-YYYY HH:mm"
-                                    )
+                                    ? dayjs(availability.updatedAt).format("DD-MM-YYYY HH:mm")
                                     : "-"}
                             </Text>
                         </Descriptions.Item>
@@ -198,7 +194,7 @@ const ViewDetailTechnicianAvailability = ({
                     </div>
                 </>
             )}
-        </Drawer>
+        </Modal>
     );
 };
 

@@ -26,7 +26,7 @@ import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 
 import ModalApproveAcceptance from "@/pages/admin/maintenance/maintenance-acceptance/modal.approve-acceptance";
-import ModalRejectAcceptance from "@/pages/admin/maintenance/maintenance-acceptance/modal.reject-acceptanc";
+import ModalRejectAcceptance from "@/pages/admin/maintenance/maintenance-acceptance/modal.reject-acceptance";
 import ViewDetailAcceptance from "@/pages/admin/maintenance/maintenance-acceptance/view-detail-acceptance";
 
 const { Title, Text } = Typography;
@@ -269,7 +269,6 @@ export default function MaintenanceAcceptancePage() {
                                                 </div>
                                             )}
                                         </Col>
-
                                         {/* Info */}
                                         <Col xs={24} sm={18}>
                                             <div
@@ -280,6 +279,7 @@ export default function MaintenanceAcceptancePage() {
                                                     gap: 16,
                                                 }}
                                             >
+                                                {/* Left info section */}
                                                 <div style={{ flex: 1, minWidth: 300 }}>
                                                     <Text strong style={{ fontSize: 16 }}>
                                                         {device?.deviceName}{" "}
@@ -287,11 +287,13 @@ export default function MaintenanceAcceptancePage() {
                                                     </Text>
 
                                                     <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.8 }}>
+                                                        {/* Request code */}
                                                         <div style={{ marginBottom: 6 }}>
                                                             <Text type="secondary">Mã phiếu: </Text>
                                                             <Text strong>{item.requestCode}</Text>
                                                         </div>
 
+                                                        {/* Priority */}
                                                         <div style={{ marginBottom: 6 }}>
                                                             <Text type="secondary">Mức độ ưu tiên: </Text>
                                                             <Tag color={getPriorityColor(item.priorityLevel)}>
@@ -299,6 +301,7 @@ export default function MaintenanceAcceptancePage() {
                                                             </Tag>
                                                         </div>
 
+                                                        {/* Status */}
                                                         <div style={{ marginBottom: 6 }}>
                                                             <Text type="secondary">Trạng thái: </Text>
                                                             <Tag color={getStatusColor(item.status)}>
@@ -306,11 +309,22 @@ export default function MaintenanceAcceptancePage() {
                                                             </Tag>
                                                         </div>
 
+                                                        {item.acceptanceProgress && (
+                                                            <div style={{ marginBottom: 6 }}>
+                                                                <Text type="secondary">Tiến độ nghiệm thu: </Text>
+                                                                <Tag color={item.fullyAccepted ? "green" : "orange"}>
+                                                                    {item.acceptanceProgress}
+                                                                </Tag>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Company */}
                                                         <div style={{ marginBottom: 6 }}>
                                                             <Text type="secondary">Công ty: </Text>
                                                             <Text>{device?.companyName || "-"}</Text>
                                                         </div>
 
+                                                        {/* Department */}
                                                         {device?.departmentName && (
                                                             <div style={{ marginBottom: 6 }}>
                                                                 <Text type="secondary">Phòng ban: </Text>
@@ -318,12 +332,20 @@ export default function MaintenanceAcceptancePage() {
                                                             </div>
                                                         )}
 
+                                                        {/* Location */}
                                                         <div style={{ marginBottom: 6 }}>
                                                             <Text type="secondary">Vị trí: </Text>
                                                             <Text>{device?.locationDetail || "-"}</Text>
                                                         </div>
 
-                                                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f0f0" }}>
+                                                        {/* Created time */}
+                                                        <div
+                                                            style={{
+                                                                marginTop: 8,
+                                                                paddingTop: 8,
+                                                                borderTop: "1px solid #f0f0f0",
+                                                            }}
+                                                        >
                                                             <Text type="secondary" style={{ fontSize: 12 }}>
                                                                 Ngày tạo: {createdAt}
                                                             </Text>
@@ -331,14 +353,23 @@ export default function MaintenanceAcceptancePage() {
 
                                                         {/* Show rejection info for REJECTED tab */}
                                                         {activeTab === "REJECTED" && item.rejectInfo && (
-                                                            <div style={{
-                                                                marginTop: 12,
-                                                                padding: 12,
-                                                                backgroundColor: "#fff1f0",
-                                                                borderRadius: 6,
-                                                                border: "1px solid #ffccc7"
-                                                            }}>
-                                                                <Text strong style={{ color: "#cf1322", display: "block", marginBottom: 8 }}>
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 12,
+                                                                    padding: 12,
+                                                                    backgroundColor: "#fff1f0",
+                                                                    borderRadius: 6,
+                                                                    border: "1px solid #ffccc7",
+                                                                }}
+                                                            >
+                                                                <Text
+                                                                    strong
+                                                                    style={{
+                                                                        color: "#cf1322",
+                                                                        display: "block",
+                                                                        marginBottom: 8,
+                                                                    }}
+                                                                >
                                                                     Thông tin từ chối nghiệm thu
                                                                 </Text>
                                                                 <div style={{ fontSize: 12, lineHeight: 1.6 }}>
@@ -366,14 +397,23 @@ export default function MaintenanceAcceptancePage() {
 
                                                         {/* Show acceptance info for ACCEPTED tab */}
                                                         {activeTab === "ACCEPTED" && item.acceptanceId && (
-                                                            <div style={{
-                                                                marginTop: 12,
-                                                                padding: 12,
-                                                                backgroundColor: "#f6ffed",
-                                                                borderRadius: 6,
-                                                                border: "1px solid #b7eb8f"
-                                                            }}>
-                                                                <Text strong style={{ color: "#389e0d", display: "block", marginBottom: 8 }}>
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 12,
+                                                                    padding: 12,
+                                                                    backgroundColor: "#f6ffed",
+                                                                    borderRadius: 6,
+                                                                    border: "1px solid #b7eb8f",
+                                                                }}
+                                                            >
+                                                                <Text
+                                                                    strong
+                                                                    style={{
+                                                                        color: "#389e0d",
+                                                                        display: "block",
+                                                                        marginBottom: 8,
+                                                                    }}
+                                                                >
                                                                     Thông tin nghiệm thu
                                                                 </Text>
                                                                 <div style={{ fontSize: 12, lineHeight: 1.6 }}>
@@ -383,7 +423,9 @@ export default function MaintenanceAcceptancePage() {
                                                                     </div>
                                                                     {completedAt !== "-" && (
                                                                         <div>
-                                                                            <Text type="secondary">Thời gian hoàn thành: </Text>
+                                                                            <Text type="secondary">
+                                                                                Thời gian hoàn thành:{" "}
+                                                                            </Text>
                                                                             <Text>{completedAt}</Text>
                                                                         </div>
                                                                     )}
@@ -405,7 +447,10 @@ export default function MaintenanceAcceptancePage() {
                                                     {/* Only pending can approve / reject */}
                                                     {activeTab === "PENDING" && (
                                                         <>
-                                                            <Access permission={ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE.APPROVE} hideChildren>
+                                                            <Access
+                                                                permission={ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE.APPROVE}
+                                                                hideChildren
+                                                            >
                                                                 <Button
                                                                     type="primary"
                                                                     onClick={() =>
@@ -419,7 +464,10 @@ export default function MaintenanceAcceptancePage() {
                                                                 </Button>
                                                             </Access>
 
-                                                            <Access permission={ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE.REJECT} hideChildren>
+                                                            <Access
+                                                                permission={ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE.REJECT}
+                                                                hideChildren
+                                                            >
                                                                 <Button
                                                                     danger
                                                                     onClick={() =>
@@ -436,7 +484,10 @@ export default function MaintenanceAcceptancePage() {
                                                     )}
 
                                                     {/* Detail always available */}
-                                                    <Access permission={ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE.GET_BY_ID} hideChildren>
+                                                    <Access
+                                                        permission={ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE.GET_BY_ID}
+                                                        hideChildren
+                                                    >
                                                         <Button
                                                             style={{ backgroundColor: "#0091EA", color: "white" }}
                                                             onClick={() => setDetailModal(item.requestId)}
@@ -447,6 +498,7 @@ export default function MaintenanceAcceptancePage() {
                                                 </div>
                                             </div>
                                         </Col>
+
                                     </Row>
                                 </Card>
                             );

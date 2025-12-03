@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Space, Tag } from "antd";
+import { Space, Tag, Popconfirm, message, Badge } from "antd";
 import {
     EditOutlined,
     EyeOutlined,
-    PlusOutlined,
+    StopOutlined,
+    ReloadOutlined,
 } from "@ant-design/icons";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import queryString from "query-string";
@@ -19,9 +20,13 @@ import type { IUser } from "@/types/backend";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { PAGINATION_CONFIG } from "@/config/pagination";
-import { sfLike } from "spring-filter-query-builder";
 import { useUsersQuery } from "@/hooks/user/useUsers";
 import { useRolesQuery } from "@/hooks/user/useRoles";
+import {
+    callDeactivateUser,
+    callRestoreUser,
+} from "@/config/api";
+
 import ModalUser from "@/pages/admin/user/modal.user";
 import ViewDetailUser from "@/pages/admin/user/view.user";
 
@@ -36,7 +41,9 @@ const UserPage = () => {
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
     const [searchValue, setSearchValue] = useState<string>("");
 
-    const [roleOptions, setRoleOptions] = useState<{ label: string; value: string; color?: string }[]>([]);
+    const [roleOptions, setRoleOptions] = useState<
+        { label: string; value: string; color?: string }[]
+    >([]);
 
     const [query, setQuery] = useState<string>(
         `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
@@ -44,7 +51,7 @@ const UserPage = () => {
 
     const tableRef = useRef<ActionType>(null);
 
-    const { data, isFetching } = useUsersQuery(query);
+    const { data, isFetching, refetch } = useUsersQuery(query);
     const { data: rolesData } = useRolesQuery("page=1&size=100");
 
     useEffect(() => {
@@ -58,7 +65,6 @@ const UserPage = () => {
         }
     }, [rolesData]);
 
-    // Auto call API whenever filters change
     useEffect(() => {
         const q: any = {
             page: PAGINATION_CONFIG.DEFAULT_PAGE,
@@ -87,9 +93,9 @@ const UserPage = () => {
         pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
         total: 0,
     };
+
     const users = data?.result ?? [];
 
-    /** Xây dựng query filter cho DataTable sort/pagination */
     const buildQuery = (params: any, sort: any) => {
         const q: any = {
             page: params.current,
@@ -111,24 +117,37 @@ const UserPage = () => {
 
         let temp = queryString.stringify(q, { encode: false });
 
-        let sortBy = "";
-        if (sort?.name)
-            sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
+        let sortBy = "sort=createdAt,desc";
+        if (sort?.name) sortBy = sort.name === "ascend" ? "sort=name,asc" : "sort=name,desc";
         else if (sort?.email)
             sortBy = sort.email === "ascend" ? "sort=email,asc" : "sort=email,desc";
-        else sortBy = "sort=createdAt,desc";
 
         return `${temp}&${sortBy}`;
     };
 
     const reloadTable = () => {
-        setSearchValue("");
-        setRoleFilter(null);
-        setActiveFilter(null);
-        setCreatedAtFilter(null);
-        setQuery(
-            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
-        );
+        refetch();
+    };
+
+    // ================== HANDLERS: SOFT DELETE & RESTORE ================== //
+    const handleDeactivate = async (id: string) => {
+        try {
+            await callDeactivateUser(id);
+            message.success("Đã vô hiệu hóa người dùng");
+            reloadTable();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || "Lỗi khi vô hiệu hóa");
+        }
+    };
+
+    const handleRestore = async (id: string) => {
+        try {
+            await callRestoreUser(id);
+            message.success("Đã phục hồi người dùng");
+            reloadTable();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || "Lỗi khi phục hồi");
+        }
     };
 
     const columns: ProColumns<IUser>[] = [
@@ -141,6 +160,35 @@ const UserPage = () => {
                 index + 1 + ((meta.page || 1) - 1) * (meta.pageSize || 10),
             hideInSearch: true,
         },
+
+        {
+            title: "Avatar",
+            dataIndex: "avatar",
+            width: 90,
+            align: "center",
+            hideInSearch: true,
+            render: (_, record) => {
+                const backendURL = import.meta.env.VITE_BACKEND_URL;
+                const avatar = record.avatar
+                    ? `${backendURL}/storage/AVATAR/${record.avatar}`
+                    : null;
+
+                return (
+                    <img
+                        src={avatar || "/no-avatar.png"}
+                        alt="avatar"
+                        style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            border: "1px solid #ddd",
+                        }}
+                    />
+                );
+            },
+        },
+
         {
             title: "Tên hiển thị",
             dataIndex: "name",
@@ -165,12 +213,13 @@ const UserPage = () => {
         {
             title: "Trạng thái",
             dataIndex: "active",
+            align: "center",
             hideInSearch: true,
             render: (_, record) =>
                 record.active ? (
-                    <Tag color="green">Đang hoạt động</Tag>
+                    <Badge status="success" text="Đang hoạt động" />
                 ) : (
-                    <Tag color="red">Ngừng hoạt động</Tag>
+                    <Badge status="error" text="Ngừng hoạt động" />
                 ),
         },
         {
@@ -186,7 +235,7 @@ const UserPage = () => {
             title: "Hành động",
             hideInSearch: true,
             align: "center",
-            width: 120,
+            width: 160,
             render: (_, entity) => (
                 <Space>
                     <Access permission={ALL_PERMISSIONS.USERS.GET_BY_ID} hideChildren>
@@ -207,6 +256,42 @@ const UserPage = () => {
                             }}
                         />
                     </Access>
+
+                    {entity.active ? (
+                        <Access permission={ALL_PERMISSIONS.USERS.DELETE} hideChildren>
+                            <Popconfirm
+                                title="Vô hiệu hóa người dùng này?"
+                                okText="Xác nhận"
+                                cancelText="Hủy"
+                                onConfirm={() => handleDeactivate(String(entity.id))}
+                            >
+                                <StopOutlined
+                                    style={{
+                                        fontSize: 18,
+                                        color: "#ff4d4f",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </Popconfirm>
+                        </Access>
+                    ) : (
+                        <Access permission={ALL_PERMISSIONS.USERS.RESTORE} hideChildren>
+                            <Popconfirm
+                                title="Phục hồi người dùng này?"
+                                okText="Xác nhận"
+                                cancelText="Hủy"
+                                onConfirm={() => handleRestore(String(entity.id))}
+                            >
+                                <ReloadOutlined
+                                    style={{
+                                        fontSize: 18,
+                                        color: "#52c41a",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </Popconfirm>
+                        </Access>
+                    )}
                 </Space>
             ),
         },
@@ -291,9 +376,7 @@ const UserPage = () => {
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
-                                <span
-                                    style={{ fontWeight: 600, color: "#1677ff" }}
-                                >
+                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
                                 người dùng

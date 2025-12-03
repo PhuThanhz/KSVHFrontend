@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Space, Tag, Badge } from "antd";
+import { Space, Tag, Badge, Popconfirm, message } from "antd";
 import {
     EditOutlined,
     EyeOutlined,
-    PlusOutlined,
+    StopOutlined,
+    ReloadOutlined,
 } from "@ant-design/icons";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import queryString from "query-string";
@@ -21,6 +22,11 @@ import { ALL_PERMISSIONS } from "@/config/permissions";
 import { PAGINATION_CONFIG } from "@/config/pagination";
 import { useTechniciansQuery } from "@/hooks/user/useTechnicians";
 import { useTechnicianSuppliersQuery } from "@/hooks/useTechnicianSuppliers";
+import {
+    callDeactivateTechnician,
+    callRestoreTechnician,
+} from "@/config/api";
+
 import ModalTechnician from "@/pages/admin/technician/modal.technician";
 import ViewTechnician from "@/pages/admin/technician/view.technician";
 
@@ -36,7 +42,9 @@ const TechnicianPage = () => {
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
 
-    const [supplierOptions, setSupplierOptions] = useState<{ label: string; value: string; color?: string }[]>([]);
+    const [supplierOptions, setSupplierOptions] = useState<
+        { label: string; value: string; color?: string }[]
+    >([]);
 
     const [query, setQuery] = useState<string>(
         `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
@@ -44,7 +52,7 @@ const TechnicianPage = () => {
 
     const tableRef = useRef<ActionType>(null);
 
-    const { data, isFetching } = useTechniciansQuery(query);
+    const { data, isFetching, refetch } = useTechniciansQuery(query);
     const { data: supplierData } = useTechnicianSuppliersQuery("page=1&size=100");
 
     useEffect(() => {
@@ -68,18 +76,15 @@ const TechnicianPage = () => {
 
         const filterParts: string[] = [];
 
-        if (searchValue) {
+        if (searchValue)
             filterParts.push(`(fullName~'${searchValue}' or technicianCode~'${searchValue}')`);
-        }
 
         if (technicianTypeFilter)
             filterParts.push(`technicianType='${technicianTypeFilter}'`);
 
         if (statusFilter)
             filterParts.push(
-                statusFilter === "active"
-                    ? "activeStatus=true"
-                    : "activeStatus=false"
+                statusFilter === "active" ? "active=true" : "active=false"
             );
 
         if (createdAtFilter)
@@ -109,16 +114,13 @@ const TechnicianPage = () => {
 
         const filterParts: string[] = [];
 
-        if (searchValue) {
+        if (searchValue)
             filterParts.push(`(fullName~'${searchValue}' or technicianCode~'${searchValue}')`);
-        }
         if (technicianTypeFilter)
             filterParts.push(`technicianType='${technicianTypeFilter}'`);
         if (statusFilter)
             filterParts.push(
-                statusFilter === "active"
-                    ? "activeStatus=true"
-                    : "activeStatus=false"
+                statusFilter === "active" ? "active=true" : "active=false"
             );
         if (createdAtFilter)
             filterParts.push(createdAtFilter);
@@ -139,13 +141,28 @@ const TechnicianPage = () => {
 
     // ---------- Reset Table ---------- //
     const reloadTable = () => {
-        setSearchValue("");
-        setTechnicianTypeFilter(null);
-        setStatusFilter(null);
-        setCreatedAtFilter(null);
-        setQuery(
-            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=createdAt,desc`
-        );
+        refetch();
+    };
+
+    // ---------- Soft Delete / Restore ---------- //
+    const handleDeactivate = async (id: string) => {
+        try {
+            await callDeactivateTechnician(id);
+            message.success("Đã vô hiệu hóa kỹ thuật viên");
+            reloadTable();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || "Lỗi khi vô hiệu hóa");
+        }
+    };
+
+    const handleRestore = async (id: string) => {
+        try {
+            await callRestoreTechnician(id);
+            message.success("Đã phục hồi kỹ thuật viên");
+            reloadTable();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || "Lỗi khi phục hồi");
+        }
     };
 
     // ---------- Columns ---------- //
@@ -173,10 +190,10 @@ const TechnicianPage = () => {
         },
         {
             title: "Trạng thái hoạt động",
-            dataIndex: "activeStatus",
+            dataIndex: "active",
             align: "center",
-            render: (value) =>
-                value ? (
+            render: (active) =>
+                active ? (
                     <Badge status="success" text="Đang hoạt động" />
                 ) : (
                     <Badge status="error" text="Ngừng hoạt động" />
@@ -195,7 +212,7 @@ const TechnicianPage = () => {
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 150,
+            width: 180,
             align: "center",
             render: (_, entity) => (
                 <Space>
@@ -218,6 +235,42 @@ const TechnicianPage = () => {
                             }}
                         />
                     </Access>
+
+                    {entity.active ? (
+                        <Access permission={ALL_PERMISSIONS.TECHNICIAN.DELETE} hideChildren>
+                            <Popconfirm
+                                title="Vô hiệu hóa kỹ thuật viên này?"
+                                okText="Xác nhận"
+                                cancelText="Hủy"
+                                onConfirm={() => handleDeactivate(String(entity.id))}
+                            >
+                                <StopOutlined
+                                    style={{
+                                        fontSize: 18,
+                                        color: "#ff4d4f",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </Popconfirm>
+                        </Access>
+                    ) : (
+                        <Access permission={ALL_PERMISSIONS.TECHNICIAN.RESTORE} hideChildren>
+                            <Popconfirm
+                                title="Phục hồi kỹ thuật viên này?"
+                                okText="Xác nhận"
+                                cancelText="Hủy"
+                                onConfirm={() => handleRestore(String(entity.id))}
+                            >
+                                <ReloadOutlined
+                                    style={{
+                                        fontSize: 18,
+                                        color: "#52c41a",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </Popconfirm>
+                        </Access>
+                    )}
                 </Space>
             ),
         },
@@ -305,9 +358,7 @@ const TechnicianPage = () => {
                                     {range[0]}–{range[1]}
                                 </span>{" "}
                                 trên{" "}
-                                <span
-                                    style={{ fontWeight: 600, color: "#1677ff" }}
-                                >
+                                <span style={{ fontWeight: 600, color: "#1677ff" }}>
                                     {total.toLocaleString()}
                                 </span>{" "}
                                 kỹ thuật viên

@@ -4,6 +4,8 @@ export const ALL_PERMISSIONS = {
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/users/{id}", module: "USERS" },
         CREATE: { method: "POST", apiPath: "/api/v1/users", module: "USERS" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/users", module: "USERS" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/users/{id}", module: "USERS" },
+        RESTORE: { method: "PUT", apiPath: "/api/v1/users/{id}/restore", module: "USERS" },
     },
     PERMISSIONS: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/permissions", module: "PERMISSIONS" },
@@ -52,12 +54,17 @@ export const ALL_PERMISSIONS = {
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
         CREATE: { method: "POST", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/employees", module: "EMPLOYEE" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/employees/{id}", module: "EMPLOYEE" },
+        RESTORE: { method: "PUT", apiPath: "/api/v1/employees/{id}/restore", module: "EMPLOYEE" },
     },
+
     CUSTOMER: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/customers", module: "CUSTOMER" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/customers/{id}", module: "CUSTOMER" },
         CREATE: { method: "POST", apiPath: "/api/v1/customers", module: "CUSTOMER" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/customers", module: "CUSTOMER" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/customers/{id}", module: "CUSTOMER" },
+        RESTORE: { method: "PUT", apiPath: "/api/v1/customers/{id}/restore", module: "CUSTOMER" },
     },
     DEVICE_TYPES: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/device-types", module: "DEVICE_TYPES" },
@@ -127,6 +134,8 @@ export const ALL_PERMISSIONS = {
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/technicians/{id}", module: "TECHNICIAN" },
         CREATE: { method: "POST", apiPath: "/api/v1/technicians", module: "TECHNICIAN" },
         UPDATE: { method: "PUT", apiPath: "/api/v1/technicians", module: "TECHNICIAN" },
+        DELETE: { method: "DELETE", apiPath: "/api/v1/technicians/{id}", module: "TECHNICIAN" },
+        RESTORE: { method: "PUT", apiPath: "/api/v1/technicians/{id}/restore", module: "TECHNICIAN" },
     },
     INVENTORY_ITEM: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/inventory-items", module: "INVENTORY_ITEM" },

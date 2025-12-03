@@ -729,7 +729,9 @@ export interface ITechnicianSummary {
     fullName: string;
     phone?: string | null;
     email?: string | null;
+    active: boolean;
 }
+
 /** ==============================
  *   MODULE MaintenanceCause
  *  ============================== */
@@ -1439,6 +1441,9 @@ export interface IResAcceptanceCardDTO {
     surveyInfo?: IResSurveyCommonDTO | null;
     planInfo?: IResPlanCommonDTO | null;
 
+    acceptanceProgress?: string | null;
+    fullyAccepted?: boolean | null;
+
     // ======= Thiết bị =======
     device: {
         deviceCode?: string | null;
@@ -1475,10 +1480,8 @@ export interface IResAcceptanceDetailDTO {
     }[] | null;
 }
 
-
 export interface IResAcceptanceDTO {
     id?: string | null;
-
     acceptedAt?: string | null;
     rating?: number | null;
     comment?: string | null;
@@ -1486,7 +1489,6 @@ export interface IResAcceptanceDTO {
     requestId?: string | null;
     requestCode?: string | null;
     status: MaintenanceRequestStatus;
-
     priorityLevel?: PriorityLevel | null;
     maintenanceType?: MaintenanceType | null;
     createdAt?: string | null;
@@ -1501,7 +1503,11 @@ export interface IResAcceptanceDTO {
         departmentName?: string | null;
         locationDetail?: string | null;
     } | null;
+
+    acceptanceProgress?: string | null;
+    fullyAccepted?: boolean | null;
 }
+
 
 export interface IResEvaluationDTO {
     rating?: number | null;

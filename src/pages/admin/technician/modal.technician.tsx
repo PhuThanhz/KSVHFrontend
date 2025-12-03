@@ -5,7 +5,7 @@ import {
     ProFormText,
     ProFormDigit,
 } from "@ant-design/pro-components";
-import { Col, Form, Row, Switch, Select } from "antd";
+import { Col, Form, Row, Select } from "antd";
 import { isMobile } from "react-device-detect";
 import type { ITechnician } from "@/types/backend";
 import {
@@ -17,7 +17,7 @@ import {
     callFetchSkill,
     callFetchTechnicianById,
 } from "@/config/api";
-import { DebounceSelect } from "../../../components/common/debouce.select";
+import { DebounceSelect } from "@/components/common/debouce.select";
 
 export interface ISelectItem {
     key?: string;
@@ -41,15 +41,13 @@ const ModalTechnician = ({
     const [form] = Form.useForm();
     const isEdit = Boolean(dataInit?.id);
     const [loadingDetail, setLoadingDetail] = useState(false);
+    const [technicianType, setTechnicianType] =
+        useState<"INTERNAL" | "OUTSOURCE">("INTERNAL");
 
     const { mutate: createTechnician, isPending: isCreating } =
         useCreateTechnicianMutation();
     const { mutate: updateTechnician, isPending: isUpdating } =
         useUpdateTechnicianMutation();
-
-    /** ==================== State ==================== */
-    const [technicianType, setTechnicianType] =
-        useState<"INTERNAL" | "OUTSOURCE">("INTERNAL");
 
     /** ==================== Fetch detail khi edit ==================== */
     useEffect(() => {
@@ -63,7 +61,6 @@ const ModalTechnician = ({
                     const type = detail.technicianType || "INTERNAL";
                     setTechnicianType(type);
 
-                    // ✅ Đợi React render lại state trước khi set form
                     setTimeout(() => {
                         const supplierItem =
                             detail.supplier && detail.supplier.id
@@ -89,9 +86,9 @@ const ModalTechnician = ({
                                 type === "OUTSOURCE" && detail.costPerHire != null
                                     ? Number(detail.costPerHire)
                                     : undefined,
-                            technicianSupplier: type === "OUTSOURCE" ? supplierItem : undefined,
+                            technicianSupplier:
+                                type === "OUTSOURCE" ? supplierItem : undefined,
                             skillIds: skillItems,
-
                         });
                     }, 0);
                 }
@@ -127,7 +124,6 @@ const ModalTechnician = ({
                 )
             )
         ) as (string | number)[];
-
 
         const payload: ITechnician = {
             id: dataInit?.id,
@@ -173,7 +169,6 @@ const ModalTechnician = ({
     /** ==================== Initial Values ==================== */
     const initialValues = useMemo(
         () => ({
-            activeStatus: true,
             technicianType: "INTERNAL",
         }),
         []
@@ -323,18 +318,6 @@ const ModalTechnician = ({
                         />
                     </ProForm.Item>
                 </Col>
-
-                {isEdit && (
-                    <Col lg={12} md={12}>
-                        <ProForm.Item
-                            name="activeStatus"
-                            label="Trạng thái"
-                            valuePropName="checked"
-                        >
-                            <Switch />
-                        </ProForm.Item>
-                    </Col>
-                )}
             </Row>
         </ModalForm>
     );

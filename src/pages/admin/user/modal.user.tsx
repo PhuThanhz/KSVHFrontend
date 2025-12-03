@@ -1,9 +1,9 @@
 import { ModalForm, ProForm, ProFormText } from "@ant-design/pro-components";
-import { Col, Form, Row, Switch } from "antd";
+import { Col, Form, Row } from "antd";
 import { isMobile } from "react-device-detect";
 import { useEffect, useState } from "react";
 import type { IUser } from "@/types/backend";
-import { DebounceSelect } from "../../../components/common/debouce.select";
+import { DebounceSelect } from "@/components/common/debouce.select";
 import { useCreateUserMutation, useUpdateUserMutation } from "@/hooks/user/useUsers";
 import { callFetchRole } from "@/config/api";
 
@@ -41,7 +41,6 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                 name: dataInit.name,
                 address: dataInit.address,
                 role: { label: dataInit.role.name, value: dataInit.role.id },
-                active: dataInit.active ?? true,
             });
         } else {
             setSelectedRole(null);
@@ -57,13 +56,13 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
     };
 
     const submitUser = async (valuesForm: any) => {
-        const { name, email, password, address, role, active } = valuesForm;
+        const { name, email, password, address, role } = valuesForm;
+
         const payload: IUser = dataInit?.id
             ? {
                 id: dataInit.id,
                 name,
                 address,
-                active,
                 role: { id: Number(role?.value) },
             }
             : {
@@ -188,18 +187,6 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                         placeholder="Nhập địa chỉ"
                     />
                 </Col>
-
-                {isEdit && (
-                    <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProForm.Item
-                            name="active"
-                            label="Trạng thái kích hoạt"
-                            valuePropName="checked"
-                        >
-                            <Switch />
-                        </ProForm.Item>
-                    </Col>
-                )}
             </Row>
         </ModalForm>
     );

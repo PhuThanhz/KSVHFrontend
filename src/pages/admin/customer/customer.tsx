@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
-import { Button, Space, Tag } from "antd";
+import { Button, Space, Tag, Popconfirm, message } from "antd";
 import {
     EditOutlined,
     EyeOutlined,
     PlusOutlined,
+    StopOutlined,
+    ReloadOutlined,
 } from "@ant-design/icons";
 import type { ProColumns, ActionType } from "@ant-design/pro-components";
 import dayjs from "dayjs";
@@ -20,6 +22,7 @@ import ModalCustomer from "@/pages/admin/customer/modal.customer";
 import ViewDetailCustomer from "@/pages/admin/customer/view.customer";
 import { PAGINATION_CONFIG } from "@/config/pagination";
 import { sfLike } from "spring-filter-query-builder";
+import { callDeactivateCustomer, callRestoreCustomer } from "@/config/api";
 
 const CustomerPage = () => {
     const [openModal, setOpenModal] = useState(false);
@@ -32,7 +35,7 @@ const CustomerPage = () => {
     );
 
     const tableRef = useRef<ActionType>(null);
-    const { data, isFetching } = useCustomersQuery(query);
+    const { data, isFetching, refetch } = useCustomersQuery(query);
 
     const meta = data?.meta ?? {
         page: PAGINATION_CONFIG.DEFAULT_PAGE,
@@ -43,9 +46,7 @@ const CustomerPage = () => {
 
     /** Reload bảng */
     const reloadTable = () => {
-        setQuery(
-            `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&sort=${PAGINATION_CONFIG.DEFAULT_SORT}`
-        );
+        refetch();
     };
 
     /** Build query cho sort/pagination/filter */
@@ -92,6 +93,27 @@ const CustomerPage = () => {
         else sortBy = `sort=${PAGINATION_CONFIG.DEFAULT_SORT}`;
 
         return `${temp}&${sortBy}`;
+    };
+
+    /** Vô hiệu hóa / Phục hồi khách hàng */
+    const handleDeactivate = async (id: string) => {
+        try {
+            await callDeactivateCustomer(id);
+            message.success("Đã vô hiệu hóa khách hàng");
+            reloadTable();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || "Lỗi khi vô hiệu hóa");
+        }
+    };
+
+    const handleRestore = async (id: string) => {
+        try {
+            await callRestoreCustomer(id);
+            message.success("Đã phục hồi khách hàng");
+            reloadTable();
+        } catch (error: any) {
+            message.error(error?.response?.data?.message || "Lỗi khi phục hồi");
+        }
     };
 
     /** Cột bảng */
@@ -148,7 +170,7 @@ const CustomerPage = () => {
         {
             title: "Hành động",
             hideInSearch: true,
-            width: 120,
+            width: 160,
             align: "center",
             render: (_, entity) => (
                 <Space>
@@ -179,6 +201,42 @@ const CustomerPage = () => {
                             }}
                         />
                     </Access>
+
+                    {entity.active ? (
+                        <Access permission={ALL_PERMISSIONS.CUSTOMER.DELETE} hideChildren>
+                            <Popconfirm
+                                title="Vô hiệu hóa khách hàng này?"
+                                okText="Xác nhận"
+                                cancelText="Hủy"
+                                onConfirm={() => handleDeactivate(String(entity.id))}
+                            >
+                                <StopOutlined
+                                    style={{
+                                        fontSize: 18,
+                                        color: "#ff4d4f",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </Popconfirm>
+                        </Access>
+                    ) : (
+                        <Access permission={ALL_PERMISSIONS.CUSTOMER.RESTORE} hideChildren>
+                            <Popconfirm
+                                title="Phục hồi khách hàng này?"
+                                okText="Xác nhận"
+                                cancelText="Hủy"
+                                onConfirm={() => handleRestore(String(entity.id))}
+                            >
+                                <ReloadOutlined
+                                    style={{
+                                        fontSize: 18,
+                                        color: "#52c41a",
+                                        cursor: "pointer",
+                                    }}
+                                />
+                            </Popconfirm>
+                        </Access>
+                    )}
                 </Space>
             ),
         },

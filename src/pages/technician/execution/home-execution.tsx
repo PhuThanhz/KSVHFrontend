@@ -37,6 +37,7 @@ import type { MaintenanceRequestStatus, IResExecutionCardDTO } from "@/types/bac
 const { Title, Text } = Typography;
 
 const HomeExecution = () => {
+    /** ========== STATE ========== */
     const [activeTab, setActiveTab] = useState<string>("approved");
 
     const [openStartModal, setOpenStartModal] = useState(false);
@@ -48,7 +49,7 @@ const HomeExecution = () => {
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [selectedRequestCode, setSelectedRequestCode] = useState<string | null>(null);
 
-    /** Build query theo tab */
+    /** ========== QUERY DYNAMIC THEO TAB ========== */
     const query = useMemo(() => {
         let filter = "";
         switch (activeTab) {
@@ -79,12 +80,12 @@ const HomeExecution = () => {
         });
     }, [activeTab]);
 
-    /** Fetch API */
+    /** ========== FETCH API ========== */
     const { data, isFetching, refetch } = useApprovedExecutionsQuery(query);
     const executions: IResExecutionCardDTO[] = data?.result || [];
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    /** Modal handler */
+    /** ========== MODAL HANDLER ========== */
     const handleOpenModal = (
         type: "start" | "update" | "complete" | "view" | "support",
         id: string,
@@ -104,7 +105,7 @@ const HomeExecution = () => {
         refetch();
     };
 
-    /** Step logic */
+    /** ========== STEP LOGIC ========== */
     const getStepIndex = (status: MaintenanceRequestStatus): number => {
         switch (status) {
             case "DA_PHE_DUYET":
@@ -138,7 +139,7 @@ const HomeExecution = () => {
         }
     };
 
-    /** Render list */
+    /** ========== RENDER DANH SÁCH ========== */
     const renderList = () => {
         if (isFetching)
             return (
@@ -170,6 +171,7 @@ const HomeExecution = () => {
                             bodyStyle={{ padding: 20 }}
                         >
                             <Row gutter={16} align="top">
+                                {/* HÌNH ẢNH */}
                                 <Col xs={24} md={7} style={{ textAlign: "center" }}>
                                     {deviceImages.length > 0 ? (
                                         <Image.PreviewGroup>
@@ -201,6 +203,7 @@ const HomeExecution = () => {
                                     )}
                                 </Col>
 
+                                {/* THÔNG TIN CHÍNH */}
                                 <Col xs={24} md={17}>
                                     <Space size="small" wrap>
                                         <Tag color="blue">{item.requestCode}</Tag>
@@ -259,7 +262,12 @@ const HomeExecution = () => {
                                         items={[
                                             { title: "Phê duyệt" },
                                             { title: "Thi công" },
-                                            { title: "Chờ nghiệm thu" },
+                                            {
+                                                title:
+                                                    item.status === "TU_CHOI_NGHIEM_THU"
+                                                        ? "Bị từ chối - Làm lại"
+                                                        : "Chờ nghiệm thu",
+                                            },
                                             { title: "Hoàn thành" },
                                         ]}
                                     />
@@ -305,22 +313,26 @@ const HomeExecution = () => {
 
                                     <Divider style={{ margin: "10px 0" }} />
 
+                                    {/* ==== BUTTON HÀNH ĐỘNG ==== */}
                                     <Space wrap>
-                                        {item.status === "DA_PHE_DUYET" && (
-                                            <Button
-                                                type="primary"
-                                                icon={<PlayCircleOutlined />}
-                                                onClick={() =>
-                                                    handleOpenModal(
-                                                        "start",
-                                                        item.requestId,
-                                                        item.requestCode
-                                                    )
-                                                }
-                                            >
-                                                Bắt đầu thi công
-                                            </Button>
-                                        )}
+                                        {(item.status === "DA_PHE_DUYET" ||
+                                            item.status === "TU_CHOI_NGHIEM_THU") && (
+                                                <Button
+                                                    type="primary"
+                                                    icon={<PlayCircleOutlined />}
+                                                    onClick={() =>
+                                                        handleOpenModal(
+                                                            "start",
+                                                            item.requestId,
+                                                            item.requestCode
+                                                        )
+                                                    }
+                                                >
+                                                    {item.status === "TU_CHOI_NGHIEM_THU"
+                                                        ? "Làm lại thi công"
+                                                        : "Bắt đầu thi công"}
+                                                </Button>
+                                            )}
 
                                         {item.status === "DANG_BAO_TRI" && (
                                             <>
@@ -386,6 +398,7 @@ const HomeExecution = () => {
         );
     };
 
+    /** ========== RENDER ========== */
     return (
         <div style={{ padding: "24px 36px" }}>
             <Breadcrumb />
