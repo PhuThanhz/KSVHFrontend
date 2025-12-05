@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Button, Space, Tag, Image, Empty, Modal, Card, Row, Col, Typography, Spin } from "antd";
-import { EyeOutlined, HistoryOutlined } from "@ant-design/icons";
+import { EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { ActionType } from "@ant-design/pro-components";
 
@@ -15,54 +15,20 @@ import { PAGINATION_CONFIG } from "@/config/pagination";
 import { useMaintenanceRequestsQuery } from "@/hooks/maintenance/useMaintenanceRequests";
 import ViewMaintenanceDetail from "@/pages/admin/maintenance/view/view.maintenance-detail";
 import ModalCreateMaintenance from "@/pages/admin/maintenance/modal/modal.maintenance-create";
-import ButtonAssignTechnician from "./button/button.assign-technician";
 import RejectLogsModal from "@/pages/admin/maintenance/modal/modal.reject-logs";
-import ModalAutoAssignMaintenance from "@/pages/admin/maintenance/modal/modal.maintenance-auto-assign";
-import MaintenanceTimelineModal from "@/pages/admin/maintenance/modal/modal.timeline";
 
 const { Text } = Typography;
+import type {
+    IResMaintenanceRequestDTO
+} from "@/types/backend";
 
-interface MaintenanceRequest {
-    requestInfo: {
-        requestId?: string;
-        requestCode?: string;
-        maintenanceType?: string;
-        status?: string;
-        priorityLevel?: string;
-        creatorType?: string;
-        locationDetail?: string;
-        createdAt?: string;
-        device?: {
-            deviceName?: string;
-            deviceCode?: string;
-            companyName?: string;
-            departmentName?: string;
-            ownershipType?: string;
-            image1?: string;
-            image2?: string;
-            image3?: string;
-        };
-    };
-    technicianCode?: string;
-    technicianName?: string;
-    technicianPhone?: string;
-    assignedAt?: string;
-    assignedBy?: string;
-    latestRejectReason?: string;
-    latestRejectedAt?: string;
-}
+
 
 const MaintenancePage = () => {
     // ===================== Modal states =====================
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
-    const [showAutoAssignModal, setShowAutoAssignModal] = useState(false);
-    const [showTimelineModal, setShowTimelineModal] = useState<{
-        id: string;
-        code?: string;
-    } | null>(null);
-
     // ===================== Filter states =====================
     const [searchValue, setSearchValue] = useState<string>("");
     const [creatorTypeFilter, setCreatorTypeFilter] = useState<string | null>(null);
@@ -81,11 +47,9 @@ const MaintenancePage = () => {
         const params = new URLSearchParams();
         params.set("page", PAGINATION_CONFIG.DEFAULT_PAGE.toString());
         params.set("size", PAGINATION_CONFIG.DEFAULT_PAGE_SIZE.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT);
         return params.toString();
     });
-
-    const tableRef = useRef<ActionType>(null);
-
     // ===================== Data fetching =====================
     const { data, isLoading } = useMaintenanceRequestsQuery(query);
 
@@ -94,7 +58,7 @@ const MaintenancePage = () => {
         pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
         total: 0,
     };
-    const requests = (data?.result || []) as MaintenanceRequest[];
+    const requests = (data?.result || []) as IResMaintenanceRequestDTO[];
 
     // ===================== Filter options =====================
     const creatorTypeOptions = [
@@ -140,11 +104,14 @@ const MaintenancePage = () => {
         const params = new URLSearchParams();
         params.set("page", currentPage.toString());
         params.set("size", pageSize.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT);
 
         const filterParts: string[] = [];
 
         if (searchValue) {
-            filterParts.push(`(requestCode~'${searchValue}' or device.deviceName~'${searchValue}')`);
+            filterParts.push(
+                `(requestCode~'${searchValue}' or device.deviceName~'${searchValue}' or device.deviceCode~'${searchValue}')`
+            );
         }
         if (creatorTypeFilter) filterParts.push(`creatorType='${creatorTypeFilter}'`);
         if (ownershipTypeFilter) filterParts.push(`device.ownershipType='${ownershipTypeFilter}'`);
@@ -175,6 +142,7 @@ const MaintenancePage = () => {
         const params = new URLSearchParams();
         params.set("page", PAGINATION_CONFIG.DEFAULT_PAGE.toString());
         params.set("size", PAGINATION_CONFIG.DEFAULT_PAGE_SIZE.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT);
         setQuery(params.toString());
     };
 
@@ -193,7 +161,7 @@ const MaintenancePage = () => {
             filter={
                 <div className="flex flex-col gap-3">
                     <SearchFilter
-                        searchPlaceholder="Tìm theo mã phiếu hoặc tên thiết bị..."
+                        searchPlaceholder="Tìm theo mã phiếu - mã thiết bị hoặc tên thiết bị..."
                         addLabel="Tạo phiếu bảo trì"
                         showFilterButton={false}
                         showAddButton={false}
@@ -247,11 +215,6 @@ const MaintenancePage = () => {
                             <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.CREATE_INTERNAL} hideChildren>
                                 <Button type="primary" onClick={() => setShowCreateModal(true)}>
                                     + Tạo phiếu bảo trì
-                                </Button>
-                            </Access>
-                            <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.AUTO_ASSIGN_ALL} hideChildren>
-                                <Button type="default" onClick={() => setShowAutoAssignModal(true)}>
-                                    Phân công tự động
                                 </Button>
                             </Access>
                         </Space>
@@ -563,38 +526,27 @@ const MaintenancePage = () => {
                                                         >
                                                             Ngày tạo: {createdAt}
                                                         </div>
-                                                        <div style={{ marginTop: 8 }}>
+                                                        <Space style={{ marginTop: 8 }}>
                                                             <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.GET_BY_ID} hideChildren>
                                                                 <Button
                                                                     size="small"
                                                                     type="primary"
                                                                     icon={<EyeOutlined />}
-                                                                    style={{ marginRight: 6 }}
+                                                                    style={{
+                                                                        borderRadius: 6,
+                                                                        height: 36,
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        fontWeight: 500,
+                                                                    }}
                                                                     onClick={() => setSelectedId(info.requestId!)}
                                                                 >
                                                                     Thông tin chi tiết
                                                                 </Button>
                                                             </Access>
 
-                                                            {info.status === "CHO_PHAN_CONG" && (
-                                                                <ButtonAssignTechnician requestId={info.requestId!} />
-                                                            )}
+                                                        </Space>
 
-                                                            <Button
-                                                                size="small"
-                                                                type="default"
-                                                                icon={<HistoryOutlined />}
-                                                                style={{ marginLeft: 6 }}
-                                                                onClick={() =>
-                                                                    setShowTimelineModal({
-                                                                        id: info.requestId!,
-                                                                        code: info.requestCode,
-                                                                    })
-                                                                }
-                                                            >
-                                                                Xem nhật ký hoạt động
-                                                            </Button>
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </Col>
@@ -647,7 +599,6 @@ const MaintenancePage = () => {
                     </>
                 )}
             </Access>
-
             {/* Modals */}
             {selectedId && (
                 <Modal
@@ -660,33 +611,17 @@ const MaintenancePage = () => {
                     <ViewMaintenanceDetail requestId={selectedId} />
                 </Modal>
             )}
-
             {showRejectModal && (
                 <RejectLogsModal
                     requestId={showRejectModal}
                     onClose={() => setShowRejectModal(null)}
                 />
             )}
-
-            <ModalAutoAssignMaintenance
-                open={showAutoAssignModal}
-                onClose={() => setShowAutoAssignModal(false)}
-            />
-
             <ModalCreateMaintenance
                 open={showCreateModal}
                 onClose={() => setShowCreateModal(false)}
                 onSuccess={() => setShowCreateModal(false)}
             />
-
-            {showTimelineModal && (
-                <MaintenanceTimelineModal
-                    open={!!showTimelineModal}
-                    onClose={() => setShowTimelineModal(null)}
-                    requestId={showTimelineModal.id}
-                    requestCode={showTimelineModal.code}
-                />
-            )}
         </PageContainer>
     );
 };

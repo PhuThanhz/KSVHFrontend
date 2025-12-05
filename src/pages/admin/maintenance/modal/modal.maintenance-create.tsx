@@ -4,27 +4,18 @@ import {
     Input,
     Select,
     Button,
-    Upload,
     Modal,
     message,
     Card,
     Typography,
-    Image,
     Row,
     Col,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-import type { UploadFile, UploadProps } from "antd/es/upload/interface";
-import { v4 as uuidv4 } from "uuid";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 
-import {
-    callUploadMultipleFiles,
-    callFetchDevice,
-    callFetchIssue,
-} from "@/config/api";
+import { callFetchDevice, callFetchIssue } from "@/config/api";
 import { useCreateInternalMaintenanceRequestMutation } from "@/hooks/maintenance/useMaintenanceRequests";
 import type {
     IReqMaintenanceRequestInternalDTO,
@@ -32,6 +23,8 @@ import type {
     MaintenanceType,
     IDeviceList,
 } from "@/types/backend";
+
+import FileUploader from "@/components/ui/FileUploader";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -49,12 +42,7 @@ const ModalCreateMaintenance = ({
     onSuccess,
 }: ModalCreateMaintenanceProps) => {
     const [form] = Form.useForm();
-    const [fileList, setFileList] = useState<UploadFile[]>([]);
-    const [previewOpen, setPreviewOpen] = useState(false);
-    const [previewImage, setPreviewImage] = useState("");
-    const [previewTitle, setPreviewTitle] = useState("");
-    const [loadingUpload, setLoadingUpload] = useState(false);
-
+    const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
     const [selectedDevice, setSelectedDevice] = useState<IDeviceList | null>(null);
 
     const account = useSelector((state: RootState) => state.account);
@@ -63,6 +51,7 @@ const ModalCreateMaintenance = ({
     const { mutateAsync: createRequest, isPending } =
         useCreateInternalMaintenanceRequestMutation();
 
+    /** =============== FETCH API =============== */
     const { data: devices } = useQuery({
         queryKey: ["devices"],
         queryFn: async () => {
@@ -79,27 +68,35 @@ const ModalCreateMaintenance = ({
         },
     });
 
+    /** =============== PREFILL FORM =============== */
     useEffect(() => {
         if (open) {
-            if (employee) {
-                form.setFieldsValue({
-                    fullName: employee.fullName,
-                    employeeCode: employee.employeeCode,
-                    phone: employee.phone,
-                    positionName: employee.positionName,
-                });
-            } else if (account.user) {
-                form.setFieldsValue({
-                    fullName: account.user.name,
-                    employeeCode: "Không áp dụng",
-                    phone: "Chưa cập nhật",
-                    positionName: "Khách hàng",
-                });
-            }
+            const defaults =
+                employee
+                    ? {
+                        fullName: employee.fullName,
+                        employeeCode: employee.employeeCode,
+                        phone: employee.phone,
+                        positionName: employee.positionName,
+                    }
+                    : account.user
+                        ? {
+                            fullName: account.user.name,
+                            employeeCode: "Không áp dụng",
+                            phone: "Chưa cập nhật",
+                            positionName: "Khách hàng",
+                        }
+                        : {};
+
+            form.setFieldsValue(defaults);
+        } else {
+            form.resetFields();
+            setUploadedFiles([]);
+            setSelectedDevice(null);
         }
     }, [open, employee, account.user, form]);
 
-
+    /** =============== HANDLE DEVICE CHANGE =============== */
     const handleDeviceChange = (deviceCode: string) => {
         const device = devices?.find(
             (d: any) => d.deviceCode === deviceCode
@@ -120,60 +117,15 @@ const ModalCreateMaintenance = ({
         }
     };
 
-    const handlePreview = async (file: UploadFile) => {
-        if (!file.url && !file.preview) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file.originFileObj as File);
-            reader.onload = () => {
-                setPreviewImage(reader.result as string);
-                setPreviewTitle(file.name);
-                setPreviewOpen(true);
-            };
-        } else {
-            setPreviewImage(file.url || (file.preview as string));
-            setPreviewTitle(file.name);
-            setPreviewOpen(true);
-        }
-    };
-
-    const uploadProps: UploadProps = {
-        listType: "picture-card",
-        multiple: true,
-        fileList,
-        maxCount: 3,
-        accept: ".jpg,.jpeg,.png,.webp",
-        customRequest: async ({ file, onSuccess, onError }) => {
-            try {
-                setLoadingUpload(true);
-                const res = await callUploadMultipleFiles(
-                    [file as File],
-                    "maintenance_request"
-                );
-                if (res?.data && Array.isArray(res.data)) {
-                    const newFiles: UploadFile[] = res.data.map((f) => ({
-                        uid: uuidv4(),
-                        name: f.fileName,
-                        status: "done" as const,
-                        url: `${import.meta.env.VITE_BACKEND_URL}/storage/maintenance_request/${f.fileName}`,
-                    }));
-                    setFileList((prev) => [...prev, ...newFiles].slice(0, 3));
-                    onSuccess?.("ok");
-                } else throw new Error("Upload thất bại");
-            } catch (err: any) {
-                message.error(err?.message || "Không thể upload ảnh");
-                onError?.(err);
-            } finally {
-                setLoadingUpload(false);
-            }
-        },
-        onRemove: (file) =>
-            setFileList((prev) => prev.filter((f) => f.uid !== file.uid)),
-        onPreview: handlePreview,
-    };
-
+    /** =============== HANDLE SUBMIT =============== */
     const handleSubmit = async (values: IReqMaintenanceRequestInternalDTO) => {
-        const images = fileList.map((f) => f.name || "").slice(0, 3);
-        const [attachment1, attachment2, attachment3] = images;
+        if (uploadedFiles.length === 0) {
+            message.warning("Vui lòng tải lên ít nhất 1 tệp (ảnh hoặc video)!");
+            return;
+        }
+
+        const attachments = uploadedFiles.map((f) => f.name || "").slice(0, 3);
+        const [attachment1, attachment2, attachment3] = attachments;
 
         const payload: IReqMaintenanceRequestInternalDTO = {
             ...values,
@@ -182,25 +134,36 @@ const ModalCreateMaintenance = ({
             attachment3,
         };
 
-        await createRequest(payload);
-        message.success("Tạo phiếu bảo trì nội bộ thành công");
-        form.resetFields();
-        setFileList([]);
-        setSelectedDevice(null);
-        onSuccess?.();
-        onClose();
+        try {
+            await createRequest(payload);
+            message.success("Tạo phiếu bảo trì nội bộ thành công");
+            onSuccess?.();
+            form.resetFields();
+            setUploadedFiles([]);
+            setSelectedDevice(null);
+            onClose();
+        } catch (err: any) {
+            message.error(err?.message || "Không thể tạo phiếu bảo trì");
+        }
     };
 
+    /** =============== RENDER =============== */
     return (
         <Modal
             open={open}
-            title="Tạo Phiếu Bảo Trì (Nội bộ)"
+            title={<Title level={4} className="!mb-0">Tạo Phiếu Bảo Trì</Title>}
             onCancel={onClose}
             footer={null}
-            width={950} // rộng hơn 50% màn hình
+            centered
             destroyOnClose
+            width={900}
+            bodyStyle={{
+                maxHeight: "calc(100vh - 120px)",
+                overflowY: "auto",
+                padding: 12,
+            }}
         >
-            <Card bordered={false}>
+            <Card bordered={false} className="shadow-none">
                 <Form
                     form={form}
                     layout="vertical"
@@ -209,52 +172,60 @@ const ModalCreateMaintenance = ({
                         priorityLevel: "TRUNG_BINH" as PriorityLevel,
                         maintenanceType: "DOT_XUAT" as MaintenanceType,
                     }}
+                    style={{ marginTop: -8 }}
                 >
                     {/* ===== Thông tin nhân viên ===== */}
-                    <Title level={5}>Thông tin nhân viên</Title>
-                    <Row gutter={16}>
-                        <Col span={8}>
-                            <Form.Item label="Họ và tên" name="fullName">
-                                <Input disabled placeholder="Tự động điền" />
+                    <Title
+                        level={5}
+                        style={{ marginBottom: 8, marginTop: 0, fontSize: 15 }}
+                    >
+                        Thông tin nhân viên
+                    </Title>
+                    <Row gutter={[8, 4]}>
+                        <Col xs={24} sm={12} md={8}>
+                            <Form.Item label="Họ và tên" name="fullName" style={{ marginBottom: 6 }}>
+                                <Input disabled />
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
-                            <Form.Item label="Mã nhân viên" name="employeeCode">
-                                <Input disabled placeholder="Tự động điền" />
+                        <Col xs={24} sm={12} md={8}>
+                            <Form.Item label="Mã nhân viên" name="employeeCode" style={{ marginBottom: 6 }}>
+                                <Input disabled />
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
-                            <Form.Item label="Chức vụ" name="positionName">
-                                <Input disabled placeholder="Tự động điền" />
+                        <Col xs={24} sm={12} md={8}>
+                            <Form.Item label="Chức vụ" name="positionName" style={{ marginBottom: 6 }}>
+                                <Input disabled />
                             </Form.Item>
                         </Col>
-                    </Row>
-
-                    <Row gutter={16}>
-                        <Col span={8}>
-                            <Form.Item label="Số điện thoại" name="phone">
-                                <Input disabled placeholder="Tự động điền" />
+                        <Col xs={24} sm={12} md={8}>
+                            <Form.Item label="Số điện thoại" name="phone" style={{ marginBottom: 6 }}>
+                                <Input disabled />
                             </Form.Item>
                         </Col>
                     </Row>
 
                     {/* ===== Thông tin phiếu ===== */}
-                    <Title level={5} style={{ marginTop: 16 }}>
+                    <Title
+                        level={5}
+                        style={{ marginTop: 8, marginBottom: 8, fontSize: 15 }}
+                    >
                         Thông tin phiếu bảo trì
                     </Title>
 
-                    <Row gutter={16}>
-                        <Col span={8}>
+                    <Row gutter={[8, 4]}>
+                        <Col xs={24} sm={12} md={8}>
                             <Form.Item
                                 label="Thiết bị"
                                 name="deviceCode"
                                 rules={[{ required: true, message: "Vui lòng chọn thiết bị" }]}
+                                style={{ marginBottom: 6 }}
                             >
                                 <Select
                                     placeholder="Chọn thiết bị"
-                                    onChange={handleDeviceChange}
                                     showSearch
                                     optionFilterProp="children"
+                                    onChange={handleDeviceChange}
+                                    loading={!devices}
                                 >
                                     {devices?.map((item: any) => (
                                         <Option key={item.deviceCode} value={item.deviceCode}>
@@ -264,26 +235,26 @@ const ModalCreateMaintenance = ({
                                 </Select>
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
-                            <Form.Item label="Công ty" name="companyName">
-                                <Input disabled placeholder="Tự động điền" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item label="Phòng ban" name="departmentName">
-                                <Input disabled placeholder="Tự động điền" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
 
-                    <Row gutter={16}>
-                        <Col span={8}>
+                        <Col xs={24} sm={12} md={8}>
+                            <Form.Item label="Công ty" name="companyName" style={{ marginBottom: 6 }}>
+                                <Input disabled />
+                            </Form.Item>
+                        </Col>
+                        <Col xs={24} sm={12} md={8}>
+                            <Form.Item label="Phòng ban" name="departmentName" style={{ marginBottom: 6 }}>
+                                <Input disabled />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} sm={12} md={8}>
                             <Form.Item
                                 label="Sự cố"
                                 name="issueId"
                                 rules={[{ required: true, message: "Vui lòng chọn sự cố" }]}
+                                style={{ marginBottom: 6 }}
                             >
-                                <Select placeholder="Chọn sự cố">
+                                <Select placeholder="Chọn sự cố" loading={!issues}>
                                     {issues?.map((item: any) => (
                                         <Option key={item.id} value={item.id}>
                                             {item.issueName}
@@ -292,11 +263,13 @@ const ModalCreateMaintenance = ({
                                 </Select>
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
+
+                        <Col xs={24} sm={12} md={8}>
                             <Form.Item
                                 label="Mức độ ưu tiên"
                                 name="priorityLevel"
                                 rules={[{ required: true, message: "Chọn mức độ ưu tiên" }]}
+                                style={{ marginBottom: 6 }}
                             >
                                 <Select>
                                     <Option value="KHAN_CAP">Khẩn cấp</Option>
@@ -306,11 +279,13 @@ const ModalCreateMaintenance = ({
                                 </Select>
                             </Form.Item>
                         </Col>
-                        <Col span={8}>
+
+                        <Col xs={24} sm={12} md={8}>
                             <Form.Item
                                 label="Loại bảo trì"
                                 name="maintenanceType"
                                 rules={[{ required: true, message: "Chọn loại bảo trì" }]}
+                                style={{ marginBottom: 6 }}
                             >
                                 <Select>
                                     <Option value="DOT_XUAT">Đột xuất</Option>
@@ -319,47 +294,41 @@ const ModalCreateMaintenance = ({
                                 </Select>
                             </Form.Item>
                         </Col>
-                    </Row>
 
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item label="Địa điểm cụ thể" name="locationDetail">
+                        <Col xs={24} md={12}>
+                            <Form.Item label="Địa điểm cụ thể" name="locationDetail" style={{ marginBottom: 6 }}>
                                 <TextArea rows={2} placeholder="Nhập địa điểm cụ thể của thiết bị" />
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
-                            <Form.Item label="Ghi chú" name="note">
+                        <Col xs={24} md={12}>
+                            <Form.Item label="Ghi chú" name="note" style={{ marginBottom: 6 }}>
                                 <TextArea rows={2} placeholder="Nhập ghi chú (nếu có)" />
                             </Form.Item>
                         </Col>
                     </Row>
 
-                    <Form.Item label="Tệp đính kèm (tối đa 3)">
-                        <Upload {...uploadProps}>
-                            {fileList.length >= 3 ? null : (
-                                <div>
-                                    <PlusOutlined />
-                                    <div style={{ marginTop: 8 }}>Tải lên</div>
-                                </div>
-                            )}
-                        </Upload>
-
-                        <Modal
-                            open={previewOpen}
-                            title={previewTitle}
-                            footer={null}
-                            onCancel={() => setPreviewOpen(false)}
-                        >
-                            <Image alt="preview" src={previewImage} width="100%" />
-                        </Modal>
+                    {/* ===== Upload ===== */}
+                    <Form.Item
+                        label="Ảnh / Video đính kèm (tối đa 3 tệp)"
+                        required
+                        style={{ marginBottom: 8 }}
+                    >
+                        <FileUploader
+                            folder="maintenance_request"
+                            maxFiles={3}
+                            onChange={(files) => setUploadedFiles(files)}
+                        />
                     </Form.Item>
 
-                    <Form.Item>
+                    {/* ===== Submit ===== */}
+                    <Form.Item style={{ marginBottom: 0 }}>
                         <Button
                             type="primary"
                             htmlType="submit"
                             block
-                            loading={isPending || loadingUpload}
+                            size="middle"
+                            loading={isPending}
+                            style={{ height: 36 }}
                         >
                             {isPending ? "Đang tạo..." : "Tạo phiếu"}
                         </Button>

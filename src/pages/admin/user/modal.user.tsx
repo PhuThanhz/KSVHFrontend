@@ -1,7 +1,12 @@
-import { ModalForm, ProForm, ProFormText } from "@ant-design/pro-components";
+import { useEffect, useState } from "react";
+import {
+    ModalForm,
+    ProForm,
+    ProFormText,
+    ProFormSelect,
+} from "@ant-design/pro-components";
 import { Col, Form, Row } from "antd";
 import { isMobile } from "react-device-detect";
-import { useEffect, useState } from "react";
 import type { IUser } from "@/types/backend";
 import { DebounceSelect } from "@/components/common/debouce.select";
 import { useCreateUserMutation, useUpdateUserMutation } from "@/hooks/user/useUsers";
@@ -28,6 +33,7 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
     const { mutate: createUser, isPending: isCreating } = useCreateUserMutation();
     const { mutate: updateUser, isPending: isUpdating } = useUpdateUserMutation();
 
+    /** Prefill form khi edit */
     useEffect(() => {
         if (dataInit?.id && dataInit.role) {
             const roleItem = {
@@ -36,11 +42,13 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                 key: dataInit.role.id,
             };
             setSelectedRole(roleItem);
+
             form.setFieldsValue({
                 email: dataInit.email,
                 name: dataInit.name,
                 address: dataInit.address,
-                role: { label: dataInit.role.name, value: dataInit.role.id },
+                role: roleItem,
+                accountType: dataInit.accountTypeDisplay || "",
             });
         } else {
             setSelectedRole(null);
@@ -48,6 +56,7 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
         }
     }, [dataInit, form]);
 
+    /** Reset modal */
     const handleReset = () => {
         form.resetFields();
         setSelectedRole(null);
@@ -55,8 +64,9 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
         setOpenModal(false);
     };
 
+    /** Gọi API create / update */
     const submitUser = async (valuesForm: any) => {
-        const { name, email, password, address, role } = valuesForm;
+        const { name, email, password, address, role, accountType } = valuesForm;
 
         const payload: IUser = dataInit?.id
             ? {
@@ -64,6 +74,7 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                 name,
                 address,
                 role: { id: Number(role?.value) },
+                accountTypeDisplay: accountType, // dùng cho update
             }
             : {
                 name,
@@ -71,6 +82,7 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                 password,
                 address,
                 role: { id: Number(role?.value) },
+                accountTypeDisplay: accountType, // dùng cho create
             };
 
         if (isEdit) {
@@ -84,6 +96,7 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
         }
     };
 
+    /** Lấy danh sách vai trò */
     async function fetchRoleList(name: string): Promise<IRoleSelect[]> {
         const res = await callFetchRole(`page=1&size=100&name=/${name}/i`);
         if (res?.data) {
@@ -122,11 +135,13 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                             label: dataInit.role?.name,
                             value: dataInit.role?.id,
                         },
+                        accountType: dataInit.accountTypeDisplay || "",
                     }
                     : {}
             }
         >
-            <Row gutter={16}>
+            <Row gutter={[16, 8]}>
+                {/* Email */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProFormText
                         label="Email"
@@ -140,6 +155,7 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                     />
                 </Col>
 
+                {/* Mật khẩu */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProFormText.Password
                         label="Mật khẩu"
@@ -150,6 +166,7 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                     />
                 </Col>
 
+                {/* Tên hiển thị */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProFormText
                         label="Tên hiển thị"
@@ -159,6 +176,7 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                     />
                 </Col>
 
+                {/* Vai trò */}
                 <Col lg={12} md={12} sm={24} xs={24}>
                     <ProForm.Item
                         name="role"
@@ -179,6 +197,24 @@ const ModalUser = ({ openModal, setOpenModal, dataInit, setDataInit }: IProps) =
                     </ProForm.Item>
                 </Col>
 
+                {/* Loại tài khoản */}
+                <Col lg={12} md={12} sm={24} xs={24}>
+                    <ProFormSelect
+                        label="Loại tài khoản"
+                        name="accountType"
+                        placeholder="Chọn loại tài khoản"
+                        rules={[{ required: true, message: "Vui lòng chọn loại tài khoản" }]}
+                        options={[
+                            { label: "Quản trị hệ thống", value: "ADMIN_SYSTEM" },
+                            { label: "Quản trị chi nhánh", value: "ADMIN_SUB" },
+                            { label: "Nhân viên", value: "EMPLOYEE" },
+                            { label: "Kỹ thuật viên", value: "TECHNICIAN" },
+                            { label: "Khách hàng", value: "CUSTOMER" },
+                        ]}
+                    />
+                </Col>
+
+                {/* Địa chỉ */}
                 <Col lg={24} md={24} sm={24} xs={24}>
                     <ProFormText
                         label="Địa chỉ"

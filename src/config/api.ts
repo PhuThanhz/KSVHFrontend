@@ -65,12 +65,10 @@ import type {
     IResAcceptanceDTO,
     IResAcceptanceCardDTO,
     IResAcceptanceDetailDTO,
-    IResMaintenanceHistoryCardDTO,
-    IResMaintenanceHistoryDetailDTO,
+
     IMaintenanceSchedule,
     IMaintenanceScheduleDetail,
     IMaintenanceScheduleByDevice,
-    IResMaintenanceTimelineDTO,
     IReqSupportRequestDTO,
     IReqSupportApproveDTO,
     IResSupportRequestDTO,
@@ -178,7 +176,8 @@ export const callUpdateUser = (user: IUser) => {
         id: user.id,
         name: user.name,
         address: user.address,
-        role: { id: user.role?.id },
+        role: user.role?.id ? { id: user.role.id } : undefined,
+        accountType: user.accountTypeDisplay || null,
     };
 
     return axios.put<IBackendRes<IUser>>("/api/v1/users", payload, {
@@ -1106,7 +1105,6 @@ export const callFetchMaintenanceRequest = (query: string) => {
         `/api/v1/maintenance-requests?${query}`
     );
 };
-
 export const callFetchMaintenanceRequestById = (id: string) => {
     return axios.get<IBackendRes<IResMaintenanceRequestDetailDTO>>(
         `/api/v1/maintenance-requests/${id}`
@@ -1117,7 +1115,11 @@ export const callFetchRejectLogsByRequestId = (id: string) => {
         `/api/v1/maintenance-requests/${id}/reject-logs`
     );
 };
-
+export const callFetchPendingMaintenanceRequests = (query: string) => {
+    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceRequestDTO>>>(
+        `/api/v1/maintenance-requests/pending-assignment?${query}`
+    );
+};
 // ======================= TẠO PHIẾU BẢO TRÌ ======================= //
 
 // Tạo phiếu bảo trì nội bộ (nhân viên)
@@ -1145,11 +1147,7 @@ export const callFetchMyMaintenanceRequests = (query: string) => {
     );
 };
 
-export const callFetchMaintenanceRequestTimeline = (id: string) => {
-    return axios.get<IBackendRes<IResMaintenanceTimelineDTO>>(
-        `/api/v1/maintenance-requests/${id}/timeline`
-    );
-};
+
 
 
 // ======================= PHÂN CÔNG KỸ THUẬT VIÊN ======================= //
@@ -1443,19 +1441,6 @@ export const callRejectAcceptance = (
     );
 };
 
-
-/* ========================   MODULE: lịch sử bảo trì ========================*/
-
-export const callFetchMaintenanceHistories = (query: string) => {
-    return axios.get<IBackendRes<IModelPaginate<IResMaintenanceHistoryCardDTO>>>(
-        `/api/v1/maintenance-histories?${query}`
-    );
-};
-export const callFetchMaintenanceHistoryDetail = (requestId: string) => {
-    return axios.get<IBackendRes<IResMaintenanceHistoryDetailDTO>>(
-        `/api/v1/maintenance-histories/${requestId}`
-    );
-};
 
 
 

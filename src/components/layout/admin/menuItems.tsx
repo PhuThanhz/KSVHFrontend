@@ -20,7 +20,7 @@ import {
     SettingOutlined,
     InboxOutlined,
     SolutionOutlined,
-
+    ClockCircleOutlined
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { ALL_PERMISSIONS } from "@/config/permissions";
@@ -112,16 +112,25 @@ export const generateMenuItems = (permissions: Permission[] | undefined) => {
             checkPermission(ALL_PERMISSIONS.MAINTENANCE_EXECUTION_ADMIN?.GET_PAGINATE ?? {}) ||
             checkPermission(ALL_PERMISSIONS.ISSUE_SKILL_MAPPING.GET_PAGINATE) ||
             checkPermission(ALL_PERMISSIONS.MAINTENANCE_SCHEDULE.GET_PAGINATE) ||
-            checkPermission(ALL_PERMISSIONS.MAINTENANCE_HISTORY.GET_PAGINATE) ||
             checkPermission(ALL_PERMISSIONS.MAINTENANCE_ACCEPTANCE?.GET_PAGINATE ?? {})
             ? [{
                 label: "Quản lý bảo trì",
                 key: "/admin/maintenance-group",
                 icon: <ToolOutlined />,
                 children: [
+
+                    ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REQUESTS?.GET_PENDING_ASSIGNMENT ?? {})
+                        ? [
+                            {
+                                label: <Link to="/admin/maintenance-pending">Phiếu chờ phân công</Link>,
+                                key: "/admin/maintenance-pending",
+                                icon: <ClockCircleOutlined />,
+                            },
+                        ]
+                        : []),
                     ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_REQUESTS?.GET_PAGINATE ?? {})
                         ? [{
-                            label: <Link to="/admin/maintenance">Yêu cầu bảo trì</Link>,
+                            label: <Link to="/admin/maintenance">Quản lý phiếu bảo trì</Link>,
                             key: "/admin/maintenance",
                             icon: <ToolOutlined />,
                         }] : []),
@@ -144,14 +153,7 @@ export const generateMenuItems = (permissions: Permission[] | undefined) => {
                             key: "/admin/maintenance-acceptance",
                             icon: <CheckCircleOutlined />,
                         }] : []),
-                    ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_HISTORY?.GET_PAGINATE ?? {})
-                        ? [{
-                            label: <Link to="/admin/maintenance-history">lịch sử bảo trì</Link>,
-                            key: "/admin/maintenance-history",
-                            icon: <CheckCircleOutlined />,
-                        }] : []),
-
-                    ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_HISTORY?.GET_PAGINATE ?? {})
+                    ...(checkPermission(ALL_PERMISSIONS.MAINTENANCE_SCHEDULE?.GET_PAGINATE ?? {})
                         ? [{
                             label: <Link to={PATHS.ADMIN.MAINTENANCE_SCHEDULE}>Lịch bảo trì định kỳ</Link>,
                             key: PATHS.ADMIN.MAINTENANCE_SCHEDULE,

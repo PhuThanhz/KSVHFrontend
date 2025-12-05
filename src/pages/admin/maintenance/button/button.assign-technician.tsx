@@ -1,13 +1,27 @@
 import React, { useState } from "react";
-import { Modal, Table, Button, Tag, Spin, Space, Typography, Popconfirm } from "antd";
-import { CheckCircleOutlined, CalendarOutlined } from "@ant-design/icons";
+import {
+    Modal,
+    Table,
+    Button,
+    Tag,
+    Spin,
+    Space,
+    Typography,
+    Popconfirm,
+    Divider,
+} from "antd";
+import {
+    CheckCircleOutlined,
+    CalendarOutlined,
+    UserOutlined,
+} from "@ant-design/icons";
 import { useAssignTechnicianManualMutation } from "@/hooks/maintenance/useMaintenanceRequests";
 import { useTechniciansQuery } from "@/hooks/user/useTechnicians";
 import ScheduleDrawer from "./schedule-drawer";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 interface ButtonAssignTechnicianProps {
     requestId: string;
@@ -20,15 +34,20 @@ const ButtonAssignTechnician = ({ requestId }: ButtonAssignTechnicianProps) => {
     const [selectedTechnician, setSelectedTechnician] = useState<any>(null);
 
     const assignMutation = useAssignTechnicianManualMutation();
-    const { data: techData, isLoading: loadingTechs } = useTechniciansQuery("page=1&pageSize=20");
+    const { data: techData, isLoading: loadingTechs } = useTechniciansQuery(
+        "page=1&pageSize=20"
+    );
 
     /** ========================= Phân công kỹ thuật viên ========================= */
     const handleAssign = async (tech: any) => {
         try {
-            await assignMutation.mutateAsync({ requestId, technicianId: tech.id });
+            await assignMutation.mutateAsync({
+                requestId,
+                technicianId: tech.id,
+            });
             setOpen(false);
         } catch {
-            // lỗi đã được notify.handle trong mutation
+            // Lỗi đã được notify.handle trong mutation
         }
     };
 
@@ -44,7 +63,12 @@ const ButtonAssignTechnician = ({ requestId }: ButtonAssignTechnicianProps) => {
             title: "Họ tên",
             dataIndex: "fullName",
             key: "fullName",
-            render: (text: string) => <Text strong>{text}</Text>,
+            render: (text: string) => (
+                <Space>
+                    <UserOutlined />
+                    <Text strong>{text}</Text>
+                </Space>
+            ),
         },
         {
             title: "Mã KTV",
@@ -57,18 +81,26 @@ const ButtonAssignTechnician = ({ requestId }: ButtonAssignTechnicianProps) => {
             dataIndex: "technicianType",
             key: "technicianType",
             render: (type: string) => (
-                <Tag color={type === "INTERNAL" ? "blue" : "purple"}>{type}</Tag>
+                <Tag color={type === "INTERNAL" ? "blue" : "purple"}>
+                    {type === "INTERNAL" ? "Nội bộ" : "Bên ngoài"}
+                </Tag>
             ),
         },
         {
             title: "Email",
             dataIndex: "email",
             key: "email",
+            render: (email: string) => (
+                <Text copyable type="secondary">
+                    {email || "—"}
+                </Text>
+            ),
         },
         {
             title: "Số điện thoại",
             dataIndex: "phone",
             key: "phone",
+            render: (phone: string) => <Text>{phone || "—"}</Text>,
         },
         {
             title: "Kỹ năng",
@@ -86,21 +118,26 @@ const ButtonAssignTechnician = ({ requestId }: ButtonAssignTechnicianProps) => {
                                             ? "geekblue"
                                             : "volcano"
                                 }
-                                className="px-2 py-1 text-sm font-medium"
+                                style={{
+                                    borderRadius: 6,
+                                    fontSize: 13,
+                                    padding: "2px 6px",
+                                }}
                             >
                                 {s.techniqueName}
                             </Tag>
                         ))}
                     </Space>
                 ) : (
-                    <Text type="secondary">—</Text>
+                    <Text type="secondary">Không có</Text>
                 ),
         },
         {
             title: "Hành động",
             key: "actions",
+            fixed: "right" as const,
             render: (_: any, record: any) => (
-                <Space>
+                <Space wrap>
                     <Button
                         type="link"
                         icon={<CalendarOutlined />}
@@ -110,17 +147,12 @@ const ButtonAssignTechnician = ({ requestId }: ButtonAssignTechnicianProps) => {
                     </Button>
 
                     <Popconfirm
-                        title={
-                            <div className="font-semibold text-base">
-                                Phân công kỹ thuật viên
-                            </div>
-                        }
+                        title="Xác nhận phân công"
                         description={
-                            <div className="text-gray-700">
+                            <div style={{ maxWidth: 250 }}>
                                 Bạn có chắc muốn phân công kỹ thuật viên{" "}
-                                <strong>{record.fullName}</strong>{" "}
-                                (Mã: {record.technicianCode})<br />
-                                cho yêu cầu này?
+                                <b>{record.fullName}</b> (Mã:{" "}
+                                {record.technicianCode}) cho yêu cầu này?
                             </div>
                         }
                         okText="Xác nhận"
@@ -140,39 +172,94 @@ const ButtonAssignTechnician = ({ requestId }: ButtonAssignTechnicianProps) => {
         },
     ];
 
+    /** ========================= Giao diện chính ========================= */
     return (
         <>
-
-            <Access permission={ALL_PERMISSIONS.MAINTENANCE_REQUESTS.ASSIGN_TECHNICIAN} hideChildren>
+            <Access
+                permission={
+                    ALL_PERMISSIONS.MAINTENANCE_REQUESTS.ASSIGN_TECHNICIAN
+                }
+                hideChildren
+            >
                 <Button
+                    type="primary"
+                    size="middle"
+                    style={{
+                        borderRadius: 6,
+                        fontWeight: 500,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                    }}
                     onClick={() => setOpen(true)}
-                    disabled={assignMutation.isPending}
                     loading={assignMutation.isPending}
+                    icon={<CheckCircleOutlined />}
                 >
                     Phân công
                 </Button>
             </Access>
+
             <Modal
                 open={open}
-                title="Phân công kỹ thuật viên"
+                title={
+                    <div
+                        style={{
+                            textAlign: "center",
+                            marginBottom: 8,
+                        }}
+                    >
+                        <Title level={4} style={{ margin: 0 }}>
+                            Phân công kỹ thuật viên
+                        </Title>
+                        <Text type="secondary" style={{ fontSize: 13 }}>
+                            Chọn kỹ thuật viên phù hợp để thực hiện yêu cầu
+                        </Text>
+                    </div>
+                }
                 onCancel={() => setOpen(false)}
                 footer={null}
-                width={1200} // modal to hơn
-                bodyStyle={{ padding: "24px 28px" }}
+                width="100%"
+                style={{
+                    top: "5vh",
+                    padding: 0,
+                    maxWidth: 1200,
+                }}
+                bodyStyle={{
+                    padding: "16px 20px 24px",
+                    borderRadius: 12,
+                    background: "#fff",
+                }}
+                destroyOnClose
+                centered
             >
                 {loadingTechs ? (
-                    <div className="flex justify-center py-8">
-                        <Spin />
+                    <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+                        <Spin size="large" />
                     </div>
                 ) : techData?.result?.length ? (
-                    <Table
-                        rowKey="id"
-                        dataSource={techData.result}
-                        columns={columns}
-                        pagination={{ pageSize: 6 }}
-                    />
+                    <>
+                        <Table
+                            rowKey="id"
+                            dataSource={techData.result}
+                            columns={columns}
+                            pagination={{
+                                pageSize: 6,
+                                position: ["bottomCenter"],
+                                showSizeChanger: false,
+                            }}
+                            scroll={{ x: "max-content" }}
+                        />
+                    </>
                 ) : (
-                    <p className="text-gray-600 text-center">Không có kỹ thuật viên nào</p>
+                    <p
+                        style={{
+                            textAlign: "center",
+                            color: "#888",
+                            marginTop: 20,
+                        }}
+                    >
+                        Không có kỹ thuật viên nào phù hợp
+                    </p>
                 )}
             </Modal>
 

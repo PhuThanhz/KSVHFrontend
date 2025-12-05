@@ -6,6 +6,7 @@ import {
 import { Avatar, Tag, Popconfirm, Tooltip } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import type { IInventoryItem } from "@/types/backend";
+import { isMobile } from "react-device-detect";
 
 interface MaterialListFormProps {
     form: any;
@@ -20,7 +21,6 @@ const MaterialListForm = ({
     inventoryOptions,
     backendURL,
 }: MaterialListFormProps) => {
-    /** Hiển thị vật tư kho với hình ảnh và tồn kho */
     const renderOption = (item: IInventoryItem) => (
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {item.image && (
@@ -39,7 +39,6 @@ const MaterialListForm = ({
         </div>
     );
 
-    /** Chọn màu tag theo tình trạng */
     const getTagColor = (tag: string) => {
         switch (tag) {
             case "Có sẵn":
@@ -53,7 +52,6 @@ const MaterialListForm = ({
         }
     };
 
-    /** Khi người dùng chọn mã vật tư hoặc nhập mới */
     const handleMaterialInput = (input: string | number | null, index: number) => {
         if (!input) return;
         const selected = inventoryOptions.find(
@@ -61,53 +59,62 @@ const MaterialListForm = ({
         );
 
         if (selected) {
-            // Cập nhật đồng loạt, tránh nhiều render
             form.setFields([
                 { name: ["materials", index, "inventoryItemId"], value: selected.id },
                 { name: ["materials", index, "partCode"], value: selected.itemCode },
                 { name: ["materials", index, "partName"], value: selected.itemName },
                 { name: ["materials", index, "quantity"], value: 1 },
                 { name: ["materials", index, "tag"], value: "Có sẵn" },
+                { name: ["materials", index, "isNewProposal"], value: false },
             ]);
         } else {
             form.setFields([
                 { name: ["materials", index, "inventoryItemId"], value: null },
                 { name: ["materials", index, "partCode"], value: String(input) },
+                { name: ["materials", index, "partName"], value: "" },
+                { name: ["materials", index, "quantity"], value: 1 },
                 { name: ["materials", index, "tag"], value: "Mua bổ sung" },
+                { name: ["materials", index, "isNewProposal"], value: true },
             ]);
         }
     };
 
     return (
-        <ProFormList
-            name="materials"
-            label="Danh sách vật tư"
-            copyIconProps={false}
-            deleteIconProps={false}
-            creatorButtonProps={{
-                icon: <PlusOutlined />,
-                position: "bottom",
-                creatorButtonText: "Thêm vật tư",
-            }}
-        >
-            {(field, index, action) => {
-                const tagValue = form.getFieldValue(["materials", index, "tag"]);
+        <div style={{ overflowX: "auto" }}>
+            <ProFormList
+                name="materials"
+                label="Danh sách vật tư"
+                copyIconProps={false}
+                deleteIconProps={false}
+                creatorButtonProps={{
+                    icon: <PlusOutlined />,
+                    position: "bottom",
+                    creatorButtonText: "Thêm vật tư",
+                }}
+            >
+                {(field, index, action) => {
+                    const tagValue = form.getFieldValue(["materials", index, "tag"]);
 
-                return (
-                    <div className="border border-gray-200 rounded-lg mb-3">
-                        <table className="w-full text-sm border-collapse">
-                            <thead className="bg-gray-50 text-gray-700">
-                                <tr>
-                                    <th className="text-left p-2 w-[28%]">Mã vật tư</th>
-                                    <th className="text-left p-2 w-[30%]">Tên vật tư</th>
-                                    <th className="text-left p-2 w-[15%]">Số lượng cần</th>
-                                    <th className="text-left p-2 w-[15%]">Tình trạng</th>
-                                    <th className="text-center p-2 w-[10%]">Thao tác</th>
-                                </tr>
-                            </thead>
+                    return (
+                        <table
+                            className="w-full text-sm border border-gray-200 rounded-lg mb-3"
+                            style={{ minWidth: 800 }}
+                        >
+                            {/* Chỉ hiển thị header cho phần tử đầu tiên */}
+                            {index === 0 && (
+                                <thead className="bg-gray-50 text-gray-700">
+                                    <tr>
+                                        <th className="text-left p-2 w-[25%]">Mã vật tư</th>
+                                        <th className="text-left p-2 w-[30%]">Tên vật tư</th>
+                                        <th className="text-left p-2 w-[15%]">Số lượng cần</th>
+                                        <th className="text-left p-2 w-[15%]">Tình trạng</th>
+                                        <th className="text-center p-2 w-[10%]">Thao tác</th>
+                                    </tr>
+                                </thead>
+                            )}
+
                             <tbody>
-                                <tr className="align-top">
-                                    {/* Cột mã vật tư */}
+                                <tr className="align-top border-t">
                                     <td className="p-2">
                                         <ProFormSelect
                                             name="partCode"
@@ -130,14 +137,39 @@ const MaterialListForm = ({
                                                     const keyword = input.toLowerCase();
                                                     return code.includes(keyword) || name.includes(keyword);
                                                 },
-                                                onChange: (value) => {
-                                                    handleMaterialInput(value as string | number | null, index);
+                                                onChange: (value) =>
+                                                    handleMaterialInput(value as string | number | null, index),
+                                                onSearch: (value) => {
+                                                    const exists = inventoryOptions.find(
+                                                        (i) =>
+                                                            i.itemCode.toLowerCase() ===
+                                                            value.toLowerCase()
+                                                    );
+                                                    if (!exists && value) {
+                                                        form.setFields([
+                                                            {
+                                                                name: ["materials", index, "partCode"],
+                                                                value,
+                                                            },
+                                                            {
+                                                                name: ["materials", index, "tag"],
+                                                                value: "Mua bổ sung",
+                                                            },
+                                                            {
+                                                                name: ["materials", index, "inventoryItemId"],
+                                                                value: null,
+                                                            },
+                                                            {
+                                                                name: ["materials", index, "isNewProposal"],
+                                                                value: true,
+                                                            },
+                                                        ]);
+                                                    }
                                                 },
                                             }}
                                         />
                                     </td>
 
-                                    {/* Cột tên vật tư */}
                                     <td className="p-2">
                                         <ProFormText
                                             name="partName"
@@ -146,7 +178,6 @@ const MaterialListForm = ({
                                         />
                                     </td>
 
-                                    {/* Cột số lượng */}
                                     <td className="p-2">
                                         <ProFormText
                                             name="quantity"
@@ -179,35 +210,31 @@ const MaterialListForm = ({
                                         />
                                     </td>
 
-                                    {/* Cột tình trạng */}
                                     <td className="p-2 text-center align-middle">
                                         <Tag
                                             color={getTagColor(tagValue)}
                                             style={{
                                                 fontSize: 13,
                                                 padding: "3px 10px",
+                                                minWidth: 80,
+                                                display: "inline-block",
+                                                textAlign: "center",
                                             }}
                                         >
                                             {tagValue || "—"}
                                         </Tag>
                                     </td>
 
-                                    {/* Cột xóa */}
                                     <td className="text-center align-middle p-2">
                                         <Tooltip title="Xóa vật tư">
                                             <Popconfirm
                                                 title="Xóa vật tư"
-                                                description="Bạn có chắc chắn muốn xóa vật tư này?"
                                                 okText="Xóa"
                                                 cancelText="Hủy"
                                                 onConfirm={() => action.remove(field.name)}
                                             >
                                                 <DeleteOutlined
-                                                    style={{
-                                                        fontSize: 18,
-                                                        color: "#ff4d4f",
-                                                        cursor: "pointer",
-                                                    }}
+                                                    style={{ fontSize: 18, color: "#ff4d4f", cursor: "pointer" }}
                                                 />
                                             </Popconfirm>
                                         </Tooltip>
@@ -215,10 +242,10 @@ const MaterialListForm = ({
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
-                );
-            }}
-        </ProFormList>
+                    );
+                }}
+            </ProFormList>
+        </div>
     );
 };
 

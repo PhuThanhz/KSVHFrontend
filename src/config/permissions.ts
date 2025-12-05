@@ -189,6 +189,11 @@ export const ALL_PERMISSIONS = {
     MAINTENANCE_REQUESTS: {
         GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-requests", module: "MAINTENANCE_REQUESTS" },
         GET_BY_ID: { method: "GET", apiPath: "/api/v1/maintenance-requests/{id}", module: "MAINTENANCE_REQUESTS" },
+        GET_PENDING_ASSIGNMENT: {
+            method: "GET",
+            apiPath: "/api/v1/maintenance-requests/pending-assignment",
+            module: "MAINTENANCE_REQUESTS",
+        },
         GET_REJECT_LOGS: {
             method: "GET", apiPath: "/api/v1/maintenance-requests/{id}/reject-logs", module: "MAINTENANCE_REQUESTS",
         },
@@ -293,10 +298,7 @@ export const ALL_PERMISSIONS = {
         },
 
     },
-    MAINTENANCE_HISTORY: {
-        GET_PAGINATE: { method: "GET", apiPath: "/api/v1/maintenance-histories", module: "MAINTENANCE_HISTORY" },
-        GET_BY_ID: { method: "GET", apiPath: "/api/v1/maintenance-histories/{requestId}", module: "MAINTENANCE_HISTORY" },
-    },
+
     MAINTENANCE_SCHEDULE: {
         GET_PAGINATE: {
             method: "GET",

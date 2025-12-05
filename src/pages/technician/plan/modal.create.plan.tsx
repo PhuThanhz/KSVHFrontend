@@ -3,7 +3,7 @@ import {
     ProFormTextArea,
     ProFormSwitch,
     ProFormText,
-    ProFormCheckbox,
+    ProFormSelect,
 } from "@ant-design/pro-components";
 import { Form, Spin } from "antd";
 import { useEffect, useState, useMemo } from "react";
@@ -52,33 +52,34 @@ const ModalCreateMaintenancePlan = ({
     const { mutate: replan, isPending: replanning } = useReplanMaintenanceMutation();
 
     const [loading, setLoading] = useState(false);
-    const [solutionOptions, setSolutionOptions] = useState<{ label: string; value: number | string }[]>([]);
+    const [solutionOptions, setSolutionOptions] = useState<ISolution[]>([]);
     const [inventoryOptions, setInventoryOptions] = useState<IInventoryItem[]>([]);
     const [useMaterial, setUseMaterial] = useState(false);
     const [detail, setDetail] = useState<IResMaintenanceSurveyedDetailDTO | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>("");
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    /** Lấy danh sách phương án */
     useEffect(() => {
         const fetchSolutions = async () => {
             try {
-                const res = await callFetchSolution("page=1&size=50&sort=createdAt,asc");
+                const query = searchTerm
+                    ? `page=1&size=20&sort=createdAt,asc&filter=solutionName~'${searchTerm}'`
+                    : "page=1&size=20&sort=createdAt,asc";
+
+                const res = await callFetchSolution(query);
                 if (res?.data?.result) {
-                    setSolutionOptions(
-                        res.data.result.map((s: ISolution) => ({
-                            label: s.solutionName,
-                            value: s.id!,
-                        }))
-                    );
+                    setSolutionOptions(res.data.result);
+                } else {
+                    setSolutionOptions([]);
                 }
             } catch {
                 console.error("Không thể tải danh sách phương án");
             }
         };
-        fetchSolutions();
-    }, []);
 
-    /** Lấy danh sách vật tư kho */
+        fetchSolutions();
+    }, [searchTerm]);
+
     useEffect(() => {
         const fetchInventoryItems = async () => {
             try {
@@ -91,7 +92,6 @@ const ModalCreateMaintenancePlan = ({
         fetchInventoryItems();
     }, []);
 
-    /** Lấy chi tiết phiếu khảo sát */
     useEffect(() => {
         const fetchDetail = async () => {
             if (!maintenanceRequestId || !openModal || !inventoryOptions.length) return;
@@ -110,7 +110,6 @@ const ModalCreateMaintenancePlan = ({
                     });
 
                     if (planInfo) {
-                        // Map lại vật tư
                         const mappedMaterials: IFormMaterialItem[] = (planInfo.materials || []).map((m) => {
                             const matchedItem = inventoryOptions.find(
                                 (i) => i.itemCode === m.partCode
@@ -205,6 +204,10 @@ const ModalCreateMaintenancePlan = ({
                 onCancel: () => setOpenModal(false),
                 okText: "Lưu kế hoạch",
                 cancelText: "Hủy",
+                bodyStyle: {
+                    maxHeight: isMobile ? "80vh" : "70vh",
+                    overflowY: "auto",
+                },
             }}
         >
             <Spin spinning={loading}>
@@ -213,10 +216,21 @@ const ModalCreateMaintenancePlan = ({
                     <ProFormText name="readonlyDeviceCode" label="Mã thiết bị" readonly />
                 </div>
 
-                <ProFormCheckbox.Group
+                <ProFormSelect
                     name="solutionIds"
-                    label="Chọn phương án"
-                    options={solutionOptions}
+                    label="Chọn phương án xử lý"
+                    mode="multiple"
+                    showSearch
+                    placeholder="Nhập tên phương án để tìm..."
+                    debounceTime={400}
+                    options={solutionOptions.map((s) => ({
+                        label: s.solutionName,
+                        value: s.id!,
+                    }))}
+                    fieldProps={{
+                        onSearch: (val: string) => setSearchTerm(val),
+                        filterOption: false,
+                    }}
                     rules={[{ required: true, message: "Vui lòng chọn ít nhất một phương án" }]}
                 />
 
@@ -237,12 +251,14 @@ const ModalCreateMaintenancePlan = ({
                 />
 
                 {useMaterial && (
-                    <MaterialListForm
-                        form={form}
-                        selectOptions={selectOptions}
-                        inventoryOptions={inventoryOptions}
-                        backendURL={backendURL}
-                    />
+                    <div style={{ overflowX: "auto" }}>
+                        <MaterialListForm
+                            form={form}
+                            selectOptions={selectOptions}
+                            inventoryOptions={inventoryOptions}
+                            backendURL={backendURL}
+                        />
+                    </div>
                 )}
 
                 <ProFormTextArea

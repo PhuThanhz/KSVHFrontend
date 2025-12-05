@@ -21,6 +21,7 @@ import {
     IdcardOutlined,
     PhoneOutlined,
     ToolOutlined,
+    ApartmentOutlined,
 } from "@ant-design/icons";
 import { isMobile } from "react-device-detect";
 import { useNavigate } from "react-router-dom";
@@ -42,8 +43,9 @@ const { Text, Title } = Typography;
 const TechnicianProfilePage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { user, employee } = useAppSelector((state) => state.account);
+    const { user, technician } = useAppSelector((state) => state.account);
     const backendURL = import.meta.env.VITE_BACKEND_URL;
+
     const avatarSrc = user?.avatar
         ? `${backendURL}/storage/AVATAR/${user.avatar}`
         : undefined;
@@ -130,30 +132,32 @@ const TechnicianProfilePage: React.FC = () => {
     const displayAvatar = previewUrl || avatarSrc;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white flex justify-center py-16 px-6">
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex justify-center py-16 px-6">
             <Card
                 className="w-full max-w-2xl rounded-2xl shadow-lg p-10 bg-white"
                 style={{ fontSize: "18px" }}
             >
-                {/* ====== Header thông tin ====== */}
+                {/* ====== Header ====== */}
                 <div className="flex flex-col items-center text-center mb-6">
                     <Avatar
                         size={130}
                         src={avatarSrc}
                         icon={!avatarSrc && <UserOutlined />}
                         className={`shadow-lg mb-4 ${avatarSrc
-                            ? ""
-                            : "bg-gradient-to-br from-pink-400 to-orange-400 text-white"
+                                ? ""
+                                : "bg-gradient-to-br from-blue-500 to-indigo-400 text-white"
                             }`}
                     >
                         {!avatarSrc && user?.name?.charAt(0)?.toUpperCase()}
                     </Avatar>
 
                     <Title level={3} style={{ marginBottom: 4, fontSize: 28 }}>
-                        {user?.name || employee?.fullName || "Kỹ thuật viên"}
+                        {technician?.fullName || user?.name || "Kỹ thuật viên"}
                     </Title>
                     <Text type="secondary" style={{ fontSize: 18 }}>
-                        Kỹ thuật viên bảo trì
+                        {technician?.technicianType
+                            ? `Loại: ${technician.technicianType}`
+                            : "Kỹ thuật viên bảo trì"}
                     </Text>
                 </div>
 
@@ -161,53 +165,65 @@ const TechnicianProfilePage: React.FC = () => {
 
                 {/* ====== Thông tin chi tiết ====== */}
                 <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                    {/* Email */}
                     <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-4 text-gray-700">
                             <MailOutlined style={{ fontSize: 20 }} />
                             <Text strong style={{ fontSize: 17 }}>Email:</Text>
                         </div>
-                        <Text style={{ fontSize: 17 }}>{user?.email || employee?.email || "Chưa cập nhật"}</Text>
+                        <Text style={{ fontSize: 17 }}>
+                            {user?.email || technician?.email || "Chưa cập nhật"}
+                        </Text>
                     </div>
 
+                    {/* Mã kỹ thuật viên */}
                     <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-4 text-gray-700">
                             <IdcardOutlined style={{ fontSize: 20 }} />
-                            <Text strong style={{ fontSize: 17 }}>Mã nhân viên:</Text>
+                            <Text strong style={{ fontSize: 17 }}>Mã KTV:</Text>
                         </div>
-                        <Text style={{ fontSize: 17 }}>{employee?.employeeCode || "Không có"}</Text>
+                        <Text style={{ fontSize: 17 }}>
+                            {technician?.technicianCode || "Không có"}
+                        </Text>
                     </div>
 
-                    {employee?.phone && (
+                    {/* Số điện thoại */}
+                    {technician?.phone && (
                         <div className="flex items-center justify-between py-2">
                             <div className="flex items-center gap-4 text-gray-700">
                                 <PhoneOutlined style={{ fontSize: 20 }} />
                                 <Text strong style={{ fontSize: 17 }}>Số điện thoại:</Text>
                             </div>
-                            <Text style={{ fontSize: 17 }}>{employee.phone}</Text>
+                            <Text style={{ fontSize: 17 }}>{technician.phone}</Text>
                         </div>
                     )}
 
-                    {employee?.positionName && (
+                    {/* Nhà cung cấp */}
+                    {technician?.supplierName && (
                         <div className="flex items-center justify-between py-2">
                             <div className="flex items-center gap-4 text-gray-700">
-                                <ToolOutlined style={{ fontSize: 20 }} />
-                                <Text strong style={{ fontSize: 17 }}>Chức vụ:</Text>
+                                <ApartmentOutlined style={{ fontSize: 20 }} />
+                                <Text strong style={{ fontSize: 17 }}>Nhà cung cấp:</Text>
                             </div>
-                            <Text style={{ fontSize: 17 }}>{employee.positionName}</Text>
+                            <Text style={{ fontSize: 17 }}>{technician.supplierName}</Text>
                         </div>
                     )}
 
+                    {/* Địa chỉ */}
                     <div className="flex items-center justify-between py-2">
                         <div className="flex items-center gap-4 text-gray-700">
                             <UserOutlined style={{ fontSize: 20 }} />
                             <Text strong style={{ fontSize: 17 }}>Địa chỉ:</Text>
                         </div>
-                        <Text style={{ fontSize: 17 }}>{user?.address || "Chưa cập nhật"}</Text>
+                        <Text style={{ fontSize: 17 }}>
+                            {user?.address || "Chưa cập nhật"}
+                        </Text>
                     </div>
                 </Space>
 
                 <Divider />
 
+                {/* ====== Action Buttons ====== */}
                 <Space className="w-full mt-6 flex justify-between">
                     <Button
                         type="primary"
@@ -245,10 +261,10 @@ const TechnicianProfilePage: React.FC = () => {
                     layout="vertical"
                     onFinish={handleSubmit}
                     initialValues={{
-                        name: user?.name,
+                        name: user?.name || technician?.fullName,
                         email: user?.email,
+                        technicianCode: technician?.technicianCode,
                         address: user?.address,
-                        employeeCode: employee?.employeeCode,
                     }}
                     className="pt-4"
                 >
@@ -283,7 +299,7 @@ const TechnicianProfilePage: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Form fields */}
+                    {/* Họ và tên */}
                     <Form.Item
                         label={<span style={{ fontSize: 17 }}>Họ và tên</span>}
                         name="name"
@@ -292,15 +308,24 @@ const TechnicianProfilePage: React.FC = () => {
                         <Input size="large" placeholder="Nhập họ và tên" disabled={submitting} />
                     </Form.Item>
 
+                    {/* Email */}
                     <Form.Item label={<span style={{ fontSize: 17 }}>Email</span>} name="email">
                         <Input size="large" disabled />
                     </Form.Item>
 
-                    <Form.Item label={<span style={{ fontSize: 17 }}>Mã nhân viên</span>} name="employeeCode">
+                    {/* Mã KTV */}
+                    <Form.Item
+                        label={<span style={{ fontSize: 17 }}>Mã kỹ thuật viên</span>}
+                        name="technicianCode"
+                    >
                         <Input size="large" disabled />
                     </Form.Item>
 
-                    <Form.Item label={<span style={{ fontSize: 17 }}>Địa chỉ</span>} name="address">
+                    {/* Địa chỉ */}
+                    <Form.Item
+                        label={<span style={{ fontSize: 17 }}>Địa chỉ</span>}
+                        name="address"
+                    >
                         <Input size="large" placeholder="Nhập địa chỉ" disabled={submitting} />
                     </Form.Item>
 

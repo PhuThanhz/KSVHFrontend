@@ -44,7 +44,9 @@ import PurchaseHistoryPage from "@/pages/client/purchase-history";
 import MyMaintenanceRequestsPage from "@/pages/client/maintenance-request/my-maintenance-requests";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
-import MaintenancePage from "@/pages/admin/maintenance/maintenance";
+import MaintenancePage from "@/pages/admin/maintenance/maintenance"
+import MaintenancePendingPage from "@/pages/admin/maintenance/maintenance-pending";
+;
 import IssueSkillMappingPage from "@/pages/admin/issue-skill-mapping/issue-skill-mapping";
 import TechnicianAssignmentPage from "@/pages/technician/assignment/home-assignment";
 import HomeSchedulePage from "@/pages/technician/schedule/home-schedule";
@@ -59,7 +61,6 @@ import MaintenanceExecutionAdminPage from "./pages/admin/maintenance/maintenance
 import MaintenanceAcceptancePage from "@/pages/admin/maintenance/maintenance-acceptance/maintenance-acceptance";
 import TechnicianProfilePage from "@/pages/technician/profile/index";
 
-import MaintenanceHistoryPage from "./pages/admin/maintenance/maintenance-histories";
 import AdminMaintenanceSchedulePage from "./pages/admin/maintenance/maintenance-schedule";
 
 import DeviceDepreciationSection from "./pages/admin/maintenance-report/sections/DeviceDepreciation";
@@ -169,6 +170,13 @@ export default function App() {
               <MaintenancePage />
             </ProtectedRoute>
         },
+        {
+          path: PATHS.ADMIN.MAINTENANCE_PENDING,
+          element:
+            <ProtectedRoute>
+              <MaintenancePendingPage />
+            </ProtectedRoute>
+        },
 
         {
           path: PATHS.ADMIN.MAINTENANCE_APPROVAL,
@@ -191,14 +199,6 @@ export default function App() {
           element: (
             <ProtectedRoute>
               <MaintenanceAcceptancePage />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: PATHS.ADMIN.MAINTENANCE_HISTORY,
-          element: (
-            <ProtectedRoute>
-              < MaintenanceHistoryPage />
             </ProtectedRoute>
           ),
         },

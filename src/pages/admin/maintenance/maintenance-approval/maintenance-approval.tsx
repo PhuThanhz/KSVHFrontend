@@ -70,10 +70,10 @@ const MaintenanceApprovalPage = () => {
         const params = new URLSearchParams();
         params.set("page", PAGINATION_CONFIG.DEFAULT_PAGE.toString());
         params.set("size", PAGINATION_CONFIG.DEFAULT_PAGE_SIZE.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT);
         return params.toString();
     });
 
-    const tableRef = useRef<ActionType>(null);
 
     // ===================== Data fetching =====================
     const approveMutation = useApprovePlanMutation();
@@ -98,6 +98,8 @@ const MaintenanceApprovalPage = () => {
         const params = new URLSearchParams();
         params.set("page", currentPage.toString());
         params.set("size", pageSize.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT);
+
 
         const filterParts: string[] = [];
 
@@ -129,6 +131,9 @@ const MaintenanceApprovalPage = () => {
         const params = new URLSearchParams();
         params.set("page", PAGINATION_CONFIG.DEFAULT_PAGE.toString());
         params.set("size", PAGINATION_CONFIG.DEFAULT_PAGE_SIZE.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT);
+        setQuery(params.toString());
+
         setQuery(params.toString());
     };
 

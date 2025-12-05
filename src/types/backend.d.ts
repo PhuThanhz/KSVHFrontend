@@ -27,9 +27,9 @@ export interface IResUploadFileDTO {
     fileName: string;
     uploadedAt: string;
 }
-
 export interface IAccount {
     access_token?: string;
+
     user: {
         id: string;
         email: string;
@@ -48,6 +48,7 @@ export interface IAccount {
             }[];
         };
     };
+
     employee?: {
         id: string;
         employeeCode: string;
@@ -56,7 +57,27 @@ export interface IAccount {
         email?: string;
         positionName?: string;
     };
+
+    customer?: {
+        id: string;
+        customerCode: string;
+        name: string;
+        phone?: string;
+        email?: string;
+        address?: string;
+    };
+
+    technician?: {
+        id: string;
+        technicianCode: string;
+        fullName: string;
+        phone?: string;
+        email?: string;
+        technicianType?: string;
+        supplierName?: string;
+    };
 }
+
 
 export interface IReqUpdateProfileDTO {
     name?: string;
@@ -845,22 +866,6 @@ export interface IAutoAssignmentResponse {
 
 
 
-/** ================== Timeline phiếu bảo trì ===================== */
-export interface IResMaintenanceTimelineDTO {
-    requestId: string;
-    requestCode: string;
-    timeline: IMaintenanceTimelineItem[];
-}
-
-export interface IMaintenanceTimelineItem {
-    title: string;
-    description: string;
-    createdAt: string;
-    actor: string;
-    status: MaintenanceRequestStatus;
-}
-
-
 
 
 /** ==============================
@@ -895,7 +900,6 @@ export interface IResDeviceSimpleDTO {
     companyName?: string;
     departmentName?: string;
 }
-
 /** ======================== Thông tin phiếu yêu cầu (Chung) ====================== */
 export interface IResRequestCommonDTO {
     requestId?: string;
@@ -919,7 +923,7 @@ export interface IResRequestCommonDTO {
     updatedAt?: string;
 }
 
-/** ==================== Thông tin khảo sát (chung) ===================== */
+/** ==================== Thông tin khảo sát (Chung) ===================== */
 export interface IResSurveyCommonDTO {
     actualIssueDescription?: string;
     causeName?: string;
@@ -931,14 +935,104 @@ export interface IResSurveyCommonDTO {
     attachment2?: string;
     attachment3?: string;
 }
-/** ==================== Thông tin kế hoạch (chung) ===================== */
+
+/** ==================== Thông tin kế hoạch (Chung) ===================== */
 export interface IResPlanCommonDTO {
     planId?: string | null;
     solutionName?: string | null;
+    customSolution?: string | null;
     useMaterial?: boolean | null;
     note?: string | null;
     createdAt?: string | null;
     createdBy?: string | null;
+    materials?: IPlanMaterialItem[];
+}
+
+export interface IPlanMaterialItem {
+    partCode?: string;
+    partName?: string;
+    quantity?: number;
+    isNewProposal?: boolean;
+    isShortage?: boolean;
+    image?: string;
+}
+
+/** ==================== Thông tin thi công bảo trì (Chung) ===================== */
+export interface IResExecutionCommonDTO {
+    executionId?: string;
+    requestCode?: string;
+    status?: string;
+    mainTechnician?: string;
+    startAt?: string;
+    endAt?: string;
+    totalTasks?: number;
+    completedTasks?: number;
+    tasks?: IExecutionTaskItem[];
+    materials?: IExecutionMaterialItem[];
+    rejectHistory?: IExecutionRejectHistoryItem[];
+    supportRequests?: ISupportRequestItem[];
+}
+
+export interface IExecutionTaskItem {
+    id?: string;
+    content?: string;
+    done?: boolean;
+    doneAt?: string;
+    doneBy?: string;
+    note?: string;
+    image1?: string;
+    image2?: string;
+    image3?: string;
+    video?: string;
+}
+
+export interface IExecutionMaterialItem {
+    partCode?: string;
+    partName?: string;
+    quantity?: number;
+    isNewProposal?: boolean;
+    isShortage?: boolean;
+    stock?: number;
+    warehouseName?: string;
+    image?: string;
+}
+
+export interface IExecutionRejectHistoryItem {
+    reasonName?: string;
+    note?: string;
+    rejectedBy?: string;
+    rejectedAt?: string;
+}
+
+export interface ISupportRequestItem {
+    requesterName?: string;
+    supporterName?: string;
+    reason?: string;
+    status?: "PENDING" | "APPROVED" | "REJECTED";
+    createdAt?: string;
+}
+
+/** ==================== Thông tin nghiệm thu ===================== */
+export interface IResAcceptanceCommonDTO {
+    acceptanceId?: string;
+    approverType?: string;
+    isAccepted?: boolean;
+    rating?: number;
+    isOnTime?: boolean;
+    isProfessional?: boolean;
+    isDeviceWorking?: boolean;
+    comment?: string;
+    createdAt?: string;
+    createdBy?: string;
+}
+
+/** ==================== Lịch sử từ chối nghiệm thu ===================== */
+export interface IResAcceptanceRejectCommonDTO {
+    rejectId?: string;
+    reasonName?: string;
+    note?: string;
+    rejectedBy?: string;
+    rejectedAt?: string;
 }
 
 
@@ -980,11 +1074,26 @@ export interface IResMaintenanceRequestDTO {
 
 /** ================== Chi tiết phiếu bảo trì ===================== */
 export interface IResMaintenanceRequestDetailDTO {
-    requestInfo: IResRequestCommonDTO;
-    assignmentInfo?: IResMaintenanceAssignmentDTO;
-    rejectInfo?: IResMaintenanceRejectDTO;
-    surveyInfo?: IResSurveyCommonDTO;
+    /** ===== Thông tin chung & phân công ===== */
+    requestInfo: IResRequestCommonDTO;                       // Thông tin cơ bản của phiếu bảo trì
+    assignmentInfo?: IResMaintenanceAssignmentDTO;            // Kỹ thuật viên được phân công
+    rejectInfo?: IResMaintenanceRejectDTO;                    // Lịch sử kỹ thuật viên từ chối phiếu
+
+    /** ===== Giai đoạn khảo sát ===== */
+    surveyInfo?: IResSurveyCommonDTO;                         // Thông tin khảo sát thực tế
+
+    /** ===== Giai đoạn kế hoạch ===== */
+    planInfo?: IResPlanCommonDTO;                             // Thông tin kế hoạch bảo trì
+    planRejectInfo?: IResMaintenancePlanRejectDTO;            // Thông tin từ chối kế hoạch (nếu bị từ chối phê duyệt)
+
+    /** ===== Giai đoạn thi công ===== */
+    executionInfo?: IResExecutionCommonDTO;                   // Thông tin thi công thực tế
+
+    /** ===== Giai đoạn nghiệm thu ===== */
+    acceptanceInfos?: IResAcceptanceCommonDTO[];              // Danh sách tất cả người nghiệm thu (CREATOR, DEVICE_MANAGER)
+    acceptanceRejectInfo?: IResAcceptanceRejectCommonDTO;     // Thông tin từ chối nghiệm thu (nếu có)
 }
+
 
 /** ================== Nhân viên nội bộ tạo phiếu ===================== */
 export interface IReqMaintenanceRequestInternalDTO {
@@ -1354,29 +1463,38 @@ export interface IReqSupportApproveDTO {
     approve: boolean;
 }
 
+import { MaintenanceRequestStatus } from "@/types/backend/maintenance-request-status";
+import type { ITechnicianSummary } from "@/types/backend/technician";
+
 export interface IResAdminExecutionCardDTO {
     requestId: string;
     requestCode: string;
     status: MaintenanceRequestStatus;
     createdAt?: string | null;
 
+    // ===== Thiết bị =====
     deviceCode?: string | null;
     deviceName?: string | null;
     deviceImage1?: string | null;
     deviceImage2?: string | null;
     deviceImage3?: string | null;
 
+    // ===== Kỹ thuật viên =====
     technicians?: ITechnicianSummary[];
+
+    // ===== Tiến độ =====
     totalTasks?: number | null;
     completedTasks?: number | null;
     progressPercent?: number | null;
-
     startAt?: string | null;
     endAt?: string | null;
 
+    // ===== Khảo sát =====
     actualIssueDescription?: string | null;
     causeName?: string | null;
     surveyDate?: string | null;
+
+    pendingSupportCount?: number | null;
 }
 
 
@@ -1519,34 +1637,6 @@ export interface IResEvaluationDTO {
 }
 
 
-
-// IResMaintenanceHistoryCardDTO
-export interface IResMaintenanceHistoryCardDTO {
-    requestInfo: IResRequestCommonDTO;
-    solutionName: string | null;
-    technicianName: string | null;
-    createdAt: string;
-    completedAt: string | null;
-}
-
-// IResMaintenanceHistoryDetailDTO
-export interface IResMaintenanceHistoryDetailDTO {
-    requestInfo: IResRequestCommonDTO;
-    surveyInfo: IResSurveyCommonDTO | null;
-    planInfo: IResPlanCommonDTO | null;
-    tasks: IResExecutionTaskDTO[];
-    rejectHistory: IRejectHistoryItem[];
-    rejectInfo: IResMaintenanceRejectDTO | null;
-    rejectLogs: IResMaintenancePlanRejectDTO[];
-    workResultInfo: IResWorkResultCommonDTO | null;
-}
-
-export interface IRejectHistoryItem {
-    reasonName: string;
-    note: string;
-    rejectedBy: string;
-    rejectedAt: string;
-}
 
 
 

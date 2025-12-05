@@ -33,6 +33,7 @@ export const PATHS = {
         TECHNICIAN_AVAILABILITY: "/admin/technician-availability",
         CUSTOMER_PURCHASE_HISTORY: "/admin/customer-purchase-history",
         MAINTENANCE: "/admin/maintenance",
+        MAINTENANCE_PENDING: "/admin/maintenance-pending",
         ISSUE_SKILL_MAPPING: "/admin/issue-skill-mapping",
         MAINTENANCE_CAUSE: "/admin/maintenance-cause",
         MAINTENANCE_APPROVAL: "/admin/maintenance-approval",

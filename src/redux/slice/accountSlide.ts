@@ -2,19 +2,17 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { callFetchAccount } from '@/config/api';
 
 /** ========================= FETCH ACCOUNT ========================= */
-export const fetchAccount = createAsyncThunk(
-    'account/fetchAccount',
-    async () => {
-        const response = await callFetchAccount();
-        return response.data;
-    }
-);
+export const fetchAccount = createAsyncThunk('account/fetchAccount', async () => {
+    const response = await callFetchAccount();
+    return response.data;
+});
 
 interface IState {
     isAuthenticated: boolean;
     isLoading: boolean;
     isRefreshToken: boolean;
     errorRefreshToken: string;
+
     user: {
         id: string;
         email: string;
@@ -33,6 +31,7 @@ interface IState {
             }[];
         };
     };
+
     employee?: {
         id: string;
         employeeCode: string;
@@ -41,6 +40,26 @@ interface IState {
         email?: string;
         positionName?: string;
     };
+
+    customer?: {
+        id: string;
+        customerCode: string;
+        name: string;
+        phone?: string;
+        email?: string;
+        address?: string;
+    };
+
+    technician?: {
+        id: string;
+        technicianCode: string;
+        fullName: string;
+        phone?: string;
+        email?: string;
+        technicianType?: string;
+        supplierName?: string;
+    };
+
     activeMenu: string;
 }
 
@@ -63,11 +82,13 @@ const initialState: IState = {
         },
     },
     employee: undefined,
+    customer: undefined,
+    technician: undefined,
     activeMenu: 'home',
 };
 
 /** ========================= SLICE ========================= */
-export const accountSlide = createSlice({
+export const accountSlice = createSlice({
     name: 'account',
     initialState,
     reducers: {
@@ -86,10 +107,12 @@ export const accountSlide = createSlice({
             state.user.avatar = action.payload?.avatar ?? '';
             state.user.address = action.payload?.address ?? '';
 
-            state.user.role = action?.payload?.role ?? { id: '', name: '', permissions: [] };
-            state.user.role.permissions = action?.payload?.role?.permissions ?? [];
+            state.user.role = action.payload?.role ?? { id: '', name: '', permissions: [] };
+            state.user.role.permissions = action.payload?.role?.permissions ?? [];
 
             state.employee = action.payload?.employee ?? undefined;
+            state.customer = action.payload?.customer ?? undefined;
+            state.technician = action.payload?.technician ?? undefined;
         },
 
         setLogoutAction: (state) => {
@@ -106,6 +129,8 @@ export const accountSlide = createSlice({
             };
 
             state.employee = undefined;
+            state.customer = undefined;
+            state.technician = undefined;
         },
 
         setRefreshTokenAction: (state, action) => {
@@ -117,7 +142,6 @@ export const accountSlide = createSlice({
             if (action.payload) {
                 if (action.payload.name) state.user.name = action.payload.name;
                 if (action.payload.avatar) state.user.avatar = action.payload.avatar;
-
                 state.user.address = action.payload.address ?? state.user.address;
             }
         },
@@ -144,6 +168,8 @@ export const accountSlide = createSlice({
                 state.user.role.permissions = action.payload.user?.role?.permissions ?? [];
 
                 state.employee = action.payload?.employee ?? undefined;
+                state.customer = action.payload?.customer ?? undefined;
+                state.technician = action.payload?.technician ?? undefined;
             }
         });
 
@@ -161,6 +187,6 @@ export const {
     setLogoutAction,
     setRefreshTokenAction,
     updateUserProfile,
-} = accountSlide.actions;
+} = accountSlice.actions;
 
-export default accountSlide.reducer;
+export default accountSlice.reducer;

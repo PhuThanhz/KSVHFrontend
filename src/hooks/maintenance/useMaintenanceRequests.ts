@@ -7,7 +7,7 @@ import {
     callAutoAssignAll,
     callAssignTechnicianManual,
     callFetchRejectLogsByRequestId,
-    callFetchMaintenanceRequestTimeline
+    callFetchPendingMaintenanceRequests,
 } from "@/config/api";
 import type {
     IModelPaginate,
@@ -16,7 +16,6 @@ import type {
     IReqMaintenanceRequestInternalDTO,
     IReqMaintenanceRequestCustomerDTO,
     IResMaintenanceRejectDTO,
-    IResMaintenanceTimelineDTO
 } from "@/types/backend";
 import { notify } from "@/components/common/notification/notify";
 
@@ -28,6 +27,18 @@ export const useMaintenanceRequestsQuery = (query: string) => {
         queryFn: async () => {
             const res = await callFetchMaintenanceRequest(query);
             if (!res?.data) throw new Error("Không thể lấy danh sách phiếu bảo trì");
+            return res.data as IModelPaginate<IResMaintenanceRequestDTO>;
+        },
+    });
+};
+
+/**  ========================= Lấy danh sách phiếu CHỜ PHÂN CÔNG ========================= */
+export const usePendingMaintenanceRequestsQuery = (query: string) => {
+    return useQuery({
+        queryKey: ["pending-maintenance-requests", query],
+        queryFn: async () => {
+            const res = await callFetchPendingMaintenanceRequests(query);
+            if (!res?.data) throw new Error("Không thể lấy danh sách phiếu chờ phân công");
             return res.data as IModelPaginate<IResMaintenanceRequestDTO>;
         },
     });
@@ -122,6 +133,7 @@ export const useAssignTechnicianManualMutation = () => {
         onSuccess: (res) => {
             notify.updated(res.message || "Gán kỹ thuật viên thành công");
             queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
+            queryClient.invalidateQueries({ queryKey: ["pending-maintenance-requests"] });
             queryClient.invalidateQueries({ queryKey: ["maintenance-request"] });
         },
         onError: (error: any) => {
@@ -129,6 +141,7 @@ export const useAssignTechnicianManualMutation = () => {
         },
     });
 };
+
 /** ========================= Phân công tự động ========================= */
 export const useAutoAssignAllMutation = () => {
     const queryClient = useQueryClient();
@@ -143,24 +156,10 @@ export const useAutoAssignAllMutation = () => {
         onSuccess: (res) => {
             notify.success(res.message || "Phân công tự động thành công");
             queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
+            queryClient.invalidateQueries({ queryKey: ["pending-maintenance-requests"] }); // ✅ làm mới tab chờ phân công
         },
         onError: (error: any) => {
             notify.error(error.message || "Lỗi khi phân công tự động");
-        },
-    });
-};
-
-/** ========================= Lấy timeline phiếu bảo trì ========================= */
-export const useMaintenanceTimelineQuery = (id?: string) => {
-    return useQuery({
-        queryKey: ["maintenance-request-timeline", id],
-        enabled: !!id,
-        queryFn: async () => {
-            if (!id) throw new Error("Thiếu ID phiếu bảo trì");
-            const res = await callFetchMaintenanceRequestTimeline(id);
-            if (!res?.data)
-                throw new Error(res?.message || "Không thể lấy timeline phiếu bảo trì");
-            return res.data as IResMaintenanceTimelineDTO;
         },
     });
 };

@@ -27,7 +27,7 @@ const LoginPage = () => {
             const { access_token, user } = res?.data || {};
 
             if (!access_token) {
-                notify.error("Không nhận được access_token từ server.");
+                notify.error("Không đúng email hoặc mật khẩu.");
                 return;
             }
 

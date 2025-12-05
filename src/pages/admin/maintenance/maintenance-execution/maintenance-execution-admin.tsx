@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     Button,
     Tag,
@@ -14,12 +14,9 @@ import {
 import { EyeOutlined } from "@ant-design/icons";
 import type { ActionType } from "@ant-design/pro-components";
 import dayjs from "dayjs";
-import queryString from "query-string";
 
 import PageContainer from "@/components/common/data-table/PageContainer";
-import DataTable from "@/components/common/data-table";
 import SearchFilter from "@/components/common/filter-date/SearchFilter";
-import AdvancedFilterSelect from "@/components/common/filter-date/AdvancedFilterSelect";
 import DateRangeFilter from "@/components/common/filter-date/DateRangeFilter";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
@@ -28,36 +25,28 @@ import { PAGINATION_CONFIG } from "@/config/pagination";
 import { useAdminExecutionsQuery } from "@/hooks/useAdminExecutions";
 import ViewAdminExecutionDetail from "./view.admin-maintenance-execution-detail";
 import ModalAdminSupportRequests from "./modal.admin-support-requests";
+import type { IResAdminExecutionCardDTO } from "@/types/backend";
 
 const { Text } = Typography;
 
-interface TechnicianSummary {
-    id: string;
-    fullName: string;
-    phone?: string;
-    email?: string;
-    isMain?: boolean;
-}
-
-interface ExecutionCard {
-    requestId: string;
-    requestCode: string;
-    status: string;
-    deviceName?: string;
-    deviceCode?: string;
-    deviceImage1?: string;
-    deviceImage2?: string;
-    deviceImage3?: string;
-    createdAt?: string;
-    totalTasks?: number;
-    completedTasks?: number;
-    technicians?: TechnicianSummary[];
-}
-
 export default function MaintenanceExecutionAdminPage() {
-    const [query, setQuery] = useState<string>(
-        `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}`
-    );
+    // ===================== States =====================
+    const [searchValue, setSearchValue] = useState<string>("");
+    const [deviceCode, setDeviceCode] = useState<string>("");
+    const [deviceName, setDeviceName] = useState<string>("");
+    const [createdAtFilter, setCreatedAtFilter] = useState<string | null>(null);
+
+    const [currentPage, setCurrentPage] = useState(PAGINATION_CONFIG.DEFAULT_PAGE);
+    const [pageSize, setPageSize] = useState(PAGINATION_CONFIG.DEFAULT_PAGE_SIZE);
+
+    const [query, setQuery] = useState<string>(() => {
+        const params = new URLSearchParams();
+        params.set("page", currentPage.toString());
+        params.set("size", pageSize.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT); // ✅ Gắn sort mặc định
+        return params.toString();
+    });
+
     const tableRef = useRef<ActionType>(null);
 
     // ===================== MODALS =====================
@@ -68,7 +57,7 @@ export default function MaintenanceExecutionAdminPage() {
 
     // ===================== FETCH DATA =====================
     const { data, isFetching } = useAdminExecutionsQuery(query);
-    const executions = (data?.result || []) as ExecutionCard[];
+    const executions = (data?.result || []) as IResAdminExecutionCardDTO[];
     const meta = data?.meta ?? {
         page: PAGINATION_CONFIG.DEFAULT_PAGE,
         pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
@@ -77,48 +66,59 @@ export default function MaintenanceExecutionAdminPage() {
 
     const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-    // ===================== FILTER OPTIONS =====================
-    const statusOptions = [
-        { label: "Đang bảo trì", value: "DANG_BAO_TRI", color: "orange" },
-        { label: "Từ chối nghiệm thu", value: "TU_CHOI_NGHIEM_THU", color: "red" },
-        { label: "Hoàn thành", value: "HOAN_THANH", color: "green" },
-    ];
+    // ===================== AUTO BUILD QUERY =====================
+    useEffect(() => {
+        const params = new URLSearchParams();
+        params.set("page", currentPage.toString());
+        params.set("size", pageSize.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT);
 
-    // ===================== BUILD QUERY =====================
-    const buildQuery = (params: any) => {
-        const q: any = {
-            page: params.current || PAGINATION_CONFIG.DEFAULT_PAGE,
-            size: params.pageSize || PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
-        };
+        const filters: string[] = [];
 
-        if (params.requestCode) {
-            q.filter = `maintenanceRequest.requestCode~'${params.requestCode}'`;
+        if (searchValue) {
+            filters.push(`maintenanceRequest.requestCode~'${searchValue}'`);
+        }
+        if (deviceCode) {
+            filters.push(`maintenanceRequest.device.deviceCode~'${deviceCode}'`);
+        }
+        if (deviceName) {
+            filters.push(`maintenanceRequest.device.deviceName~'${deviceName}'`);
+        }
+        if (createdAtFilter) {
+            filters.push(createdAtFilter);
         }
 
-        if (params.deviceCode) {
-            if (q.filter) q.filter += `&filter=maintenanceRequest.device.deviceCode~'${params.deviceCode}'`;
-            else q.filter = `maintenanceRequest.device.deviceCode~'${params.deviceCode}'`;
+        if (filters.length > 0) {
+            params.set("filter", filters.join(" and "));
         }
 
-        if (params.deviceName) {
-            if (q.filter) q.filter += `&filter=maintenanceRequest.device.deviceName~'${params.deviceName}'`;
-            else q.filter = `maintenanceRequest.device.deviceName~'${params.deviceName}'`;
-        }
+        setQuery(params.toString());
+    }, [searchValue, deviceCode, deviceName, createdAtFilter, currentPage, pageSize]);
 
-        if (params.status) {
-            if (q.filter) q.filter += `&filter=maintenanceRequest.status='${params.status}'`;
-            else q.filter = `maintenanceRequest.status='${params.status}'`;
-        }
+    // ===================== HANDLERS =====================
+    const resetFilters = () => {
+        setSearchValue("");
+        setDeviceCode("");
+        setDeviceName("");
+        setCreatedAtFilter(null);
+        setCurrentPage(PAGINATION_CONFIG.DEFAULT_PAGE);
+        setPageSize(PAGINATION_CONFIG.DEFAULT_PAGE_SIZE);
 
-        if (params.createdAtFilter) {
-            if (q.filter) q.filter += `&filter=${params.createdAtFilter}`;
-            else q.filter = params.createdAtFilter;
-        }
-
-        return queryString.stringify(q, { encode: false });
+        const params = new URLSearchParams();
+        params.set("page", PAGINATION_CONFIG.DEFAULT_PAGE.toString());
+        params.set("size", PAGINATION_CONFIG.DEFAULT_PAGE_SIZE.toString());
+        params.set("sort", PAGINATION_CONFIG.DEFAULT_SORT); // ✅ Reset về sort mặc định
+        setQuery(params.toString());
     };
 
-    // ===================== CARD LIST RENDER =====================
+    const handlePageChange = (page: number, newPageSize?: number) => {
+        setCurrentPage(page);
+        if (newPageSize) {
+            setPageSize(newPageSize);
+        }
+    };
+
+    // ===================== RENDER LIST =====================
     const renderExecutionCards = () => {
         if (isFetching) {
             return (
@@ -133,22 +133,29 @@ export default function MaintenanceExecutionAdminPage() {
         }
 
         return (
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {executions.map((item) => {
                     const imgs = [item.deviceImage1, item.deviceImage2, item.deviceImage3].filter(Boolean);
                     const total = item.totalTasks ?? 0;
                     const done = item.completedTasks ?? 0;
                     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
+                    const pendingSupportCount = (item as any).pendingSupportCount || 0;
+                    const hasPendingSupport = pendingSupportCount > 0;
+
                     return (
                         <Card
                             key={item.requestId}
                             bordered
                             hoverable
-                            bodyStyle={{ padding: 16 }}
-                            style={{ borderRadius: 8, border: "1px solid #e8e8e8" }}
+                            bodyStyle={{ padding: 14 }}
+                            style={{
+                                borderRadius: 8,
+                                border: hasPendingSupport ? "1.5px solid #faad14" : "1px solid #eaeaea",
+                                background: hasPendingSupport ? "#fffbe6" : "#fff",
+                            }}
                         >
-                            <Row gutter={[12, 12]}>
+                            <Row gutter={[8, 8]} align="middle">
                                 <Col xs={24} sm={6} md={5}>
                                     {imgs.length > 0 ? (
                                         <Image
@@ -162,7 +169,7 @@ export default function MaintenanceExecutionAdminPage() {
                                             style={{
                                                 width: "100%",
                                                 height: 120,
-                                                background: "#f5f5f5",
+                                                background: "#f7f7f7",
                                                 borderRadius: 6,
                                                 border: "1px solid #ddd",
                                                 display: "flex",
@@ -182,14 +189,21 @@ export default function MaintenanceExecutionAdminPage() {
                                             display: "flex",
                                             justifyContent: "space-between",
                                             flexWrap: "wrap",
-                                            gap: 8,
+                                            gap: 6,
                                         }}
                                     >
-                                        <div>
-                                            <Text strong style={{ fontSize: 16 }}>
-                                                {item.deviceName}
-                                            </Text>{" "}
-                                            <Text type="secondary">({item.deviceCode})</Text>
+                                        <div style={{ flex: 1, minWidth: 240 }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                                <Text strong style={{ fontSize: 15 }}>
+                                                    {item.deviceName}
+                                                </Text>
+                                                <Text type="secondary">({item.deviceCode})</Text>
+                                                {hasPendingSupport && (
+                                                    <Tag color="orange" style={{ fontWeight: 600 }}>
+                                                        Có yêu cầu hỗ trợ ({pendingSupportCount})
+                                                    </Tag>
+                                                )}
+                                            </div>
 
                                             <div style={{ marginTop: 8, fontSize: 13 }}>
                                                 <p>
@@ -232,7 +246,15 @@ export default function MaintenanceExecutionAdminPage() {
                                             </div>
                                         </div>
 
-                                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "flex-end",
+                                                gap: 8,
+                                                minWidth: 140,
+                                            }}
+                                        >
                                             <Access
                                                 permission={ALL_PERMISSIONS.MAINTENANCE_EXECUTION_ADMIN.GET_DETAIL}
                                                 hideChildren
@@ -280,63 +302,30 @@ export default function MaintenanceExecutionAdminPage() {
             filter={
                 <div className="flex flex-col gap-3">
                     <SearchFilter
-
                         searchPlaceholder="Nhập mã phiếu cần tìm..."
                         filterFields={[
                             { name: "deviceCode", label: "Mã thiết bị", placeholder: "Nhập mã thiết bị..." },
                             { name: "deviceName", label: "Tên thiết bị", placeholder: "Nhập tên thiết bị..." },
                         ]}
-                        onSearch={(val) =>
-                            setQuery(
-                                `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}&filter=maintenanceRequest.requestCode~'${val}'`
-                            )
-                        }
+                        onSearch={(val) => {
+                            setSearchValue(val);
+                            setCurrentPage(1);
+                        }}
                         onFilterApply={(filters) => {
-                            const temp = buildQuery({
-                                current: 1,
-                                pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
-                                ...filters,
-                            });
-                            setQuery(temp);
+                            setDeviceCode(filters.deviceCode || "");
+                            setDeviceName(filters.deviceName || "");
+                            setCurrentPage(1);
                         }}
                         showAddButton={false}
-                        onReset={() =>
-                            setQuery(
-                                `page=${PAGINATION_CONFIG.DEFAULT_PAGE}&size=${PAGINATION_CONFIG.DEFAULT_PAGE_SIZE}`
-                            )
-                        }
+                        onReset={resetFilters}
                     />
 
                     <div className="flex flex-wrap gap-3 items-center">
-                        <AdvancedFilterSelect
-                            buttonLabel="Lọc trạng thái"
-                            fields={[
-                                {
-                                    key: "status",
-                                    label: "Trạng thái phiếu",
-                                    options: statusOptions,
-                                },
-                            ]}
-                            onChange={(filters) => {
-                                const temp = buildQuery({
-                                    current: 1,
-                                    pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
-                                    ...filters,
-                                });
-                                setQuery(temp);
-                            }}
-                        />
-
-
                         <DateRangeFilter
                             fieldName="maintenanceRequest.createdAt"
                             onChange={(filter) => {
-                                const temp = buildQuery({
-                                    current: 1,
-                                    pageSize: PAGINATION_CONFIG.DEFAULT_PAGE_SIZE,
-                                    createdAtFilter: filter,
-                                });
-                                setQuery(temp);
+                                setCreatedAtFilter(filter);
+                                setCurrentPage(1);
                             }}
                         />
                     </div>
@@ -351,8 +340,8 @@ export default function MaintenanceExecutionAdminPage() {
                     <Space direction="vertical" align="center" size={8}>
                         <div style={{ fontSize: 13 }}>
                             <span style={{ fontWeight: 500 }}>
-                                {(meta.page - 1) * meta.pageSize + 1}–
-                                {Math.min(meta.page * meta.pageSize, meta.total)}
+                                {(currentPage - 1) * pageSize + 1}–
+                                {Math.min(currentPage * pageSize, meta.total)}
                             </span>{" "}
                             trên{" "}
                             <span style={{ fontWeight: 600, color: "#1677ff" }}>
@@ -360,6 +349,23 @@ export default function MaintenanceExecutionAdminPage() {
                             </span>{" "}
                             phiếu
                         </div>
+                        <Space>
+                            <Button
+                                disabled={currentPage === 1}
+                                onClick={() => handlePageChange(currentPage - 1)}
+                            >
+                                Trước
+                            </Button>
+                            <span style={{ padding: "0 16px" }}>
+                                Trang {currentPage} / {Math.ceil(meta.total / pageSize)}
+                            </span>
+                            <Button
+                                disabled={currentPage >= Math.ceil(meta.total / pageSize)}
+                                onClick={() => handlePageChange(currentPage + 1)}
+                            >
+                                Sau
+                            </Button>
+                        </Space>
                     </Space>
                 </div>
             )}
