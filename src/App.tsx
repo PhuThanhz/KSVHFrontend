@@ -70,6 +70,7 @@ import MaintenanceRequestSection from "./pages/admin/maintenance-report/sections
 // import TechnicianActivitySection from "./pages/admin/maintenance-report/sections/TechnicianActivity";
 import WarrantyProductSection from "./pages/admin/maintenance-report/sections/WarrantyProduct";
 import ScanResult from "./pages/technician/ScanResult";
+import OperationModule from "./pages/admin/operationcontrol";
 
 
 export default function App() {
@@ -209,6 +210,11 @@ export default function App() {
               <AdminMaintenanceSchedulePage />
             </ProtectedRoute>
         },
+{
+  path: "operation/*",
+  element: <OperationModule />, 
+},
+
 
         //================== BÁO CÁO THỐNG KÊ ==================
         {

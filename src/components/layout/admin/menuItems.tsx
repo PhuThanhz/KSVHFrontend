@@ -25,6 +25,8 @@ import {
 import { Link } from "react-router-dom";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { PATHS } from '@/constants/paths';
+// thêm 1 dòng ở đâu
+import { operationMenu } from "./menuItems.operation";
 
 interface Permission {
     apiPath: string;
@@ -342,6 +344,12 @@ export const generateMenuItems = (permissions: Permission[] | undefined) => {
                         }] : []),
                 ],
             }] : []),
+   
+            {
+  ...operationMenu,
+  // Khi click menu cha không bị navigate
+  onTitleClick: () => {},
+            },
 
 
         // ========== BÁO CÁO THỐNG KÊ ==========
@@ -466,7 +474,7 @@ export const generateMenuItems = (permissions: Permission[] | undefined) => {
                 },
             ]
             : [])
-
+            
     ];
 
     return full;

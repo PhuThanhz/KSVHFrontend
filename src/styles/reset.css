@@ -1,0 +1,41 @@
+.ant-pro-footer-bar {
+  z-index: 1000;
+  background-color: white;
+}
+
+.ant-menu-horizontal {
+  border-bottom: unset !important;
+}
+
+.ql-editor {
+  min-height: 350px !important;
+  overflow: hidden;
+}
+
+.modal-company.close {
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.25s linear;
+}
+
+.modal-company-root.close .ant-modal-mask {
+  background-color: unset !important;
+}
+
+.customize-form-item .ant-form-item {
+  margin-bottom: 0 !important;
+}
+
+.ant-layout-sider {
+  scrollbar-width: thin;
+  scrollbar-color: #d9d9d9 transparent;
+}
+
+.ant-layout-sider::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ant-layout-sider::-webkit-scrollbar-thumb {
+  background-color: #d9d9d9;
+  border-radius: 4px;
+}/*# sourceMappingURL=reset.css.map */
